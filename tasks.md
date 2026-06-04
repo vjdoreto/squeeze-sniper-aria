@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 04/06/2026 · v1.3_
+_Atualizado: 04/06/2026 · v1.4_
 
 ---
 
@@ -66,6 +66,26 @@ _Atualizado: 04/06/2026 · v1.3_
 - [ ] **Verificar `kelly_fraction` nos logs** — se chegando abaixo de 2% consistentemente, o problema é Kelly subestimando, não o floor $20. Se confirmado, Brain precisa ver os dados antes de qualquer ajuste
 
 > Critério: Bot valida bracket tier antes de abrir posição. Se kelly_fraction < 2% consistente → pauta para o Brain antes de codar.
+
+### F-04 — Squeezometer zerado nos relatórios horários · Brain · 04/06/2026
+
+- [ ] **Relatório horário captura valor zerado** — Evidência: 3 relatórios seguidos com Squeezometer 0/100 enquanto alertas do mesmo período mostravam 80–83. Hipótese: relatório lê o valor num momento de reset entre ciclos. Verificar de onde o snapshot lê o Squeezometer e se há reset periódico coincidindo com o horário · `src/web_dashboard.py` ou `main.py`
+- [ ] Se reset confirmado — relatório deve ler o **valor máximo dos últimos 60min** em vez do valor instantâneo
+
+> Critério: Relatório horário mostra valor consistente com os alertas do mesmo período.
+
+### F-05 — PaperAnalyzer: threshold mínimo de amostras + hot-reload do preferences.json · Brain · 04/06/2026
+
+- [ ] **Threshold mínimo para auto-calibração** — PaperAnalyzer só dispara sugestões com ≥ 30 trades fechados. Abaixo disso: apenas loga a análise, sem aplicar ao `preferences.json`. Evidência: com 10 trades sugeriu `min_trades_1m = 150` — bloquearia winner legítimo (MEME 98 Tr/1m +2.18%) e não teria evitado loser (AIXBT 420 Tr/1m MFE=0). Parâmetro: `min_trades_for_calibration: 30` em `preferences.json` · `src/paper_analyzer.py`
+- [ ] **Hot-reload do preferences.json** — confirmar se mudanças em runtime entram em vigor imediatamente ou só no próximo boot. Se só no boot: log explícito quando parâmetro auto-calibrado entrar em vigor · `main.py`
+
+> Critério: Auto-calibração só aplica com 30+ trades. Log explícito quando parâmetro entra em vigor.
+
+### F-06 — Gráficos do dashboard: placeholder "aguardando trades" · Brain · 04/06/2026
+
+- [ ] **Canvas vazio substituído por placeholder contextual** — Equity/Drawdown: "Aguardando primeiros trades para gerar curva". Kelly/Win Rate por Ativo: "Disponível após 10+ trades". Código dos gráficos permanece intacto — só lógica de exibição condicional · `src/web_dashboard.py`
+
+> Critério: Dashboard não exibe canvas vazio — mensagem contextual aparece até ter dados suficientes.
 
 ---
 
