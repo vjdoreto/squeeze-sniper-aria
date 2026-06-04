@@ -37,6 +37,14 @@ _Atualizado: 03/06/2026 · v1.1_
 
 ---
 
+## 🔵 Infraestrutura — Warm Cache de Klines (Sprint 2 ou 3)
+
+- [ ] **Persistir buffer de klines em disco** — salvar `logs/kline_cache/{symbol}_5m.json` no shutdown e recarregar no boot. Elimina o warmup de 70min para RSI/EMA após restart ou hard reset. Cache com TTL de 24h — se mais antigo, descarta e baixa do zero. Formato: JSON ou SQLite. Banco completo é overkill para esse volume.
+  - Impacto: RSI e EMA disponíveis desde o primeiro segundo após reinício
+  - Origem: Forge · 03/06/2026 · identificado durante sessão noturna
+
+---
+
 ## 🟡 Sprint 3 — Liquidity Guard
 
 - [ ] **validate_liquidity()** — validar profundidade OB antes de entrar · `src/paper_tracker.py` → `src/sniper.py`
