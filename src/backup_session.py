@@ -41,9 +41,8 @@ def create_backup():
         Path("logs/metric_state.json"),
         Path("logs/history"),
         Path("preferences.json"),
-        Path("docs/Engenheiro e DNA do Sniper.md"),
+        Path("docs/Engenheiro e DNA do Sniper v2.0.md"),
         Path("docs/CHANGELOG.md"),
-        Path("docs/ROADMAP_LIVE_V4.2.5_2026-06-02.md"),
     ]
     
     _log(f"[BACKUP] Iniciando: {backup_dir}")
