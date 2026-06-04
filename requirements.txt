@@ -1,0 +1,14 @@
+python-dotenv
+python-binance
+aiohttp
+aiodns
+redis
+msgpack
+pandas
+numpy
+ujson
+websockets==15.0.1
+rich
+fastapi
+uvicorn[standard]
+cryptography

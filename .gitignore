@@ -1,0 +1,52 @@
+# Secrets only
+.env
+.env.*
+!.env.example
+
+# Preferências locais (seu tuning sem git)
+preferences.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs and runtime data
+logs/
+*.log
+data/
+*.jsonl
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Backtests / exports
+*.csv
+snapshots/
+
+# Backups de sessão (contêm dados de trading)
+backups/
+
+# Plugins de IDE
+.kilo/
+.sixth/
+.claude/
+.mypy_cache/
+.pytest_cache/
+
+# Lock de instância
+logs/instance_lock_main.pid
+*.pid

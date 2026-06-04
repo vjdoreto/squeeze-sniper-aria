@@ -1,0 +1,17 @@
+# Dependências de Desenvolvimento — SqueezeSniper V4
+
+# Testes
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+
+# Type Checking
+mypy>=1.5.0
+basedpyright>=1.29.0
+
+# Linting
+ruff>=0.1.0
+black>=23.0.0
+
+# Instalação:
+# pip install -r requirements-dev.txt

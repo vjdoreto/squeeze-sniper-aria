@@ -1,0 +1,5 @@
+python-interpreter-path = ".venv/Scripts/python.exe"
+
+# Raiz do projeto: garante que Pyrefly encontre config.py (raiz) e src/* corretamente
+search-path = ["."]
+project-root = "."
