@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.2 · 04/06/2026
+- Versão atual: v3.3 · 04/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -57,26 +57,38 @@ Brain (análise)                    Forge (execução)
 
 ## 🏗️ Arquitetura de integração Brain → Forge
 
-### Backbone: GitHub (repositório privado)
+### Backbone: dois repositórios GitHub
 
-O GitHub serve como **memória compartilhada e fila de tarefas** entre as duas sessões. Zero custo, zero servidor, funciona imediatamente.
-
-**Repositório:** `https://github.com/vjdoreto/squeeze-sniper` (privado)
-
-**Estrutura do repositório `squeeze-sniper`:**
+**Repositório privado — código do bot:**
+`https://github.com/vjdoreto/squeeze-sniper` (privado)
 ```
 squeeze-sniper/
 ├── context.md          → documento mestre (sempre atualizado)
 ├── tasks.md            → fila de demandas Brain → Forge
-├── squeeze_sniper/     → código do bot
-└── logs/               → históricos de trades para análise
+├── src/                → código do bot (guardado pelo Forge)
+├── docs/               → manifesto, DNA, roadmap
+└── .gitignore          → bloqueia: .env, backups/, logs/
 ```
+
+**Repositório público — colaboração Brain × Forge:**
+`https://github.com/vjdoreto/squeeze-sniper-brain` (público)
+```
+squeeze-sniper-brain/
+├── context.md          → espelho do documento mestre
+├── tasks.md            → espelho da fila de tarefas
+└── reports/            → análises do Brain por data
+```
+- Contém **apenas MDs** — zero código, zero dados sensíveis
+- `.gitignore` bloqueia tudo exceto `.md` — proteção permanente
+- Sincronizado pelo Forge após cada sessão junto com o repo privado
+- Conectado ao **Claude Projects (Brain)** para acesso automático ao contexto
 
 **Fluxo de trabalho:**
 1. Brain gera análise ou demanda → escreve em `tasks.md`
 2. Forge lê as tasks, implementa e commita o código
 3. Forge traz resultado de volta ao Brain (diff / código / logs)
 4. Brain analisa, documenta e atualiza `context.md`
+5. Forge commita em ambos os repos — privado (código) e público (MDs)
 
 ### Fase 2 — Automação via Claude API (futuro)
 Quando evoluir para agentes conversando de verdade:
@@ -719,4 +731,4 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 04/06/2026*
-*Versão: 3.2*
+*Versão: 3.3 · Última atualização: 04/06/2026*
