@@ -85,6 +85,30 @@ class Sniper:
         self.risk_multiplier = risk_multiplier
         self.signal_engine = signal_engine  # SPRINT 13: Para throttling
         self._symbol_filters: Dict[str, Dict] = {}
+        self._bracket_cache: Dict[str, float] = {}  # symbol → notionalCap para leverage atual
+
+    async def _get_notional_cap(self, symbol: str) -> Optional[float]:
+        """Retorna o notional máximo permitido para o símbolo no leverage atual via leverageBracket.
+        Cacheado por símbolo — evita chamada REST a cada trade.
+        Retorna None se não conseguir buscar (não bloqueia o trade)."""
+        if symbol in self._bracket_cache:
+            return self._bracket_cache[symbol]
+        try:
+            data = await self.client.futures_leverage_bracket(symbol=symbol)
+            brackets = data[0].get("brackets", []) if data else []
+            # Encontra o bracket onde leverage <= initialLeverage (limite máximo do tier)
+            cap = None
+            for b in sorted(brackets, key=lambda x: x["initialLeverage"]):
+                if self.leverage <= b["initialLeverage"]:
+                    cap = float(b["notionalCap"])
+                    break
+            if cap is not None:
+                self._bracket_cache[symbol] = cap
+                logger.debug("Bracket %s: notionalCap=%.0f (lev=%d)", symbol, cap, self.leverage)
+            return cap
+        except Exception as e:
+            logger.warning("Erro ao buscar leverageBracket para %s: %s", symbol, e)
+            return None
 
     def hydrate_filters(self, info: Dict[str, Any]) -> None:
         """SPRINT 12.86: Fix P3 - Popula cache de filtros no boot (Latência Zero)."""
@@ -354,6 +378,16 @@ class Sniper:
 
             # Notional alvo = margem alvo * alavancagem
             notional_target = usdt_margin_target * float(self.leverage)
+
+            # Valida bracket tier da Binance — cap de notional por símbolo/alavancagem
+            notional_cap = await self._get_notional_cap(symbol)
+            if notional_cap is not None and notional_target > notional_cap:
+                logger.warning(
+                    "⚠️ [BRACKET] Notional %.2f USDT excede cap do tier (%.0f USDT) para %s lev=%dx — ajustando",
+                    notional_target, notional_cap, symbol, self.leverage,
+                )
+                notional_target = notional_cap
+                usdt_margin_target = notional_target / float(self.leverage)
 
             # Check existing position
             existing = await self._check_position(symbol)

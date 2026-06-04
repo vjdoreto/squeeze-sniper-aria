@@ -2677,14 +2677,14 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                 const kellyCheck = document.getElementById('liveKellyCheck');
                 const autoPilotCheck = document.getElementById('liveAutoPilotCheck');
                 const autoPilotHint = document.getElementById('autoPilotHint');
-                
+
                 if (slInput) slInput.value = j.sl_pct.toFixed(1);
                 if (tpInput) tpInput.value = j.tp_pct.toFixed(1);
                 if (maxHoldInput) maxHoldInput.value = j.max_hold_min;
                 if (signalModeInput) signalModeInput.value = j.signal_mode;
                 if (trailingCheck) trailingCheck.checked = j.trailing_enabled;
                 if (kellyCheck) kellyCheck.checked = j.kelly_enabled || false;
-                
+
                 // AUTO-PILOT
                 const isAutoPilot = j.auto_pilot || false;
                 if (autoPilotCheck) autoPilotCheck.checked = isAutoPilot;
@@ -2692,6 +2692,27 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
                     if (slInput) { slInput.disabled = true; slInput.style.opacity = '0.5'; }
                     if (tpInput) { tpInput.disabled = true; tpInput.style.opacity = '0.5'; }
                     if (autoPilotHint) autoPilotHint.style.display = 'inline';
+                }
+
+                // F-01: persistência do cockpit Live — campos que não eram carregados no boot
+                const capitalInput = document.getElementById('liveInitialCapitalInput');
+                const riskInput = document.getElementById('liveRiskPctInput');
+                const leverageInput = document.getElementById('liveLeverageInput');
+                const maxPosInput = document.getElementById('liveMaxPosInput');
+                const compoundBtn = document.getElementById('liveCompoundBtn');
+
+                if (capitalInput && j.usdt_amount != null) capitalInput.value = j.usdt_amount.toFixed(2);
+                if (riskInput && j.risk_pct != null) riskInput.value = j.risk_pct.toFixed(1);
+                if (leverageInput && j.leverage != null) leverageInput.value = j.leverage;
+                if (maxPosInput && j.max_open_positions != null) maxPosInput.value = j.max_open_positions;
+
+                // Compound: restaura estado visual do botão
+                if (compoundBtn && j.compound_enabled != null) {
+                    const on = j.compound_enabled;
+                    compoundBtn.textContent = `Compound: ${on ? 'ON' : 'OFF'}`;
+                    compoundBtn.style.background = on ? '#1f3d2a' : '#3d1f1f';
+                    compoundBtn.style.border = `1px solid ${on ? 'var(--green)' : 'var(--red)'}`;
+                    compoundBtn.style.color = on ? 'var(--green)' : 'var(--red)';
                 }
             }
         } catch (e) { console.error('Erro ao carregar configurações avançadas LIVE:', e); }
@@ -2958,6 +2979,12 @@ def create_app(
                 "signal_mode": str(signal_p.get("signal_mode", "conservative")),
                 "trailing_enabled": bool(exec_p.get("sl_trailing_swing_low", True)),
                 "kelly_enabled": bool(exec_p.get("kelly_enabled", False)),
+                # F-01: campos de persistência do cockpit Live
+                "usdt_amount": float(live_cfg.get("usdt_amount", 20.0)),
+                "risk_pct": float(live_cfg.get("risk_pct_per_trade", 0.03)) * 100,
+                "leverage": int(live_cfg.get("leverage", 8)),
+                "max_open_positions": int(live_cfg.get("max_open_positions", 3)),
+                "compound_enabled": bool(live_cfg.get("compound_enabled", False)),
             }
         except Exception as e:
             logger.exception("Erro ao buscar configurações avançadas LIVE: %s", e)
