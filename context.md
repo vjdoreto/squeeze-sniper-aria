@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.3 · 04/06/2026
+- Versão atual: v3.4 · 04/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -699,7 +699,27 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 - [x] **HFT Penalty floor** — ✅ implementado $20 com guard `min($20, capital × 10%)` em `paper_tracker.py` L734
 - [x] ~~**Throttle encolhe universo**~~ — ⚠️ estado desatualizado · throttle é resetado automaticamente a cada sessão
 
-### 🟡 Alta prioridade — Sprint 3
+### 🔴 Sprint 3 — Em andamento (04/06/2026)
+
+**Tasks do Brain — estado atual:**
+
+| Task | Descrição | Status |
+|------|-----------|--------|
+| F-01 | Persistência cockpit Live | 🟡 Parcial — configurações resolvidas · saldo/margem em tempo real pendente (próxima sessão) |
+| F-02 | Toggle Paper/Live colapso automático | ⏳ Aguarda restart pós 20+ trades |
+| F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` · `src/sniper.py` · commit `88104c3` |
+| F-04 | Squeezometer zerado relatórios horários | ⏳ Aguarda restart pós 20+ trades |
+| F-05 | PaperAnalyzer threshold 30+ trades | ⏳ Aguarda restart pós 20+ trades |
+| F-06 | Gráficos placeholder "aguardando trades" | ⏳ Aguarda restart pós 20+ trades |
+
+**Estado congelado — min_trades_1m:**
+- `preferences.json` → `min_trades_1m: 150` (escrito pelo PaperAnalyzer com 10 trades — amostra insuficiente)
+- Bot em memória → valor anterior ainda ativo (sem toggle, sem restart)
+- Restart planejado: após Brain analisar 20+ trades e definir valor correto com evidência
+
+**Coleta em andamento:** 10 trades fechados · aguardando 20+ para análise completa e restart limpo
+
+### 🟡 Alta prioridade — Sprint 3 (restante)
 - [ ] **Correlation Guard expandido** — cobrir 100+ símbolos além dos 15 atuais
 - [ ] **Margem de segurança Sniper** — reinstaurar checagem `balance < usdt_amount * 1.1` quando > $100
 - [ ] **MAE gate dinâmico** — saída automática se MAE > 2% nos primeiros 60s (WR sobe para 78%)
@@ -731,4 +751,4 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 04/06/2026*
-*Versão: 3.3 · Última atualização: 04/06/2026*
+*Versão: 3.4 · Última atualização: 04/06/2026*
