@@ -790,16 +790,7 @@ class PaperTradeTracker:
                 "fee_usdt": opening_fee, # SPRINT 11.21
                 "initial_quantity": quantity,
                 "current_quantity": quantity,
-                "signal": {
-                    "score": signal.get("score"), # SPRINT 6.44: Garante score no log
-                    "exp": signal.get("exp"),
-                    "oi_trend": signal.get("oi_trend"),
-                    "lsr_trend": signal.get("lsr_trend"),
-                    "trades_1m": signal.get("trades_1m"),
-                    "exp_btc": signal.get("exp_btc"),
-                    "kelly_risk_applied": risk_pct,
-                    "lsr_change_pct": signal.get("lsr_change_pct"),
-                },
+                "signal": {**signal, "kelly_risk_applied": risk_pct},
                 "metrics": entry_metrics,
             },
             "targets": {
@@ -1082,8 +1073,8 @@ class PaperTradeTracker:
                     trade["entry"]["usdt_margin"] = trade["entry"]["notional_usdt"] / self.config.leverage
                     
                     trade["breakeven_partial_closed"] = True
-                    logger.info("🎯 [PAPER] Partial Breakeven executado: %s (-%.0f%%)", 
-                                self.config.partial_tp_breakeven_pct * 100, symbol, pnl_from_partial)
+                    logger.info("🎯 [PAPER] Partial Breakeven executado: %s (-%.0f%% posicao | PnL parcial: %.4f)",
+                                symbol, self.config.partial_tp_breakeven_pct * 100, pnl_from_partial)
 
                 trade["targets"]["sl_price"] = breakeven_sl
                 current_sl = breakeven_sl

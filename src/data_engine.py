@@ -379,29 +379,42 @@ class DataEngine:
             await asyncio.sleep(5.0)
 
     async def _listen_liquidations(self):
-        """Monitora stream forceOrder para detectar liquidações de short."""
+        """Monitora stream !forceOrder@arr para detectar liquidações de short."""
         assert self.bsm is not None
         assert self.store is not None
         bsm = self.bsm
         store = self.store
-        
-        # P0-2: Reduzir para 1 conexão única
-        streams = [f"{s.lower()}@forceOrder" for s in self.symbols]
-        
-        logger.info("Liquidation WebSocket: Iniciando monitoramento de %d símbolos", len(self.symbols))
-        
+
+        # Stream global único — entrega todas as liquidações do mercado.
+        # Anterior: centenas de streams symbol@forceOrder via multiplex falhavam silenciosamente.
+        streams = ["!forceOrder@arr"]
+
+        logger.info("Liquidation WebSocket: Iniciando stream global !forceOrder@arr")
+
         attempt = 0
         while self.running:
             try:
                 async with bsm.multiplex_socket(streams) as stream:
                     attempt = 0
-                    logger.info("Liquidation WebSocket: Conectado")
+                    logger.info("Liquidation WebSocket: Conectado (!forceOrder@arr)")
                     while self.running:
                         msg = await stream.recv()
-                        if not msg or "data" not in msg: continue
-                        d = msg["data"]["o"]
-                        store.update_liquidation(d["s"], d["S"], float(d["p"])*float(d["q"]))
-                        logger.debug("Liquidation: %s %s %s", d["s"], d["S"], float(d["p"])*float(d["q"]))
+                        if not msg or "data" not in msg:
+                            continue
+                        payload = msg["data"]
+                        # !forceOrder@arr entrega lista; fallback para dict (symbol@forceOrder legado)
+                        events = payload if isinstance(payload, list) else [payload]
+                        for event in events:
+                            o = event.get("o") or event
+                            sym = o.get("s")
+                            side = o.get("S")
+                            try:
+                                notional = float(o["p"]) * float(o["q"])
+                            except (KeyError, ValueError, TypeError):
+                                continue
+                            if sym and side:
+                                store.update_liquidation(sym, side, notional)
+                                logger.debug("Liquidation: %s %s %.2f", sym, side, notional)
             except Exception as e:
                 attempt += 1
                 logger.error("Liquidation WebSocket: Erro (tentativa %d): %s", attempt, e)

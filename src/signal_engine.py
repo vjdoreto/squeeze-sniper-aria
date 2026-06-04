@@ -80,6 +80,7 @@ class SqueezeIgnition:
         fit_score_min: float = 20.0,
         signal_mode: str = "conservative", # SPRINT 12: conservative | aggressive
         trade_throttle_seconds: int = 60, # Cooldown mínimo entre trades do mesmo símbolo
+        min_cvd_change_pct_no_cascade: float = 1.0, # Gate CVD quando não há cascade (anti squeeze_failed)
     ):
         self.min_exp = min_exp
         self.min_oi_trend = min_oi_trend
@@ -92,7 +93,7 @@ class SqueezeIgnition:
         
         # Throttler para prevenir race condition
         self._trade_throttler = SymbolTradeThrottler(min_interval_seconds=trade_throttle_seconds)
-        
+
         # SPRINT 12: Ajusta thresholds baseado no signal_mode
         self.refresh_thresholds(
             signal_mode=signal_mode,
@@ -106,13 +107,14 @@ class SqueezeIgnition:
             max_lsr_change_pct=max_lsr_change_pct,
             min_oi_trend=min_oi_trend,
             blacklist=blacklist,
-            fit_score_min=fit_score_min
+            fit_score_min=fit_score_min,
+            min_cvd_change_pct_no_cascade=min_cvd_change_pct_no_cascade,
         )
         # CVD streak: contador de ciclos de CVD positivo consecutivos por símbolo
         self._cvd_streak: Dict[str, int] = {}
         self._last_cvd_sign: Dict[str, float] = {}
 
-    def refresh_thresholds(self, signal_mode: str, min_cvd_change_pct: float, cvd_streak_min: int, max_bid_ask_spread: float, min_trades_1m: int, min_vol_adaptive_ratio: float, min_oi_accel: float, min_oi_change_pct: float, max_lsr_change_pct: float, min_oi_trend: float, blacklist: Optional[List[str]] = None, fit_score_min: float = 20.0) -> None:
+    def refresh_thresholds(self, signal_mode: str, min_cvd_change_pct: float, cvd_streak_min: int, max_bid_ask_spread: float, min_trades_1m: int, min_vol_adaptive_ratio: float, min_oi_accel: float, min_oi_change_pct: float, max_lsr_change_pct: float, min_oi_trend: float, blacklist: Optional[List[str]] = None, fit_score_min: float = 20.0, min_cvd_change_pct_no_cascade: float = 1.0) -> None:
         """SPRINT 12.85: Atualiza thresholds sem resetar a memória de sinais/streaks."""
         self.signal_mode = signal_mode.lower()
         if self.signal_mode == "aggressive":
@@ -148,6 +150,7 @@ class SqueezeIgnition:
 
         # Filtros de % de crescimento
         self.min_cvd_change_pct = min_cvd_change_pct
+        self.min_cvd_change_pct_no_cascade = min_cvd_change_pct_no_cascade
         self.cvd_streak_min = cvd_streak_min
         self.max_bid_ask_spread = max_bid_ask_spread
         self.min_trades_1m = min_trades_1m
@@ -157,7 +160,7 @@ class SqueezeIgnition:
         self.blacklist = set(blacklist or [])
 
         # DNA: gate do fit score (vem de preferences, não de .env).
-        self.min_fit_score: float = float(fit_score_min)
+        self.min_fit_score: float = fit_score_min
 
     def _maybe_log_refusal(
         self,
@@ -238,7 +241,7 @@ class SqueezeIgnition:
         trading_mode: str = "live",
         state: Any = None,
     ) -> Optional[Dict]:
-        trading_mode = str(trading_mode).strip().lower()
+        trading_mode = trading_mode.strip().lower()
         d = data.get(symbol, {})
         if not d.get("price"):
             return None
@@ -575,6 +578,18 @@ class SqueezeIgnition:
         # Se o preço subiu 3%+ em 15m, é exaustão próxima
         if pc_15m > 3.0 and not liq_cascade:
             self._maybe_log_refusal(symbol, "exaustao_15m", {"pc_15m": pc_15m, "limit": 3.0})
+            return None
+
+        # Gate anti squeeze_failed: CVD deve confirmar agressão real antes da entrada.
+        # Sem liq_cascade, o bot entrava no setup (OI+LSR) antes do CVD explodir — padrão
+        # idêntico ao max_hold da sessão anterior. Com cascade o gate é bypassado pois
+        # a liquidação em si é a confirmação da agressão.
+        if not liq_cascade and cvd_change_pct < self.min_cvd_change_pct_no_cascade:
+            self._maybe_log_refusal(
+                symbol,
+                "cvd_not_confirming",
+                {"cvd_change_pct": cvd_change_pct, "min_cvd_change_pct_no_cascade": self.min_cvd_change_pct_no_cascade},
+            )
             return None
 
         # --- Filtros P1: % de crescimento (delta percentual) ---

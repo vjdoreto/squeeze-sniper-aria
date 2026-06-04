@@ -1482,6 +1482,7 @@ def _apply_runtime_mode(
         min_oi_trend=float(signal_node.get("min_oi_trend", cfg.min_oi_trend)),
         blacklist=list(prefs.get("blacklist", [])),
         fit_score_min=float(prefs.get("fit_score_min", cfg.fit_score_min)),
+        min_cvd_change_pct_no_cascade=float(signal_node.get("min_cvd_change_pct_no_cascade", 1.0)),
     )
 
     if persist:
@@ -1745,6 +1746,7 @@ async def main():
         fit_score_min=cfg.fit_score_min,
         blacklist=cfg.blacklist,
         signal_mode=cfg.signal_mode,
+        min_cvd_change_pct_no_cascade=1.0,
     )
     journal = SignalJournal(log_cfg.get("signals_jsonl", "logs/signals.jsonl"))
     
