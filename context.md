@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.4 · 04/06/2026
+- Versão atual: v3.5 · 04/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -709,7 +709,7 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 | F-02 | Toggle Paper/Live colapso automático | ⏳ Aguarda restart pós 20+ trades |
 | F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` · `src/sniper.py` · commit `88104c3` |
 | F-04 | Squeezometer zerado relatórios horários | ⏳ Aguarda restart pós 20+ trades |
-| F-05 | PaperAnalyzer threshold 30+ trades | ⏳ Aguarda restart pós 20+ trades |
+| F-05 | PaperAnalyzer threshold 30+ trades | ✅ `min_trades_for_calibration=30` · `src/paper_analyzer.py` · commit `96fb14e` |
 | F-06 | Gráficos placeholder "aguardando trades" | ⏳ Aguarda restart pós 20+ trades |
 
 **Estado congelado — min_trades_1m:**
@@ -751,4 +751,4 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 04/06/2026*
-*Versão: 3.4 · Última atualização: 04/06/2026*
+*Versão: 3.5 · Última atualização: 04/06/2026*
