@@ -53,7 +53,7 @@
         },
         "execution": {
             "sl_pct": 0.025,
-            "tp_pct": 0.05,
+            "tp_pct": 0.04,
             "sl_trailing_swing_low": true,
             "swing_low_tf": "5m",
             "kelly_enabled": true,
