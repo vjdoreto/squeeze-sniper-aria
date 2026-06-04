@@ -33,6 +33,7 @@
         "max_open_positions": 20,
         "slippage_pct": 0.1,
         "closed_jsonl": "logs/paper_closed.jsonl",
+        "min_trades_for_calibration": 30,
         "signal": {
             "min_exp": 0.025,
             "min_oi_trend": 0.015,

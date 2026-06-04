@@ -20,8 +20,13 @@ class AnalysisResult:
 
 
 class PaperAnalyzer:
-    def __init__(self, paper_closed_jsonl_path: Path = Path("logs/paper_closed.jsonl")):
+    def __init__(
+        self,
+        paper_closed_jsonl_path: Path = Path("logs/paper_closed.jsonl"),
+        min_trades_for_calibration: int = 30,
+    ):
         self.paper_closed_jsonl_path = paper_closed_jsonl_path
+        self.min_trades_for_calibration = min_trades_for_calibration
         self.last_analysis_trades = 0
 
     def load_trades(self) -> List[Dict]:
@@ -211,6 +216,16 @@ class PaperAnalyzer:
 
         self.last_analysis_trades = len(closed_trades)
         result = self.analyze_trades(closed_trades)
+
+        # Gate F-05: só aplica calibração com amostra suficiente
+        if result.total_trades < self.min_trades_for_calibration:
+            result.parameter_changes = {}
+            logger.info(
+                "📊 [ANALYZER] Análise gerada mas calibração bloqueada — %d trades (mínimo: %d). "
+                "Coletando dados sem alterar preferences.json.",
+                result.total_trades,
+                self.min_trades_for_calibration,
+            )
 
         # Loga o resultado
         logger.info("=" * 60)

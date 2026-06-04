@@ -2320,7 +2320,8 @@ async def main():
                 engine=engine,
             )
 
-    paper_analyzer = PaperAnalyzer(paper_tracker.config.closed_jsonl) if (paper_tracker is not None and paper_tracker.config is not None) else None
+    _min_trades_cal = int((prefs.get("paper") or {}).get("min_trades_for_calibration", 30))
+    paper_analyzer = PaperAnalyzer(paper_tracker.config.closed_jsonl, min_trades_for_calibration=_min_trades_cal) if (paper_tracker is not None and paper_tracker.config is not None) else None
 
     # SPRINT 12.155: Instancia o Gerenciador de Risco (DNA Sniper)
     risk_manager = DrawdownManager(max_dd_pct=15.0)
