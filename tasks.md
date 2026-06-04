@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 04/06/2026 · v1.2_
+_Atualizado: 04/06/2026 · v1.3_
 
 ---
 
@@ -35,13 +35,37 @@ _Atualizado: 04/06/2026 · v1.2_
 - [x] **Signal dict completo em paper_closed** — 22 campos persistidos (era 8) · `src/paper_tracker.py` L793
 - [x] **Manifesto v2.0** — arquitetura Brain×Forge + protocolo GitHub · `docs/Engenheiro e DNA do Sniper v2.0.md`
 
-## 🔴 Sprint 3 — Proteção de Capital (próximo)
+## 🔴 Sprint 3 — Em andamento
+
+### Proteção de Capital
 
 - [ ] **Correlation Guard expandido** — cobrir 100+ símbolos além dos ~40 atuais · `src/risk_manager.py` CORR_GROUPS
 - [ ] **Margem de segurança Sniper** — reinstaurar `balance < usdt_amount × 1.1` quando > $100 · `src/sniper.py`
 - [ ] **Kelly floor** — verificar guard `min($20, capital×10%)` para casos kelly=0.001–0.017 bypassando o floor · `src/paper_tracker.py`
 - [ ] **MAE gate 60s** _(condicional)_ — implementar só se 20+ trades confirmarem WR 78% com MAE < 2% nos primeiros 60s
 - [ ] **Filtro de divergência temporal** — standby quando EXP_BTC:1m < 0 mas 15m/1h forte · `src/signal_engine.py`
+
+### F-01 — Persistência do cockpit Live (bugs UX críticos) · Brain · 04/06/2026
+
+- [ ] **Capital/Risco%/Alav/MaxPos/Compound não persistem** — voltam ao padrão a cada restart. Verificar se `loadLiveAdvancedConfig` lê `preferences.json["live"]` no boot · `src/web_dashboard.py`
+- [ ] **Saldo e Margem param de atualizar** — carregam na primeira conexão mas não atualizam em tempo real. Verificar se snapshot do LiveTracker está nos broadcasts do WebSocket após boot · `src/web_dashboard.py` + `main.py`
+- [ ] **Compound não persiste** — verificar se toggle salva em `preferences.json` ou só em memória · `src/web_dashboard.py`
+
+> Critério: Capital/Risco%/Alav/MaxPos carregam do preferences.json ao reiniciar. Saldo atualiza em tempo real. Compound persiste entre sessões.
+
+### F-02 — Toggle Paper/Live com colapso automático de cockpit · Brain · 04/06/2026
+
+- [ ] **Cockpit oposto recolhe ao trocar de modo** — Paper ativo: cockpit Live recolhido. Live ativo: cockpit Paper recolhido. Botão PAPER/LIVE já existe — adicionar comportamento de colapso do painel oposto · `src/web_dashboard.py`
+- [ ] Verificar se o botão já dispara evento de estado no frontend e se os cockpits têm IDs/classes separados para toggle CSS
+
+> Critério: Alternar Paper/Live recolhe o painel oposto sem perder dados.
+
+### F-03 — Verificar bracket tiers da Binance no sizing · Brain · 04/06/2026
+
+- [ ] **Bot consulta `GET /fapi/v1/leverageBracket` antes do sizing?** — Se não, sizing pode calcular margem acima do notional máximo permitido para aquele símbolo/alavancagem · `src/sniper.py` ou `src/paper_tracker.py`
+- [ ] **Verificar `kelly_fraction` nos logs** — se chegando abaixo de 2% consistentemente, o problema é Kelly subestimando, não o floor $20. Se confirmado, Brain precisa ver os dados antes de qualquer ajuste
+
+> Critério: Bot valida bracket tier antes de abrir posição. Se kelly_fraction < 2% consistente → pauta para o Brain antes de codar.
 
 ---
 
