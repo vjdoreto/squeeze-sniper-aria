@@ -1445,12 +1445,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
       const macroHtml = [];
       const m = data.macro || {};
 
-      // SPRINT 12: Logo do Sniper na barra macro
-      macroHtml.push(`
-          <div style="display: flex; align-items: center; min-width: 80px;">
-              <img src="/logo.png" alt="SqueezeSniper" style="height: 75px; width: auto; object-fit: contain;" />
-          </div>
-      `);
+      // Logo removida da barra macro (esteticamente desnecessária)
 
       // SPRINT 11.29: Renderização da lista de ativos fortes (Req 2 Doreto)
       if (m.strong_than_btc && m.strong_than_btc.length > 0) {
