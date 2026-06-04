@@ -8,10 +8,10 @@ import shutil
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import Any, Dict, List, Optional
 
 from src.metrics_snapshot import capture_metrics
 from src.sizing_utils import calculate_position_size, calculate_kelly_risk, calculate_dynamic_risk_with_hft
@@ -539,7 +539,7 @@ class PaperTradeTracker:
 
         # --- Sprint 9.2: Proteção global por limite de posições abertas ---
         # Lógica deve ocorrer antes de qualquer validação específica por símbolo.
-        if len(self._open) >= int(self.config.max_open_positions):
+        if len(self._open) >= self.config.max_open_positions:
             # Se já existe posição neste símbolo, não trata como “nova abertura”.
             if self.has_open(symbol):
                 logger.debug("Paper: já existe posição aberta em %s", symbol)
@@ -548,7 +548,7 @@ class PaperTradeTracker:
             logger.info(
                 "🛡️ Max posições atingido (%d/%d) — %s ignorado por proteção global",
                 len(self._open),
-                int(self.config.max_open_positions),
+                self.config.max_open_positions,
                 symbol,
             )
             self._append_debug(
@@ -557,7 +557,7 @@ class PaperTradeTracker:
                     "event": "paper_open_ignored_max_open_positions",
                     "symbol": symbol,
                     "open_count": len(self._open),
-                    "max_open_positions": int(self.config.max_open_positions),
+                    "max_open_positions": self.config.max_open_positions,
                 }
             )
             return None
@@ -725,9 +725,12 @@ class PaperTradeTracker:
             else float("inf")
         )
 
-        # Floor mínimo $10: trades menores que isso são ruído e distorcem estatísticas.
-        # HFT penalty + Kelly com poucos dados comprimiam para $1-3 — inútil e enganoso.
-        MIN_TRADE_MARGIN = 10.0
+        # Floor mínimo $20: alinhado com o CALIBRATION_MARGIN_CAP — durante calibração,
+        # todos os trades usam $20 fixo (floor = cap), eliminando variância de tamanho
+        # que contamina o Kelly. Abaixo de $20 as fees consomem retornos mínimos e
+        # a posição não tem significância estatística.
+        # Guarda de segurança: nunca mais que 10% do capital disponível como floor.
+        MIN_TRADE_MARGIN = min(CALIBRATION_MARGIN_CAP, self.current_capital * 0.10)
         sizing_result = calculate_position_size(
             available_capital=min(self.current_capital, margin_cap * self.config.leverage),
             risk_pct=risk_pct,
@@ -1217,7 +1220,6 @@ class PaperTradeTracker:
 
         symbol = trade["symbol"]
         entry_price = trade["entry"]["price"]
-        remaining_notional = trade["entry"]["notional_usdt"]
         
         # --- FIX SPRINT 10: PnL Realizado Final ---
         current_qty = trade["entry"]["current_quantity"]
@@ -1376,14 +1378,14 @@ class PaperTradeTracker:
         Atualiza alavancagem (paper).
         Segurança: rejeita se houver trades paper abertas, pois muda margin/SL/TP.
         """
-        if int(value) < 1:
+        if value < 1:
             raise ValueError("leverage must be >= 1")
 
         # Se houver trades abertas, não mexe
         if self._open:
             raise ValueError("Cannot change leverage while paper trades are open")
 
-        self.config.leverage = int(value)
+        self.config.leverage = value
         self._persist()
         logger.info("Alavancagem paper atualizada para %sx", self.config.leverage)
 

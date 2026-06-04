@@ -695,9 +695,10 @@ class MetricStore:
             # --- DNA Squeeze: Liquidation Cascade Detector ---
             liq_curr = d_snap.get("liq_short_1m", 0.0) or 0.0
             liq_prev = d_snap.get("liq_short_prev", 0.0) or 0.0
-            # Se o volume acumulado de liquidações dobrou (1.8x) nos últimos 10s
-            # e é um valor relevante (> $5k), marcamos como cascata.
-            d_snap["liq_cascade"] = liq_curr > (liq_prev * 1.8) and liq_curr > 5000
+            # Sprint 1.5 Brain×Forge: threshold reduzido de $5k para $500.
+            # $5k filtrava 100% dos eventos — altcoins menores nunca atingiam.
+            # $500 discrimina ruído de liquidação real sem ser sensível demais.
+            d_snap["liq_cascade"] = liq_curr > (liq_prev * 1.8) and liq_curr > 500
             d_snap["liq_short_prev"] = liq_curr
 
             # Mantém até ~1 hora de snapshots (se gravado a cada 10s = 360 itens)
