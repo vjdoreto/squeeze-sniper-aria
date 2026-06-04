@@ -37,6 +37,16 @@ _Atualizado: 03/06/2026 · v1.1_
 
 ---
 
+## 🟡 Dashboard & UX — Bugs Identificados (Sprint 2)
+
+- [ ] **Live config não persiste após restart** — Capital, Risco%, Alav., Max Pos do painel LIVE voltam ao padrão a cada reinício. Deve carregar do `preferences.json["live"]` no boot do dashboard. Arquivo: `src/web_dashboard.py` (loadLiveAdvancedConfig ou equivalente)
+
+- [ ] **Live data não atualiza dinamicamente** — Saldo e Margem carregam na primeira conexão mas param de atualizar. Verificar se o snapshot do LiveTracker está sendo incluído nos broadcasts do WebSocket após o boot. Arquivo: `src/web_dashboard.py` + `main.py` (ws send_loop)
+
+- [ ] **Charts do dashboard sem expressão** — Equity, Drawdown, Kelly e Win Rate ficam vazios até ter trades fechados. Considerar placeholder visual com mensagem de contexto (ex: "aguardando primeiros trades") em vez de canvas em branco.
+
+---
+
 ## 🔵 Infraestrutura — Warm Cache de Klines (Sprint 2 ou 3)
 
 - [ ] **Persistir buffer de klines em disco** — salvar `logs/kline_cache/{symbol}_5m.json` no shutdown e recarregar no boot. Elimina o warmup de 70min para RSI/EMA após restart ou hard reset. Cache com TTL de 24h — se mais antigo, descarta e baixa do zero. Formato: JSON ou SQLite. Banco completo é overkill para esse volume.
