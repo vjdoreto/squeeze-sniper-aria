@@ -389,6 +389,20 @@ class Sniper:
                 notional_target = notional_cap
                 usdt_margin_target = notional_target / float(self.leverage)
 
+            # Log de sizing completo — aparece em todo trade para diagnóstico do Brain
+            logger.info(
+                "📐 [SIZING] %s | capital=%.2f | kelly_fraction=%.4f | risk_multiplier=%.2f | "
+                "applied_risk=%.4f | margin_target=%.2f | notional_target=%.2f | notional_cap=%s",
+                symbol,
+                effective_capital,
+                risk_pct,
+                self.risk_multiplier,
+                applied_risk,
+                usdt_margin_target,
+                notional_target,
+                f"{notional_cap:.0f}" if notional_cap is not None else "N/A",
+            )
+
             # Check existing position
             existing = await self._check_position(symbol)
             if existing > 0:
