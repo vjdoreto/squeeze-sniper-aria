@@ -374,6 +374,9 @@ async def trading_loop(
                 # Atualiza Squeezometer (média top 10)
                 all_scores.sort(reverse=True)
                 state.market_squeeze_level = sum(all_scores[:10]) / 10 if all_scores else 0
+                # F-04: rastreia pico horário para o relatório horário não capturar valor zerado
+                if state.market_squeeze_level > state.squeeze_peak_1h:
+                    state.squeeze_peak_1h = state.market_squeeze_level
                 state.bind_market(engine.data, len(engine.symbols))
 
                 rows = build_rows(market_view, min_exp=-0.01, min_oi_trend=-0.01, max_lsr_trend=10.0, limit=100)
@@ -756,6 +759,9 @@ async def paper_hourly_report_loop(
             if state.trading_mode != "paper":
                 continue
             snap = tracker.snapshot()
+            # F-04: usa pico da última hora em vez do valor instantâneo (evita capturar reset)
+            snap["market_squeeze_level"] = state.squeeze_peak_1h
+            state.squeeze_peak_1h = 0.0  # reset após enviar
             await telegram.send_hourly_report(snap)
         except asyncio.CancelledError:
             return
@@ -811,7 +817,9 @@ async def live_hourly_report_loop(
                 continue
 
             snap = tracker.get_snapshot()
-            snap["market_squeeze_level"] = state.market_squeeze_level
+            # F-04: usa pico da última hora em vez do valor instantâneo (evita capturar reset)
+            snap["market_squeeze_level"] = state.squeeze_peak_1h
+            state.squeeze_peak_1h = 0.0  # reset após enviar
             snap["uptime_sec"] = int(time.time() - state.boot_started_at)
 
             await telegram.send_hourly_report(snap)

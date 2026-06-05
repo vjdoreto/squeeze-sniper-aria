@@ -26,6 +26,7 @@ class BotState:
         self.market_data: Dict[str, Dict] = {}
         self.symbol_count: int = 0
         self.market_squeeze_level: float = 0.0
+        self.squeeze_peak_1h: float = 0.0  # F-04: pico do Squeezometer na última hora
         self.low_squeeze_since: Optional[float] = None
         self.market_paused: bool = False
 

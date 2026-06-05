@@ -547,7 +547,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
       </section>
     </div>
 
-      <section class="card wide">
+      <section class="card wide" id="paper-cockpit">
         <h2 style="display: flex; align-items: center; gap: 16px;">
           📋 Paper LONG — assertividade
           <div style="margin-left: auto; display: flex; gap: 12px; align-items: center;">
@@ -602,7 +602,7 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
 
       </section>
 
-      <section class="card wide">
+      <section class="card wide" id="live-cockpit">
         <h2 style="display: flex; align-items: center; gap: 16px;">
           📋 LIVE LONG — assertividade
           <div style="margin-left: auto; display: flex; gap: 12px; align-items: center;">
@@ -900,6 +900,10 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
     let drawdownChart = null;
     function updateDrawdownChart(history) {
       if (!history || history.length < 2) {
+        const container = document.getElementById('drawdown-container');
+        if (container && !container.innerHTML.includes('Aguardando')) {
+          container.innerHTML = '<div style="color:#555;text-align:center;padding-top:60px;font-size:11px">Drawdown — aguardando primeiros trades para gerar curva</div>';
+        }
         return;
       }
       if (!document.getElementById('drawdownChart')) {
@@ -1088,6 +1092,13 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
       const labels = Object.keys(data);
       if (labels.length === 0) {
         if (winRateChart) { winRateChart.destroy(); winRateChart = null; }
+        const container = document.getElementById('winrate-container');
+        if (container && !container.querySelector('canvas') && !container.innerHTML.includes('Aguardando')) {
+          const placeholder = document.createElement('div');
+          placeholder.style.cssText = 'color:#555;text-align:center;padding-top:60px;font-size:11px';
+          placeholder.textContent = 'Win Rate por Ativo — disponível após 10+ trades';
+          container.appendChild(placeholder);
+        }
         return;
       }
       
@@ -1413,6 +1424,19 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
       const tradingMode = data.trading_mode || 'paper';
       mode.textContent = tradingMode.toUpperCase();
       mode.className = `badge ${tradingMode}`;
+
+      // F-02: colapsa automaticamente o cockpit oposto ao modo ativo
+      const paperCockpit = document.getElementById('paper-cockpit');
+      const liveCockpit  = document.getElementById('live-cockpit');
+      if (paperCockpit && liveCockpit) {
+        if (tradingMode === 'live') {
+          paperCockpit.style.display = 'none';
+          liveCockpit.style.display  = '';
+        } else {
+          liveCockpit.style.display  = 'none';
+          paperCockpit.style.display = '';
+        }
+      }
       const st = data.stats || {};
 
       // SPRINT 6.37: Filtro Visual de Peneira (Score >= 0)
