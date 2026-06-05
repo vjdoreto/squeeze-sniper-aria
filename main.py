@@ -762,6 +762,12 @@ async def paper_hourly_report_loop(
             # F-04: usa pico da última hora em vez do valor instantâneo (evita capturar reset)
             snap["market_squeeze_level"] = state.squeeze_peak_1h
             state.squeeze_peak_1h = 0.0  # reset após enviar
+            # Trades fechados na última hora para o relatório horário
+            cutoff = time.time() - interval_seconds
+            snap["trades_1h"] = [
+                t for t in tracker._closed
+                if (t.get("exit") or {}).get("time", 0) >= cutoff
+            ]
             await telegram.send_hourly_report(snap)
         except asyncio.CancelledError:
             return

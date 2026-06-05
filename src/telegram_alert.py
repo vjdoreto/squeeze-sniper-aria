@@ -153,6 +153,24 @@ class TelegramAlert:
             f"🔄 <b>Trades:</b> {stats.get('wins')}W | {stats.get('losses')}L\n"
             f"🌡️ <b>Squeezometer:</b> {snap.get('market_squeeze_level', 0):.0f}/100"
         )
+        trades_1h = snap.get("trades_1h") or []
+        if trades_1h:
+            text += "\n━━━━━━━━━━━━━━━━━━━━\n📋 <b>Trades na hora:</b>"
+            for t in trades_1h:
+                entry = t.get("entry", {})
+                exit_ = t.get("exit", {})
+                symbol = t.get("symbol", "?").replace("USDT", "")
+                p_in  = entry.get("price", 0)
+                p_out = exit_.get("price", 0)
+                pnl   = exit_.get("pnl_pct", 0) or 0
+                mark  = "✅" if pnl >= 0 else "❌"
+                # Formata preços sem zeros desnecessários
+                def _fmt(p: float) -> str:
+                    if p == 0:
+                        return "—"
+                    s = f"{p:.8f}".rstrip("0").rstrip(".")
+                    return s
+                text += f"\n{mark} <code>{symbol:<8} {_fmt(p_in)}→{_fmt(p_out)}  {pnl:+.2f}%</code>"
         await self._send(text)
 
     async def send_daily_report(self, snap: Dict[str, Any]) -> None:
