@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.5 · 04/06/2026
+- Versão atual: v3.6 · 04/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -701,23 +701,39 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 ### 🔴 Sprint 3 — Em andamento (04/06/2026)
 
-**Tasks do Brain — estado atual:**
+**Tasks do Brain — estado final da sessão 04/06/2026:**
 
-| Task | Descrição | Status |
-|------|-----------|--------|
-| F-01 | Persistência cockpit Live | 🟡 Parcial — configurações resolvidas · saldo/margem em tempo real pendente (próxima sessão) |
-| F-02 | Toggle Paper/Live colapso automático | ⏳ Aguarda restart pós 20+ trades |
-| F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` · `src/sniper.py` · commit `88104c3` |
-| F-04 | Squeezometer zerado relatórios horários | ⏳ Aguarda restart pós 20+ trades |
-| F-05 | PaperAnalyzer threshold 30+ trades | ✅ `min_trades_for_calibration=30` · `src/paper_analyzer.py` · commit `96fb14e` |
-| F-06 | Gráficos placeholder "aguardando trades" | ⏳ Aguarda restart pós 20+ trades |
+| Task | Descrição | Status | Commit |
+|------|-----------|--------|--------|
+| F-01 | Persistência cockpit Live | 🟡 Parcial — configurações resolvidas · saldo/margem em tempo real pendente | `88104c3` |
+| F-02 | Toggle Paper/Live colapso automático | ✅ Cockpit oposto recolhe automaticamente | `51be306` |
+| F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` · `src/sniper.py` | `88104c3` |
+| F-04 | Squeezometer zerado relatórios horários | ✅ `squeeze_peak_1h` — pico da hora em vez de valor instantâneo | `51be306` |
+| F-05 | PaperAnalyzer threshold 30+ trades | ✅ `min_trades_for_calibration=30` · `src/paper_analyzer.py` | `96fb14e` |
+| F-06 | Gráficos placeholder "aguardando trades" | ✅ Drawdown e WinRate com mensagem contextual | `51be306` |
+| F-07 | signal_refusals.jsonl reason: null | ✅ Não era bug — campo correto é `reason_code`, não `reason` | — |
+| F-09 | Sizing incorreto kelly=0.05 → $13 | ✅ Não era bug — `CALIBRATION_MARGIN_CAP=$20` + partial TP 35% | — |
 
-**Estado congelado — min_trades_1m:**
-- `preferences.json` → `min_trades_1m: 150` (escrito pelo PaperAnalyzer com 10 trades — amostra insuficiente)
-- Bot em memória → valor anterior ainda ativo (sem toggle, sem restart)
-- Restart planejado: após Brain analisar 20+ trades e definir valor correto com evidência
+**F-09 diagnóstico — documentar para o Brain:**
+- `kelly=0.05 → $20` (não $50): `CALIBRATION_MARGIN_CAP=20.0` ativo com <50 trades — proteção intencional
+- `$20 → $13`: partial TP (`partial_tp_breakeven_pct=0.35`) fecha 35% no breakeven → $130 notional restante
+- `initial_margin=$20` em TODOS os trades confirmado — sizing está correto
 
-**Coleta em andamento:** 10 trades fechados · aguardando 20+ para análise completa e restart limpo
+**Estado do preferences.json — limpo para o restart:**
+- `paper.signal.min_trades_1m`: **2** (revertido 2× do PaperAnalyzer)
+- `paper.execution.tp_pct`: **0.04** (revertido 2× do PaperAnalyzer)
+- `min_trades_for_calibration`: **30** (gate F-05 ativo no próximo restart)
+- `min_cvd_change_pct_no_cascade`: **1.0** (gate anti squeeze_failed)
+
+**Próximo restart — sequência obrigatória:**
+1. Dashboard → Limpar Paper Tracker
+2. Reiniciar o bot
+3. F-05 entra em memória → PaperAnalyzer para de interferir
+4. Todos os fixes do Sprint 2+3 sobem ativos
+
+**Coleta em andamento:** 9 trades na sessão atual · aguardando 20+ para análise Brain e definição de `min_trades_1m` (candidatos: 50, 80 ou valor validado pelos dados)
+
+**Paridade Paper ↔ Live:** ✅ Completa — Live já tinha signal dict completo (`signal or {}`), mae_guard, squeeze_aborted. Nenhum fix pendente de replicação.
 
 ### 🟡 Alta prioridade — Sprint 3 (restante)
 - [ ] **Correlation Guard expandido** — cobrir 100+ símbolos além dos 15 atuais
@@ -751,4 +767,4 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 04/06/2026*
-*Versão: 3.5 · Última atualização: 04/06/2026*
+*Versão: 3.6 · Última atualização: 04/06/2026*
