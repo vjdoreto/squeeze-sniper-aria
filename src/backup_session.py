@@ -36,6 +36,7 @@ def create_backup():
         Path("logs/paper_closed.jsonl"),
         Path("logs/signals.jsonl"),
         Path("logs/signal_refusals.jsonl"),
+        Path("logs/ghost_signals.jsonl"),
         Path("logs/paper_opportunities.json"),
         Path("logs/paper_opportunities.csv"),
         Path("logs/metric_state.json"),

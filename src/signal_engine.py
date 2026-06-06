@@ -162,6 +162,12 @@ class SqueezeIgnition:
         # DNA: gate do fit score (vem de preferences, não de .env).
         self.min_fit_score: float = fit_score_min
 
+        # F-11: ghost_signals.jsonl — near-misses com score >= 85 e signal dict completo
+        self._ghost_log_path: Path = Path(
+            os.getenv("GHOST_LOG_PATH", "logs/ghost_signals.jsonl")
+        )
+        self._ghost_log_path.parent.mkdir(parents=True, exist_ok=True)
+
     def _maybe_log_refusal(
         self,
         symbol: str,
@@ -204,6 +210,50 @@ class SqueezeIgnition:
                 f.write(json.dumps(payload, ensure_ascii=False) + "\n")
         except Exception:
             # nunca pode quebrar o motor por logging
+            return
+
+    def _write_ghost_signal(
+        self,
+        symbol: str,
+        reason_code: str,
+        d: Dict,
+        score: int,
+    ) -> None:
+        """Persiste near-misses (score >= 85) em ghost_signals.jsonl com signal dict completo."""
+        if score < 85:
+            return
+        try:
+            cvd_change_pct = d.get("cvd_change_pct:5m") or 0.0
+            trades_1m = int(d.get("trades_count_1min") or 0)
+            entry: Dict[str, Any] = {
+                "ts": time.time(),
+                "symbol": symbol,
+                "reason_code": reason_code,
+                "score": score,
+                "price": d.get("price") or 0.0,
+                "exp": d.get("exp:5m") or 0.0,
+                "exp_btc": d.get("exp_btc:5m") or 0.0,
+                "exp_btc_norm_1h": d.get("exp_btc_norm_1h") or 0.0,
+                "oi_trend": d.get("oi_trend:5m") or 0.0,
+                "lsr_trend": d.get("lsr_trend:5m") or 0.0,
+                "oi_accel": d.get("oi_accel:5m") or 0.0,
+                "trades_1m": trades_1m,
+                "cvd_change_pct": cvd_change_pct,
+                "oi_change_pct": d.get("oi_change_pct:5m") or 0.0,
+                "lsr_change_pct": d.get("lsr_change_pct:5m") or 0.0,
+                "cvd_1m": d.get("volume_delta_1min") or 0.0,
+                "liq_short_1m": d.get("liq_short_1m") or 0.0,
+                "liq_cascade": d.get("liq_cascade", False),
+                "rsi_5m": d.get("rsi:5m") or 0.0,
+                "rsi_1h": d.get("rsi:1h") or 50.0,
+                "ema_trend": d.get("ema_trend:5m") or 0,
+                "ob_imbalance": d.get("ob_imbalance") or 1.0,
+                "range_level": d.get("range_level:5m") or 0,
+                "volume_quality": round(cvd_change_pct / (trades_1m + 1), 4),
+            }
+            with self._ghost_log_path.open("a", encoding="utf-8") as f:
+                f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        except Exception:
             return
 
     def get_refusal_stats(self) -> Dict[str, Any]:
@@ -644,6 +694,7 @@ class SqueezeIgnition:
         cvd_streak = self._cvd_streak.get(symbol, 0)
 
         # --- Gate combo Brain EA-Sprint3 (sem bypass por liq_cascade) ---
+        _eff_score = score if score is not None else int(d.get("score") or 0)
         # trades_1m_too_low: atividade insuficiente para confirmar liquidez real
         if trades_1m < 10:
             self._maybe_log_refusal(
@@ -651,6 +702,7 @@ class SqueezeIgnition:
                 "trades_1m_too_low",
                 {"trades_1m": trades_1m, "threshold": 10},
             )
+            self._write_ghost_signal(symbol, "trades_1m_too_low", d, _eff_score)
             return None
         # oi_trend_too_weak: OI não está crescendo o suficiente para squeeze institucional
         if oi_trend is not None and oi_trend < 0.008:
@@ -659,6 +711,7 @@ class SqueezeIgnition:
                 "oi_trend_too_weak",
                 {"oi_trend": oi_trend, "threshold": 0.008},
             )
+            self._write_ghost_signal(symbol, "oi_trend_too_weak", d, _eff_score)
             return None
         # lsr_trend_not_negative: shorts não estão capitulando
         if lsr_trend is not None and lsr_trend > -0.3:
@@ -667,6 +720,7 @@ class SqueezeIgnition:
                 "lsr_trend_not_negative",
                 {"lsr_trend": lsr_trend, "threshold": -0.3},
             )
+            self._write_ghost_signal(symbol, "lsr_trend_not_negative", d, _eff_score)
             return None
 
         # Squeeze Detection logic (Relaxada se for High Quality DNA)
@@ -860,6 +914,7 @@ class SqueezeIgnition:
                     "is_high_quality": is_high_quality,
                 },
             )
+            self._write_ghost_signal(symbol, "final_gate_fail", d, score or int(d.get("score") or 0))
 
             if debug_mode and exp > self.min_exp:
                 logger.debug(
