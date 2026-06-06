@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.6 · 04/06/2026
+- Versão atual: v3.7 · 05/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -699,54 +699,72 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 - [x] **HFT Penalty floor** — ✅ implementado $20 com guard `min($20, capital × 10%)` em `paper_tracker.py` L734
 - [x] ~~**Throttle encolhe universo**~~ — ⚠️ estado desatualizado · throttle é resetado automaticamente a cada sessão
 
-### 🔴 Sprint 3 — Em andamento (04/06/2026)
-
-**Tasks do Brain — estado final da sessão 04/06/2026:**
+### ✅ Sprint 3 — Brain EA-Sprint3 concluído (05/06/2026)
 
 | Task | Descrição | Status | Commit |
 |------|-----------|--------|--------|
-| F-01 | Persistência cockpit Live | 🟡 Parcial — configurações resolvidas · saldo/margem em tempo real pendente | `88104c3` |
-| F-02 | Toggle Paper/Live colapso automático | ✅ Cockpit oposto recolhe automaticamente | `51be306` |
-| F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` · `src/sniper.py` | `88104c3` |
-| F-04 | Squeezometer zerado relatórios horários | ✅ `squeeze_peak_1h` — pico da hora em vez de valor instantâneo | `51be306` |
-| F-05 | PaperAnalyzer threshold 30+ trades | ✅ `min_trades_for_calibration=30` · `src/paper_analyzer.py` | `96fb14e` |
-| F-06 | Gráficos placeholder "aguardando trades" | ✅ Drawdown e WinRate com mensagem contextual | `51be306` |
-| F-07 | signal_refusals.jsonl reason: null | ✅ Não era bug — campo correto é `reason_code`, não `reason` | — |
-| F-09 | Sizing incorreto kelly=0.05 → $13 | ✅ Não era bug — `CALIBRATION_MARGIN_CAP=$20` + partial TP 35% | — |
+| F-01 | Persistência cockpit Live | 🟡 Parcial — saldo/margem real-time pendente | `88104c3` |
+| F-02 | Toggle Paper/Live colapso automático | ✅ | `51be306` |
+| F-03 | Bracket tiers Binance no sizing | ✅ `_get_notional_cap()` | `88104c3` |
+| F-04 | Squeezometer zerado relatórios horários | ✅ `squeeze_peak_1h` | `51be306` |
+| F-05 | PaperAnalyzer threshold 30+ trades | ✅ `min_trades_for_calibration=30` | `96fb14e` |
+| F-06 | Gráficos placeholder "aguardando trades" | ✅ | `51be306` |
+| F-10 | daily_reset_window 21:00 BRT | ✅ Completo — 588 refusals confirmam. Relatório 20:50 BRT correto | — |
+| F-11 | ghost_signals.jsonl near-misses | ✅ Score≥85, 22 campos incl. volume_quality + exp_btc_norm_1h | `b02700f` |
+| EA-01 | min_trades_1m 2 → 10 | ✅ | `d5da930` |
+| EA-02 | Gate combo trades_1m/oi_trend/lsr_trend | ✅ reason_codes individuais | `d4b01b0` |
+| EA-03 | volume_quality no signal dict | ✅ `cvd_change_pct / (trades_1m + 1)` | `3f8b6c1` |
+| EA-04 | exp_btc_norm_1h Z-score ARIA window=14 | ✅ metric_engine + signal_engine | `8b81a81` |
 
-**F-09 diagnóstico — documentar para o Brain:**
-- `kelly=0.05 → $20` (não $50): `CALIBRATION_MARGIN_CAP=20.0` ativo com <50 trades — proteção intencional
-- `$20 → $13`: partial TP (`partial_tp_breakeven_pct=0.35`) fecha 35% no breakeven → $130 notional restante
-- `initial_margin=$20` em TODOS os trades confirmado — sizing está correto
+**Confirmação Forge — klines 1h BTC:** disponíveis no boot via `data_engine.py` L259/342. EA-06 pode ir no Sprint 3 sem nova infraestrutura.
 
-**Estado do preferences.json — limpo para o restart:**
-- `paper.signal.min_trades_1m`: **2** (revertido 2× do PaperAnalyzer)
-- `paper.execution.tp_pct`: **0.04** (revertido 2× do PaperAnalyzer)
-- `min_trades_for_calibration`: **30** (gate F-05 ativo no próximo restart)
-- `min_cvd_change_pct_no_cascade`: **1.0** (gate anti squeeze_failed)
+**Parâmetros em produção — estado 05/06/2026:**
 
-**Próximo restart — sequência obrigatória:**
-1. Dashboard → Limpar Paper Tracker
-2. Reiniciar o bot
-3. F-05 entra em memória → PaperAnalyzer para de interferir
-4. Todos os fixes do Sprint 2+3 sobem ativos
+| Parâmetro | Valor atual | Obs |
+|-----------|-------------|-----|
+| `paper.signal.min_trades_1m` | **10** | Elevado de 2 (EA-Sprint3) |
+| `paper.signal.min_cvd_change_pct_no_cascade` | **1.0** | Anti squeeze_failed |
+| `paper.signal.min_cvd_change_pct` | **1.5** | Com cascade |
+| `paper.signal.min_score` | **90** | Score mínimo entrada |
+| `paper.signal.min_oi_trend` | **0.015** | Base (gate combo usa 0.008) |
+| `paper.signal.max_lsr_trend` | **-0.002** | Base (gate combo usa -0.3) |
+| `paper.execution.tp_pct` | **0.04** | TP 4% |
+| `paper.execution.sl_pct` | **0.025** | SL 2.5% |
+| `paper.execution.max_hold_seconds` | **480** | Máx 8 min |
+| `paper.execution.partial_tp_breakeven_pct` | **0.35** | Fecha 35% no breakeven |
+| `min_trades_for_calibration` | **30** | PaperAnalyzer só calibra ≥30 trades |
 
-**Coleta em andamento:** 9 trades na sessão atual · aguardando 20+ para análise Brain e definição de `min_trades_1m` (candidatos: 50, 80 ou valor validado pelos dados)
+**Gates hard ativos (EA-Sprint3, sem bypass liq_cascade):**
+- `trades_1m < 10` → `trades_1m_too_low`
+- `oi_trend < 0.008` → `oi_trend_too_weak`
+- `lsr_trend > -0.3` → `lsr_trend_not_negative`
 
-**Paridade Paper ↔ Live:** ✅ Completa — Live já tinha signal dict completo (`signal or {}`), mae_guard, squeeze_aborted. Nenhum fix pendente de replicação.
+**Campos observacionais novos no signal dict (sem gate):**
+- `volume_quality` = `cvd_change_pct / (trades_1m + 1)`
+- `exp_btc_norm_1h` = Z-score rolling window=14 de exp_btc:5m
 
-### 🟡 Alta prioridade — Sprint 3 (restante)
-- [ ] **Correlation Guard expandido** — cobrir 100+ símbolos além dos 15 atuais
-- [ ] **Margem de segurança Sniper** — reinstaurar checagem `balance < usdt_amount * 1.1` quando > $100
-- [ ] **MAE gate dinâmico** — saída automática se MAE > 2% nos primeiros 60s (WR sobe para 78%)
-- [ ] **Filtro de divergência temporal** — modo standby quando EXP_BTC:1m negativo mas 15m/1h forte
-- [ ] **Kelly floor** — verificar guard `min($20, capital×10%)` para casos kelly=0.001–0.017
+**Paridade Paper ↔ Live:** ✅ Completa.
 
-### 🟢 Backlog — Sprint 3+
-- [ ] **Liquidity Guard** — validar profundidade OB antes de entrar (Sprint 3 Forge)
-- [ ] **50+ trades paper** — validação estatística antes do LIVE (Sprint 4 Forge)
-- [ ] **Dry-run live** — `auto_pilot: false` por 24h (Sprint 5 Forge)
-- [ ] **Filtro multiframe no score** — `ema_trend:15m` e `ema_trend:1h` em `calculate_fit_score()`
+**Próximo passo:** aguardar 20+ trades com EA-Sprint3 ativo → logs ao Brain → análise discriminação gates + campos novos → Sprint 3 restante.
+
+### 🟡 Sprint 3 — Pendente
+
+- [ ] **F-01 saldo/margem real-time** — snapshot LiveTracker nos broadcasts WebSocket
+- [ ] **Correlation Guard expandido** — 100+ símbolos · `src/risk_manager.py`
+- [ ] **Margem de segurança Sniper** — `balance < usdt_amount * 1.1` quando > $100
+- [ ] **MAE gate 60s** _(condicional)_ — só após 20+ trades confirmarem WR 78%
+- [ ] **Filtro divergência temporal** — standby EXP_BTC:1m < 0 mas 15m/1h forte
+- [ ] **Kelly floor** — verificar guard `min($20, capital×10%)` para kelly baixo
+- [ ] **EA-06** — definir com Brain (infra 1h disponível)
+
+### 🟢 Backlog — Sprint 4+
+
+- [ ] **Liquidity Guard** — profundidade OB antes de entrar
+- [ ] **50+ trades paper** — validação estatística GO/LIVE
+- [ ] **Dry-run live** — `auto_pilot: false` 24h
+- [ ] **Filtro multiframe no score** — `ema_trend:15m` e `ema_trend:1h`
+- [ ] **Gate momentum sub-minuto** — ring buffers 10s/20s/30s AggTrade
+- [ ] **Macro CMC** — USDT.D + BTC.D + Fear&Greed polling 5min
 
 ---
 
@@ -766,5 +784,5 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 ---
 
 *Documento gerado em: 03/06/2026*
-*Última atualização: 04/06/2026*
-*Versão: 3.6 · Última atualização: 04/06/2026*
+*Última atualização: 05/06/2026*
+*Versão: 3.7 · Última atualização: 05/06/2026*
