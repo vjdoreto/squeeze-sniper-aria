@@ -643,6 +643,32 @@ class SqueezeIgnition:
         trades_1m = d.get("trades_count_1min", 0)
         cvd_streak = self._cvd_streak.get(symbol, 0)
 
+        # --- Gate combo Brain EA-Sprint3 (sem bypass por liq_cascade) ---
+        # trades_1m_too_low: atividade insuficiente para confirmar liquidez real
+        if trades_1m < 10:
+            self._maybe_log_refusal(
+                symbol,
+                "trades_1m_too_low",
+                {"trades_1m": trades_1m, "threshold": 10},
+            )
+            return None
+        # oi_trend_too_weak: OI não está crescendo o suficiente para squeeze institucional
+        if oi_trend is not None and oi_trend < 0.008:
+            self._maybe_log_refusal(
+                symbol,
+                "oi_trend_too_weak",
+                {"oi_trend": oi_trend, "threshold": 0.008},
+            )
+            return None
+        # lsr_trend_not_negative: shorts não estão capitulando
+        if lsr_trend is not None and lsr_trend > -0.3:
+            self._maybe_log_refusal(
+                symbol,
+                "lsr_trend_not_negative",
+                {"lsr_trend": lsr_trend, "threshold": -0.3},
+            )
+            return None
+
         # Squeeze Detection logic (Relaxada se for High Quality DNA)
         # SPRINT 7.1: Relaxation baseada em FORÇAS INSTITUCIONAIS (OI + Liq), não em score geral
         # Score alto = sinal tardio confirmado → manter filtros
@@ -715,7 +741,7 @@ class SqueezeIgnition:
             return None
         
         # Rejeitar LSR_trend muito fraco (< -0.01 = shorts não estão realmente caindo)
-        if lsr_trend > -0.01 and not is_high_quality:
+        if (lsr_trend or 0.0) > -0.01 and not is_high_quality:
             self._maybe_log_refusal(
                 symbol,
                 "lsr_trend_too_weak",
@@ -736,8 +762,8 @@ class SqueezeIgnition:
 
         if (
             exp >= final_min_exp
-            and oi_trend >= final_min_oi_trend
-            and lsr_trend <= self.max_lsr_trend
+            and (oi_trend or 0.0) >= final_min_oi_trend
+            and (lsr_trend or 0.0) <= self.max_lsr_trend
             and (trades_1m >= self.min_trades_1m or is_high_quality)
             and cvd_streak >= final_cvd_streak
             and (oi_accel is None or oi_accel >= self.min_oi_accel)
