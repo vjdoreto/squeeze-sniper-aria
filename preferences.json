@@ -43,7 +43,7 @@
             "min_cvd_change_pct": 1.5,
             "min_cvd_change_pct_no_cascade": 1.0,
             "cvd_streak_min": 4,
-            "min_trades_1m": 2,
+            "min_trades_1m": 10,
             "min_vol_adaptive_ratio": 0.7,
             "min_rsi_5m": 60.0,
             "max_bid_ask_spread": 0.2,
