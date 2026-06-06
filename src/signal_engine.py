@@ -800,6 +800,7 @@ class SqueezeIgnition:
                     "score": score,
                     "timestamp": time.time(),
                     "volume_quality": round((cvd_change_pct or 0.0) / (int(trades_1m) + 1), 4),
+                    "exp_btc_norm_1h": d.get("exp_btc_norm_1h") or 0.0,
                 }
             lsr_val = d.get("lsr")
             

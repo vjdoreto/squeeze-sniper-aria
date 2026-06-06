@@ -3,7 +3,8 @@ import logging
 import os
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Sequence, Union
+from collections import deque
+from typing import Deque, Dict, List, Any, Optional, Sequence, Union
 
 logger = logging.getLogger("MetricStore")
 
@@ -31,6 +32,8 @@ class MetricStore:
         self._warmup_samples: Dict[str, int] = {}
         self._min_warmup = 2 # Mínimo de amostras para trend começar a aparecer (20s)
         self._kline_limit = 110 # Buffer para EMA-100
+        # Rolling buffer de exp_btc:5m por símbolo para Z-score ARIA (window=14)
+        self._exp_btc_buf: Dict[str, Deque[float]] = {}
         self.init_symbols(symbols)
 
     def reset_daily_history(self) -> None:
@@ -55,7 +58,7 @@ class MetricStore:
 
             # Zerar métricas derivadas de histórico
             for key in [
-                "exp:1m","exp:5m","exp:1h","exp_btc:5m",
+                "exp:1m","exp:5m","exp:1h","exp_btc:5m","exp_btc_norm_1h",
                 "oi_trend:1m","oi_trend:5m","oi_trend:1h",
                 "lsr_trend:1m","lsr_trend:5m","lsr_trend:1h",
                 "oi_accel:5m","oi_change_pct:5m","lsr_change_pct:5m",
@@ -111,6 +114,7 @@ class MetricStore:
                     "exp:1m": 0.0,
                     "exp:1h": 0.0,
                     "exp_btc:5m": 0.0,
+                    "exp_btc_norm_1h": 0.0,
                     "oi_trend:5m": 0.0,
                     "oi_trend:1m": 0.0,
                     "lsr_trend:5m": 0.0,
@@ -822,6 +826,18 @@ class MetricStore:
                 else:
                     valid_ratio = False; break
             d_ext["exp_btc:5m"] = self._calc_exp_slope(ratio_series) if valid_ratio and len(ratio_series) >= 2 else 0.0
+            # Z-score rolling ARIA (window=14): normaliza exp_btc:5m no contexto histórico recente
+            exp_btc_val = d_ext["exp_btc:5m"]
+            buf = self._exp_btc_buf.setdefault(symbol, deque(maxlen=14))
+            buf.append(exp_btc_val)
+            if len(buf) >= 3:
+                vals = list(buf)
+                mean_v = sum(vals) / len(vals)
+                variance = sum((v - mean_v) ** 2 for v in vals) / len(vals)
+                std_v = variance ** 0.5
+                d_ext["exp_btc_norm_1h"] = round((exp_btc_val - mean_v) / std_v, 4) if std_v > 1e-9 else 0.0
+            else:
+                d_ext["exp_btc_norm_1h"] = 0.0
 
         # === Delta % Metrics (CVD, OI, LSR) ===
         for symbol in self.symbols:
