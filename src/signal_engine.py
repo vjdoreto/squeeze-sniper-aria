@@ -799,6 +799,7 @@ class SqueezeIgnition:
                     "range_level": d.get("range_level:5m") or 0,
                     "score": score,
                     "timestamp": time.time(),
+                    "volume_quality": round((cvd_change_pct or 0.0) / (int(trades_1m) + 1), 4),
                 }
             lsr_val = d.get("lsr")
             
