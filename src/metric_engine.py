@@ -704,10 +704,13 @@ class MetricStore:
             # --- DNA Squeeze: Liquidation Cascade Detector ---
             liq_curr = d_snap.get("liq_short_1m", 0.0) or 0.0
             liq_prev = d_snap.get("liq_short_prev", 0.0) or 0.0
-            # Sprint 1.5 Brain×Forge: threshold reduzido de $5k para $500.
-            # $5k filtrava 100% dos eventos — altcoins menores nunca atingiam.
-            # $500 discrimina ruído de liquidação real sem ser sensível demais.
-            d_snap["liq_cascade"] = liq_curr > (liq_prev * 1.8) and liq_curr > 500
+            # F-16: threshold proporcional ao OI do ativo (Brain×Forge 08/06/2026).
+            # Threshold fixo de $500 era arbitrário — $500K para altcoins de $3-5M OI
+            # é matematicamente impossível; $500 capturava ruído sem discriminar cascata real.
+            # max(oi_usd * 0.02, 10_000): 2% do OI ou mínimo $10k, proporcional ao ativo.
+            _oi_usd = (d_snap.get("oi") or 0.0) * (d_snap.get("price") or 0.0)
+            _liq_threshold = max(_oi_usd * 0.02, 10_000.0)
+            d_snap["liq_cascade"] = liq_curr > (liq_prev * 1.8) and liq_curr > _liq_threshold
             d_snap["liq_short_prev"] = liq_curr
 
             # Mantém até ~1 hora de snapshots (se gravado a cada 10s = 360 itens)
