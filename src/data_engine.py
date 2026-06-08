@@ -402,6 +402,13 @@ class DataEngine:
                         if not msg or "data" not in msg:
                             continue
                         payload = msg["data"]
+                        # DIAG F-12: log payload bruto para confirmar formato real do stream.
+                        # Logar apenas os primeiros 3 eventos por sessão para não spam.
+                        if not hasattr(self, "_liq_diag_count"):
+                            self._liq_diag_count = 0
+                        if self._liq_diag_count < 3:
+                            logger.info("DIAG F-12 payload bruto (#%d): %s", self._liq_diag_count + 1, payload)
+                            self._liq_diag_count += 1
                         # !forceOrder@arr entrega lista; fallback para dict (symbol@forceOrder legado)
                         events = payload if isinstance(payload, list) else [payload]
                         for event in events:
