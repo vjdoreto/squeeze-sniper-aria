@@ -737,6 +737,18 @@ class SqueezeIgnition:
             self._write_ghost_signal(symbol, "lsr_trend_not_negative", d, _eff_score)
             return None
 
+        # F-15: volume_quality spike — CVD disperso por muitos trades indica pressão difusa,
+        # não compra institucional concentrada. vq >= 2.0 bloqueou 3 losers, 0 winners (n=33).
+        _vq = round((cvd_change_pct or 0.0) / (int(trades_1m) + 1), 4)
+        if _vq >= 2.0:
+            self._maybe_log_refusal(
+                symbol,
+                "volume_quality_spike",
+                {"volume_quality": _vq, "threshold": 2.0, "cvd_change_pct": cvd_change_pct, "trades_1m": trades_1m},
+            )
+            self._write_ghost_signal(symbol, "volume_quality_spike", d, _eff_score)
+            return None
+
         # Squeeze Detection logic (Relaxada se for High Quality DNA)
         # SPRINT 7.1: Relaxation baseada em FORÇAS INSTITUCIONAIS (OI + Liq), não em score geral
         # Score alto = sinal tardio confirmado → manter filtros
