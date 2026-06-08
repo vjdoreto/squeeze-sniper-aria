@@ -113,6 +113,8 @@ class SqueezeIgnition:
         # CVD streak: contador de ciclos de CVD positivo consecutivos por símbolo
         self._cvd_streak: Dict[str, int] = {}
         self._last_cvd_sign: Dict[str, float] = {}
+        # F-13: timestamp de início para gate de warmup rsi_1h
+        self._start_time: float = time.time()
 
     def refresh_thresholds(self, signal_mode: str, min_cvd_change_pct: float, cvd_streak_min: int, max_bid_ask_spread: float, min_trades_1m: int, min_vol_adaptive_ratio: float, min_oi_accel: float, min_oi_change_pct: float, max_lsr_change_pct: float, min_oi_trend: float, blacklist: Optional[List[str]] = None, fit_score_min: float = 20.0, min_cvd_change_pct_no_cascade: float = 1.0) -> None:
         """SPRINT 12.85: Atualiza thresholds sem resetar a memória de sinais/streaks."""
@@ -524,6 +526,18 @@ class SqueezeIgnition:
         rsi_5m: float = float(rsi_5m_raw) if rsi_5m_raw is not None else 50.0
         rsi_15m = d.get("rsi:15m")
         rsi_1h = d.get("rsi:1h")
+
+        # F-13: rsi_1h fica travado em 50.0 artificial nos primeiros ~10min (buffer klines vazio).
+        # Gate bloqueia entradas com valor artificial enquanto o warmup não completou.
+        _uptime = time.time() - self._start_time
+        if (rsi_1h is None or rsi_1h == 50.0) and _uptime < 600:
+            self._maybe_log_refusal(
+                symbol,
+                "rsi_1h_warmup",
+                {"rsi_1h": rsi_1h, "uptime_s": round(_uptime, 1), "warmup_window_s": 600},
+            )
+            return None
+
         ema_tr = d.get("ema_trend:5m") or 0
         hft_10s = int(d.get("last_trades_10s", 0))
         tlvl = d.get("trades_level", 0)
