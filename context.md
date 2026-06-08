@@ -784,5 +784,67 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 ---
 
 *Documento gerado em: 03/06/2026*
-*Última atualização: 05/06/2026*
-*Versão: 3.7 · Última atualização: 05/06/2026*
+*Última atualização: 08/06/2026*
+*Versão: 3.8 · Última atualização: 08/06/2026*
+
+---
+
+## 🔧 Sprint EA-Sprint4 — Fixes F-12 a F-15 (08/06/2026)
+
+### F-12 — liq_short_1m zerado (diagnóstico + fix notional)
+
+**Commits:** `54225d1`
+
+**Problema raiz identificado:** `notional = float(o["p"]) * float(o["q"])` — `p` pode ser `0` em ordens de mercado, gerando `notional=0` silencioso. Corrigido para usar `ap` (average price) × `z` (cumulative fill qty) com fallback para `p*q`.
+
+**Logging adicionado:**
+- `data_engine.py`: INFO para cada evento do stream `!forceOrder@arr` (antes era DEBUG — invisível)
+- `metric_engine.py`: INFO quando `update_liquidation` acumula valor não-zero
+- `metric_engine.py`: INFO quando `reset_1m_volume` copia `liq_short_1m_stable > 0`
+
+**Como verificar:** Procurar nos logs por `F-12 liq_accum:` e `F-12 liq_stable:`. Se nenhuma linha aparecer, o stream `!forceOrder@arr` não está recebendo eventos.
+
+### F-13 — Gate RSI 1h no warmup
+
+**Commits:** `d4446dd`
+
+**Problema:** `rsi:1h` fica em `50.0` artificial nos primeiros ~10min após restart (buffer de klines não completou). O score e sinal usavam esse valor falso sem saber.
+
+**Fix:** Gate `rsi_1h_warmup` em `signal_engine.py` — se `rsi_1h is None or rsi_1h == 50.0` E `uptime < 600s`, registra refusal e retorna None. `_start_time` adicionado ao `__init__` da `SqueezeIgnition`.
+
+**Parâmetro de observação:** `signal_refusals.jsonl` vai mostrar `rsi_1h_warmup` nos primeiros 10min de cada sessão.
+
+### F-14 — max_hold disparando antes do mae_guard
+
+**Commits:** `eb85dce`
+
+**Problema duplo:**
+1. `duration_s` não existia no JSONL — scripts de análise do Brain liam 0 (o campo correto era `live.duration_sec`)
+2. Janela de perda entre mae_guard (120s, pnl < -2%) e trailing (ativa em 180s): trades a -1.8% aos 120s escapavam ambos e chegavam ao max_hold em -8%+
+
+**Fixes:**
+- Alias `duration_s` adicionado em `live.update()` em `paper_tracker.py` e `live_tracker.py`
+- Late mae_guard a 240s: `pnl < -3.0% E mfe < 2.0%` → exit `mae_guard_late` (imediato, paridade paper + live)
+
+### F-15 — Gate volume_quality_spike >= 2.0
+
+**Commits:** `7bc9aab`
+
+**Evidência:** 33 trades — winners vq médio=0.535, losers vq=1.502. Threshold 2.0 teria bloqueado NILUSDT(4.67), STGUSDT(16.20), MEGAUSDT(6.61) — todos losers — sem bloquear nenhum winner.
+
+**Fix:** Gate após o gate combo EA-Sprint3 em `signal_engine.py`. Reason_code: `volume_quality_spike`. Fórmula: `cvd_change_pct / (trades_1m + 1)`.
+
+### Parâmetros e gates ativos (estado 08/06/2026)
+
+| Gate | Condição | Reason code |
+|------|----------|-------------|
+| trades_1m_too_low | trades_1m < 10 | `trades_1m_too_low` |
+| oi_trend_too_weak | oi_trend < 0.008 | `oi_trend_too_weak` |
+| lsr_trend_not_negative | lsr_trend > -0.3 | `lsr_trend_not_negative` |
+| **volume_quality_spike (novo)** | vq >= 2.0 | `volume_quality_spike` |
+| rsi_1h_warmup (novo) | rsi_1h == 50.0 E uptime < 600s | `rsi_1h_warmup` |
+| mae_guard_late (novo) | dur >= 240s E pnl < -3% E mfe < 2% | `mae_guard_late` |
+
+### ⏳ Pendente F-12
+
+O fix do notional (`ap*z`) corrige o cálculo mas a validação real só acontece na próxima sessão de paper trading. Se `F-12 liq_accum:` não aparecer nos logs → stream não está ativo → investigar se `bsm.multiplex_socket(["!forceOrder@arr"])` está conectando corretamente na biblioteca `python-binance` em uso.
