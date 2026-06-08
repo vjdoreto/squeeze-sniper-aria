@@ -503,7 +503,10 @@ class MetricStore:
             if s in self.data:
                 # SPRINT 6.9: Armazena versão estável para exibição e scoring antes de zerar
                 self.data[s]["volume_delta_1min_stable"] = self.data[s]["volume_delta_1min"]
-                self.data[s]["liq_short_1m_stable"] = self.data[s]["liq_short_1m"]
+                liq_val = self.data[s]["liq_short_1m"]
+                self.data[s]["liq_short_1m_stable"] = liq_val
+                if liq_val > 0:
+                    logger.info("F-12 liq_stable: %s liq_short_1m_stable=%.2f", s, liq_val)
                 self.data[s]["trades_count_1min_stable"] = self.data[s]["trades_count_1min"]
                 
                 self.data[s]["volume_delta_1min"] = 0.0
@@ -666,7 +669,9 @@ class MetricStore:
         if symbol in self.data:
             # No Futures, quando um SHORT é liquidado, a exchange executa uma compra (BUY) forçada.
             if side.upper() == "BUY":
-                self.data[symbol]["liq_short_1m"] = self.data[symbol].get("liq_short_1m", 0.0) + notional
+                prev = self.data[symbol].get("liq_short_1m", 0.0)
+                self.data[symbol]["liq_short_1m"] = prev + notional
+                logger.info("F-12 liq_accum: %s +%.2f → total=%.2f", symbol, notional, prev + notional)
 
     def record_snapshot(self):
         """Grava snapshot atual para histórico e recalcula trends/buffers.

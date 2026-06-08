@@ -409,12 +409,17 @@ class DataEngine:
                             sym = o.get("s")
                             side = o.get("S")
                             try:
-                                notional = float(o["p"]) * float(o["q"])
+                                # F-12: usa ap (avg price) * z (fill qty) para notional real.
+                                # p pode ser 0 em ordens de mercado — causava notional=0 silencioso.
+                                avg_price = float(o.get("ap") or o.get("p") or 0)
+                                fill_qty  = float(o.get("z")  or o.get("q") or 0)
+                                notional  = avg_price * fill_qty
                             except (KeyError, ValueError, TypeError):
                                 continue
                             if sym and side:
                                 store.update_liquidation(sym, side, notional)
-                                logger.debug("Liquidation: %s %s %.2f", sym, side, notional)
+                                logger.info("Liquidation raw: %s side=%s notional=%.2f (ap=%s z=%s)",
+                                            sym, side, notional, o.get("ap"), o.get("z"))
             except Exception as e:
                 attempt += 1
                 logger.error("Liquidation WebSocket: Erro (tentativa %d): %s", attempt, e)
