@@ -1119,6 +1119,7 @@ class PaperTradeTracker:
                     "mfe_pct": round(mfe, 4),
                     "mae_pct": round(mae, 4),
                     "duration_sec": duration,
+                    "duration_s": duration,  # F-14: alias para scripts de análise do Brain
                     "dist_sl_pct": round((price - sl) / price * 100, 4),
                     "dist_tp_pct": round((tp - price) / price * 100, 4),
                     "metrics": capture_metrics(symbol, market_data),
@@ -1159,6 +1160,14 @@ class PaperTradeTracker:
                     trade["mae_guard_checked"] = True
                     exit_reason = "mae_guard"
 
+            # F-14: Late mae_guard aos 240s — cobre janela entre 120s e trailing (180s).
+            # Trades que ficaram entre -1.5% e -2.0% aos 120s (não capturados pelo mae_guard)
+            # mas continuam degradando chegam aqui antes do max_hold em 480s.
+            if exit_reason is None and not trade.get("mae_guard_late_checked"):
+                if duration >= 240 and current_pnl < -3.0 and current_mfe < 2.0:
+                    trade["mae_guard_late_checked"] = True
+                    exit_reason = "mae_guard_late"
+
             if exit_reason is None and price <= sl:
                 if sl >= entry_price:
                     if can_trailing:
@@ -1176,7 +1185,7 @@ class PaperTradeTracker:
             if exit_reason:
                 # Exits baseados em tempo/MAE são imediatos — o gate com _checked flag
                 # não re-dispara no tick 2, quebrando a lógica de 2 confirmações.
-                _immediate = exit_reason in ("squeeze_failed", "squeeze_aborted", "mae_guard", "max_hold")
+                _immediate = exit_reason in ("squeeze_failed", "squeeze_aborted", "mae_guard", "mae_guard_late", "max_hold")
                 if _immediate:
                     closed = self._close_trade(trade, exit_price, exit_reason, market_data)
                     closed_now.append(closed)
