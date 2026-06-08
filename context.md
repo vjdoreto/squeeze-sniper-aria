@@ -785,7 +785,7 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 08/06/2026*
-*Versão: 3.8 · Última atualização: 08/06/2026*
+*Versão: 3.9 · Última atualização: 08/06/2026*
 
 ---
 
@@ -844,6 +844,72 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 | **volume_quality_spike (novo)** | vq >= 2.0 | `volume_quality_spike` |
 | rsi_1h_warmup (novo) | rsi_1h == 50.0 E uptime < 600s | `rsi_1h_warmup` |
 | mae_guard_late (novo) | dur >= 240s E pnl < -3% E mfe < 2% | `mae_guard_late` |
+
+---
+
+## 🔧 Sprint EA-Sprint4 — Diagnósticos + Pacote F-16 a F-18 (08/06/2026 — sessão 2)
+
+### Diag F-12 — payload bruto !forceOrder@arr
+
+**Commit:** `4129502`
+
+Log dos primeiros 3 eventos por sessão antes de qualquer processamento. Procurar por `DIAG F-12 payload bruto (#1)` nos logs. Se não aparecer → stream não está conectando. Se aparecer mas `F-12 liq_accum:` nunca aparecer → o formato do evento não tem campo `S=BUY` como esperado.
+
+### F-17 — late mae_guard threshold mfe 2% → 3%
+
+**Commit:** `fd0a4a5`
+
+Diagnóstico confirmado: BBUSDT MFE=2.98% escapou do gate (threshold era `< 2.0%`) e encerrou com -15.92% via max_hold — maior perda da amostra. Ajustado para `< 3.0%` em paper_tracker.py e live_tracker.py.
+
+### F-16 — liq_threshold proporcional ao OI
+
+**Commit:** `9477fd8`
+
+Substituído threshold fixo `> 500` por `max(oi_usd * 0.02, 10_000)`:
+- `oi_usd = oi_contratos * price` (calculado em tempo real no `record_snapshot`)
+- $500K OI → threshold $10k (mínimo)
+- $5M OI → threshold $100k
+- $100M OI → threshold $2M
+
+Ainda exige `liq_curr > liq_prev * 1.8` (aceleração de 80%).
+
+**Nota:** F-16 só fará diferença quando F-12 estiver confirmado — se `liq_short_1m = 0` por problema de stream, o threshold proporcional não muda nada.
+
+### F-18 — ema_trend:4h no MetricStore + gate ema_4h_bearish
+
+**Commit:** `adaed4f`
+
+**metric_engine.py:**
+- `ema_trend:4h` inicializado em data dict para novos e existentes símbolos
+- `_klines` e `_kline_volumes` incluem `"4h"` em todos os pontos de init/load/save
+- `timeframes = ["5m", "15m", "1h", "4h"]`
+
+**data_engine.py:**
+- Boot: fetch `k_4h = futures_klines(interval='4h', limit=110)` por símbolo
+- WS: `kline_4h` adicionado ao stream
+- `kline_chunk_size` reduzido de 60→48 (48×4=192 streams/batch, limite Binance=200)
+
+**signal_engine.py:**
+- Gate `ema_4h_bearish`: `ema_trend:4h <= -4 AND exp_btc_norm_1h < -1.5`
+- Evidência: 3 sessões consecutivas, EMA:4h=-6 presente na maioria dos losers
+
+### Gates ativos (estado 08/06/2026 — v3.9)
+
+| Gate | Condição | Reason code |
+|------|----------|-------------|
+| trades_1m_too_low | trades_1m < 10 | `trades_1m_too_low` |
+| oi_trend_too_weak | oi_trend < 0.008 | `oi_trend_too_weak` |
+| lsr_trend_not_negative | lsr_trend > -0.3 | `lsr_trend_not_negative` |
+| volume_quality_spike | vq >= 2.0 | `volume_quality_spike` |
+| rsi_1h_warmup | rsi_1h == 50.0 E uptime < 600s | `rsi_1h_warmup` |
+| **ema_4h_bearish (novo)** | ema_4h <= -4 E exp_btc_norm_1h < -1.5 | `ema_4h_bearish` |
+| mae_guard_late | dur >= 240s E pnl < -3% E mfe < 3% | `mae_guard_late` |
+
+### O que monitorar na próxima sessão
+1. `DIAG F-12 payload bruto (#1)` — confirmar se stream chega e formato do evento
+2. `F-12 liq_accum:` — confirmar se notional não-zero está acumulando
+3. `ema_4h_bearish` em signal_refusals.jsonl — gate funcionando
+4. `mae_guard_late` nos trades fechados — threshold 3% funcionando
 
 ### ⏳ Pendente F-12
 
