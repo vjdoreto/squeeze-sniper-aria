@@ -1161,10 +1161,9 @@ class PaperTradeTracker:
                     exit_reason = "mae_guard"
 
             # F-14: Late mae_guard aos 240s — cobre janela entre 120s e trailing (180s).
-            # Trades que ficaram entre -1.5% e -2.0% aos 120s (não capturados pelo mae_guard)
-            # mas continuam degradando chegam aqui antes do max_hold em 480s.
+            # F-17: threshold mfe < 3.0 (era 2.0) — BBUSDT MFE=2.98% escapou com -15.92%.
             if exit_reason is None and not trade.get("mae_guard_late_checked"):
-                if duration >= 240 and current_pnl < -3.0 and current_mfe < 2.0:
+                if duration >= 240 and current_pnl < -3.0 and current_mfe < 3.0:
                     trade["mae_guard_late_checked"] = True
                     exit_reason = "mae_guard_late"
 

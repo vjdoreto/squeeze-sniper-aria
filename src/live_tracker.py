@@ -613,8 +613,9 @@ class LiveTracker:
                                symbol, duration_sec, pnl_pct, current_mfe)
 
         # F-14: Late mae_guard aos 240s — cobre janela entre 120s e trailing (180s)
+        # F-17: threshold mfe < 3.0 (era 2.0) — BBUSDT MFE=2.98% escapou com -15.92%.
         if early_exit_reason is None and not trade.get("mae_guard_late_checked"):
-            if duration_sec >= 240 and pnl_pct < -3.0 and current_mfe < 2.0:
+            if duration_sec >= 240 and pnl_pct < -3.0 and current_mfe < 3.0:
                 trade["mae_guard_late_checked"] = True
                 early_exit_reason = "mae_guard_late"
                 logger.warning("🛡️ [LIVE] mae_guard_late: %s | dur=%.0fs pnl=%.2f%% mfe=%.2f%%",
