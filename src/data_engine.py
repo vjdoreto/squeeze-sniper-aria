@@ -257,9 +257,11 @@ class DataEngine:
                     k_5m = await client.futures_klines(symbol=symbol, interval='5m', limit=110)
                     k_15m = await client.futures_klines(symbol=symbol, interval='15m', limit=110) # type: ignore
                     k_1h = await client.futures_klines(symbol=symbol, interval='1h', limit=110) # type: ignore
+                    k_4h = await client.futures_klines(symbol=symbol, interval='4h', limit=110) # type: ignore  # F-18
                     if k_5m: store.init_klines(symbol, "5m", [float(x[4]) for x in k_5m], [float(x[5]) for x in k_5m])
                     if k_15m: store.init_klines(symbol, "15m", [float(x[4]) for x in k_15m], [float(x[5]) for x in k_15m])
                     if k_1h: store.init_klines(symbol, "1h", [float(x[4]) for x in k_1h], [float(x[5]) for x in k_1h])
+                    if k_4h: store.init_klines(symbol, "4h", [float(x[4]) for x in k_4h], [float(x[5]) for x in k_4h])  # F-18
                 except Exception as e:
                     logger.debug("Erro klines %s: %s", symbol, e)
 
@@ -325,8 +327,8 @@ class DataEngine:
         store = self.store
         
         # Binance Futures combined streams: limite de 200 streams por conexão.
-        # 60 símbolos × 3 timeframes = 180 streams — abaixo do limite com margem.
-        kline_chunk_size = 60
+        # F-18: 4 timeframes (5m/15m/1h/4h) → 48 símbolos × 4 = 192 streams por batch.
+        kline_chunk_size = 48
         symbol_chunks = [
             self.symbols[i : i + kline_chunk_size]
             for i in range(0, len(self.symbols), kline_chunk_size)
@@ -340,6 +342,7 @@ class DataEngine:
                     streams.append(f"{s.lower()}@kline_5m")
                     streams.append(f"{s.lower()}@kline_15m")
                     streams.append(f"{s.lower()}@kline_1h")
+                    streams.append(f"{s.lower()}@kline_4h")  # F-18
                 try:
                     async with bsm.multiplex_socket(streams) as stream:
                         attempt = 0

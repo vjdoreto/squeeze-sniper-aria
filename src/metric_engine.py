@@ -129,6 +129,7 @@ class MetricStore:
                     "ema_trend:5m": 0,
                     "ema_trend:15m": 0,
                     "ema_trend:1h": 0,
+                    "ema_trend:4h": 0,  # F-18
                     "range_level:5m": 0,
                     "range_level:15m": 0,
                     "range_level:1h": 0,
@@ -153,8 +154,8 @@ class MetricStore:
                         {"price": 0.0, "oi": 0.0, "lsr": None, "cvd": 0.0, "timestamp": now},
                     ]
                     self._warmup_samples[s] = max(self._warmup_samples.get(s, 0), self._min_warmup)
-                self._klines[s] = {"5m": [], "15m": [], "1h": []}
-                self._kline_volumes[s] = {"5m": [], "15m": [], "1h": []}
+                self._klines[s] = {"5m": [], "15m": [], "1h": [], "4h": []}
+                self._kline_volumes[s] = {"5m": [], "15m": [], "1h": [], "4h": []}
             else:
                 # Símbolo já existe: apenas garantir que tem todas as chaves
                 if "trades_count_1min" not in self.data[s]:
@@ -180,6 +181,10 @@ class MetricStore:
                 existing_kl = getattr(self, "_klines", {}).get(s) or {"5m": [], "1h": []}
                 if "15m" not in existing_kl:
                     existing_kl["15m"] = []
+                if "4h" not in existing_kl:  # F-18
+                    existing_kl["4h"] = []
+                if "ema_trend:4h" not in self.data[s]:  # F-18
+                    self.data[s]["ema_trend:4h"] = 0
                 if "volume_3h_avg" not in self.data[s]:
                     self.data[s]["volume_3h_avg"] = 0.0
                 if "vol_3h_warmup" not in self.data[s]:
@@ -232,7 +237,7 @@ class MetricStore:
 
             # Garantir integridade estrutural para evitar KeyError em update_kline()
             # (principalmente quando o cache foi gerado antes de _kline_volumes existir)
-            timeframes = ["5m", "15m", "1h"]
+            timeframes = ["5m", "15m", "1h", "4h"]  # F-18: 4h adicionado
             for sym in self.symbols:
                 if sym not in self._klines or not isinstance(self._klines.get(sym), dict):
                     self._klines[sym] = {tf: [] for tf in timeframes}
