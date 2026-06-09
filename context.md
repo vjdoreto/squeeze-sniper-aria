@@ -816,9 +816,25 @@ Não é dado corrompido nem buffer insuficiente — é limitação do cálculo s
 
 ---
 
+---
+
+### 🔧 Sprint Forge — 09/06/2026 (fix F-12 causa raiz)
+
+**fix(F-12) — causa raiz definitiva do `liq_short_1m = 0`** · commit `ed54d36`
+
+O stream `!forceOrder@arr` (liquidações de futuros) estava conectando no endpoint **Spot** (`stream.binance.com`) via `bsm.multiplex_socket()`. O servidor Spot aceitava a conexão silenciosamente mas nunca entregava eventos de futuros — por isso `"Liquidation WebSocket: Conectado"` nunca aparecia nos logs e `DIAG F-12 payload bruto` nunca logava.
+
+Correção: `bsm.multiplex_socket()` → `bsm.futures_multiplex_socket()` (endpoint `fstream.binance.com`).
+
+Arquivo: `src/data_engine.py:400` — uma linha.
+
+Esta era a causa raiz real desde o início — não o cálculo de notional (`ap*z`), não o threshold, não ausência de liquidações no mercado. Com este fix ativo, `liq_short_1m`, `liq_cascade` e `liq_threshold` passam a ter dados reais pela primeira vez.
+
+---
+
 *Documento gerado em: 03/06/2026*
 *Última atualização: 09/06/2026*
-*Versão: 4.2 · Última atualização: 09/06/2026*
+*Versão: 4.3 · Última atualização: 09/06/2026*
 
 ---
 
