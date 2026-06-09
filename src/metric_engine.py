@@ -386,7 +386,7 @@ class MetricStore:
         # Reduz tempo de "cegueira" de 40min → 25min (5 candles de 5m)
         min_rsi_samples = 5  # Mínimo reduzido para acelerar warmup
         if len(closes) >= min_rsi_samples:
-            actual_window = min(15, len(closes))
+            actual_window = min(28, len(closes))
             val = self._calc_rsi(closes[-actual_window:])
             # Garante que o valor seja float ou None, nunca um objeto
             self.data[symbol][f"rsi:{timeframe}"] = float(val) if val is not None else None
