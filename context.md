@@ -802,9 +802,23 @@ Valor atual: `-0.05` (paper e live idênticos). Brain calibra via JSON.
 
 ---
 
+---
+
+### 🔧 Sprint Forge — 09/06/2026 (fix RSI)
+
+**fix(RSI) — `actual_window` 15 → 28** · commit `5dfbe93`
+
+COMPUSDT aparecia com RSI:5m = 100 no dashboard (TradingView mostrava 56). Causa: janela de cálculo de apenas 15 candles — sequências de alta sem nenhuma perda retornam `avg_loss = 0 → RSI = 100` matematicamente correto, mas inútil. Aumentar para 28 (2× período padrão) dilui picos curtos.
+
+Arquivo: `src/metric_engine.py:389` — `min(15, len(closes))` → `min(28, len(closes))`.
+
+Não é dado corrompido nem buffer insuficiente — é limitação do cálculo simples (não Wilder smoothing). Correção conservadora que melhora fidelidade sem mudar a fórmula.
+
+---
+
 *Documento gerado em: 03/06/2026*
 *Última atualização: 09/06/2026*
-*Versão: 4.1 · Última atualização: 09/06/2026*
+*Versão: 4.2 · Última atualização: 09/06/2026*
 
 ---
 
