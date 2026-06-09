@@ -832,9 +832,23 @@ Esta era a causa raiz real desde o início — não o cálculo de notional (`ap*
 
 ---
 
+---
+
+### 🔧 Sprint Forge — 09/06/2026 (fixes signal dict + RSI 1h)
+
+**fix — `ema_trend_4h` no signal dict** · commit `affec99`
+
+`ema_trend:4h` era lido pelo gate F-18 no MetricStore mas nunca exportado no signal dict. Brain via `signals.jsonl` enxergava `ema_trend = 0` (valor do 5m). Fix: adicionado `"ema_trend_4h": d.get("ema_trend:4h") or 0` nos dois blocos de construção do signal dict em `src/signal_engine.py` (ghost signal + sinal real).
+
+**fix — `rsi:1h` travado em 50.0 após cache quente** · commit `270b20d`
+
+Causa raiz: `_update_indicators` não era chamado durante o load do cache quente — apenas em `init_klines` (símbolos missing) ou `update_kline` (kline final). Para timeframe 1h, o próximo kline final demora até 60min. Se o cache foi salvo com `rsi:1h = None`, o campo ficava `None` por toda a sessão, caindo no fallback `or 50.0` do signal dict. Fix: após restaurar os klines do cache, iterar todos os símbolos/timeframes com buffer ≥ 5 candles e chamar `_update_indicators`. Arquivo: `src/metric_engine.py`.
+
+---
+
 *Documento gerado em: 03/06/2026*
 *Última atualização: 09/06/2026*
-*Versão: 4.3 · Última atualização: 09/06/2026*
+*Versão: 4.4 · Última atualização: 09/06/2026*
 
 ---
 
