@@ -785,7 +785,7 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 *Documento gerado em: 03/06/2026*
 *Última atualização: 08/06/2026*
-*Versão: 3.9 · Última atualização: 08/06/2026*
+*Versão: 4.0 · Última atualização: 08/06/2026*
 
 ---
 
@@ -910,6 +910,31 @@ Ainda exige `liq_curr > liq_prev * 1.8` (aceleração de 80%).
 2. `F-12 liq_accum:` — confirmar se notional não-zero está acumulando
 3. `ema_4h_bearish` em signal_refusals.jsonl — gate funcionando
 4. `mae_guard_late` nos trades fechados — threshold 3% funcionando
+
+---
+
+## 🔧 Fixes cirúrgicos pós-EA-Sprint4 (08/06/2026 — sessão 3)
+
+### Fix F-18 corrigido — gate ema_4h_bearish simplificado
+
+**Commit:** `9bce976`
+
+Segunda condição `AND exp_btc_norm_1h < -1.5` removida. Anulava o gate na prática: todos os grandes losers tinham `EMA:4h=-6` mas `norm_1h positivo`. WAXPUSDT entrou com `EMA:4h=-6, norm_1h=+1.378` → -16.93%. 3 sessões de evidência.
+
+**Gate final:** `ema_trend:4h <= -4` → `ema_4h_bearish` → return None.
+
+### min_rsi_5m 60 → 45 (paper)
+
+**Commit:** `e52f2e9`
+
+BANANAS31 (+17%, melhor winner da amostra) estava bloqueado com RSI=48. A zona de ignição do squeeze é RSI 40–55 (acumulação), não acima de 60 (euforia). Relaxamento seguro pois o gate `ema_4h <= -4` agora protege contra entradas em tendência de queda — o risco que o RSI alto pretendia cobrir já está coberto de forma mais precisa.
+
+**Parâmetros críticos atualizados (v4.0):**
+
+| Parâmetro | Antes | Depois | Motivo |
+|-----------|-------|--------|--------|
+| `paper.signal.min_rsi_5m` | 60.0 | **45.0** | Zona de acumulação 40–55 |
+| Gate `ema_4h_bearish` | `<= -4 AND norm_1h < -1.5` | **`<= -4` (só)** | AND anulava o gate |
 
 ### ⏳ Pendente F-12
 
