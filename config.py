@@ -68,6 +68,7 @@ class BotConfig:
     # Novos parâmetros P2-D
     min_vol_1m: float
     min_rsi_5m: float
+    mtf_1h_crash_threshold: float
     min_exp_btc_for_btc_dump: float
 
     # Filtros % de crescimento (P1 — primary)
@@ -185,6 +186,7 @@ def load_config(preferences_path: Path | None = None) -> BotConfig:
 
         min_vol_1m=float(signal.get("min_vol_1m", 0.0)),
         min_rsi_5m=float(signal.get("min_rsi_5m", 48.0)),
+        mtf_1h_crash_threshold=float(signal.get("mtf_1h_crash_threshold", -0.05)),
         min_exp_btc_for_btc_dump=float(signal.get("min_exp_btc_for_btc_dump", 0.0)),
 
         min_cvd_change_pct=float(signal.get("min_cvd_change_pct", 3.0)),

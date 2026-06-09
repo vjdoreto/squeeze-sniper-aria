@@ -66,6 +66,7 @@ class SqueezeIgnition:
         cooldown_seconds: int = 320,
         min_vol_1m: float = 0.0,
         min_rsi_5m: float = 48.0,
+        mtf_1h_crash_threshold: float = -0.05,
         min_exp_btc_for_btc_dump: float = 0.0,
         # Filtros % de crescimento (P1 — primary)
         min_cvd_change_pct: float = 3.5,
@@ -89,6 +90,7 @@ class SqueezeIgnition:
         self._last_signal: Dict[str, float] = {}
         self.min_vol_1m = min_vol_1m
         self.min_rsi_5m = min_rsi_5m
+        self.mtf_1h_crash_threshold = mtf_1h_crash_threshold
         self.min_exp_btc_for_btc_dump = min_exp_btc_for_btc_dump
         
         # Throttler para prevenir race condition
@@ -325,8 +327,8 @@ class SqueezeIgnition:
         exp_1h = d.get("exp:1h")
         
         # Se o macro (1h) estiver caindo forte (> -0.05), a ignição de 5m é provavelmente um "dead cat bounce"
-        if exp_1h is not None and exp_1h < -0.05 and not liq_cascade:
-            self._maybe_log_refusal(symbol, "mtf_1h_crash", {"exp_1h": exp_1h, "limit": -0.05})
+        if exp_1h is not None and exp_1h < self.mtf_1h_crash_threshold and not liq_cascade:
+            self._maybe_log_refusal(symbol, "mtf_1h_crash", {"exp_1h": exp_1h, "limit": self.mtf_1h_crash_threshold})
             return None
             
         # Se o 15m estiver caindo forte (> -0.03), ignoramos o sinal de 5m por falta de suporte intermediário
