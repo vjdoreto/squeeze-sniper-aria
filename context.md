@@ -783,9 +783,28 @@ Os snapshots pós-saída coletam `rsi_5m`, `cvd_1m`, `liq_short`, `oi_chg` — e
 
 ---
 
+---
+
+### 🔧 Sprint Forge — 09/06/2026 (continuação v4.0)
+
+**B-35 — `mtf_1h_crash_threshold` configurável** · commit `d101ec8`
+
+Gate `mtf_1h_crash` bloqueava entradas quando `exp_1h < -0.05` (hardcoded). Threshold movido para `preferences.json` para que Brain possa calibrar sem tocar no código.
+
+| Arquivo | Mudança |
+|---------|---------|
+| `preferences.json` | `mtf_1h_crash_threshold: -0.05` em `paper.signal` e `live.signal` |
+| `config.py` | Campo `mtf_1h_crash_threshold: float` em `BotConfig` + `load_config` |
+| `src/signal_engine.py` | Parâmetro no construtor + `self.mtf_1h_crash_threshold` substituindo hardcode |
+| `main.py` | Passagem `mtf_1h_crash_threshold=cfg.mtf_1h_crash_threshold` |
+
+Valor atual: `-0.05` (paper e live idênticos). Brain calibra via JSON.
+
+---
+
 *Documento gerado em: 03/06/2026*
-*Última atualização: 08/06/2026*
-*Versão: 4.0 · Última atualização: 08/06/2026*
+*Última atualização: 09/06/2026*
+*Versão: 4.1 · Última atualização: 09/06/2026*
 
 ---
 
