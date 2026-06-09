@@ -129,7 +129,7 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | Reason Code | Condição | Arquivo:Linha |
 |-------------|----------|---------------|
 | `rsi15m_too_high_vs_5m` | RSI_15m - 15 > RSI_5m (ambos não acima de 60) | signal_engine.py ~599 |
-| `rsi_lt_min_rsi_5m` | rsi:5m < 60.0 (paper) | signal_engine.py ~608 |
+| `rsi_lt_min_rsi_5m` | rsi:5m < 45.0 (paper) | signal_engine.py ~608 |
 | `rsi_1h_warmup` ⭐ **F-13** | rsi_1h == 50.0 (artificial) E uptime < 600s | signal_engine.py ~531 |
 
 ### Grupo 4 — Entrada Tardia e Volume
@@ -203,10 +203,12 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 08/06/2026 | mae_guard_late mfe threshold 2% → 3% | BBUSDT MFE=2.98% escapou com -15.92% | `fd0a4a5` |
 | 08/06/2026 | liq_threshold proporcional: max(oi_usd×0.02, $10k) | threshold fixo matematicamente impossível para altcoins de $3-5M OI | `9477fd8` |
 | 08/06/2026 | ema_trend:4h no MetricStore + gate ema_4h_bearish | 3 sessões: EMA:4h=-6 na maioria dos losers | `adaed4f` |
+| 09/06/2026 | Gate ema_4h_bearish: removido AND exp_btc_norm_1h < -1.5 | AND anulava gate — WAXPUSDT EMA:4h=-6, norm_1h=+1.378 → entrou → -16.93% | `9bce976` |
+| 09/06/2026 | min_rsi_5m paper 60 → 45 | BANANAS31 (+17%) bloqueado com RSI=48; zona ignição squeeze é 40–55, não >60 | `e52f2e9` |
 
 ---
 
-## 6. Parâmetros Críticos (preferences.json · estado 08/06/2026)
+## 6. Parâmetros Críticos (preferences.json · estado 09/06/2026)
 
 | Parâmetro | Valor Paper | Valor Live | Descrição |
 |-----------|-------------|------------|-----------|
@@ -214,6 +216,7 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | `min_trades_1m` | 10 | 5 | Gate combo — atividade mínima |
 | `min_oi_trend` | 0.015 (base) / 0.008 (gate combo) | 0.02 | OI crescendo |
 | `max_lsr_trend` | -0.002 (base) / -0.3 (gate combo) | -0.002 | Shorts capitulando |
+| `min_rsi_5m` | **45.0** | 70.0 | RSI mínimo 5m — zona ignição squeeze |
 | `min_cvd_change_pct` | 1.5 | 2.0 | CVD confirmando com cascade |
 | `min_cvd_change_pct_no_cascade` | 1.0 | 1.0 | CVD confirmando sem cascade |
 | `sl_pct` | 2.5% | 2.5% | Stop loss |
@@ -225,4 +228,4 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 
 ---
 
-*SQUEEZE_SNIPER_DNA.md v1.0 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
+*SQUEEZE_SNIPER_DNA.md v1.1 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
