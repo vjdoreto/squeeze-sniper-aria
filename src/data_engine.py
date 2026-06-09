@@ -397,7 +397,7 @@ class DataEngine:
         attempt = 0
         while self.running:
             try:
-                async with bsm.multiplex_socket(streams) as stream:
+                async with bsm.futures_multiplex_socket(streams) as stream:
                     attempt = 0
                     logger.info("Liquidation WebSocket: Conectado (!forceOrder@arr)")
                     while self.running:
