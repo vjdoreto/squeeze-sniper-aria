@@ -9,8 +9,11 @@
     "fee_pct": 0.0004,
     "blacklist": [
         "EPICUSDT",
+        "HOLOUSDT",
         "JTOUSDT",
-        "PARTIUSDT"
+        "NILUSDT",
+        "PARTIUSDT",
+        "PROVEUSDT"
     ],
     "fit_score_min": 20,
     "dashboard": {
@@ -45,7 +48,7 @@
             "cvd_streak_min": 4,
             "min_trades_1m": 10,
             "min_vol_adaptive_ratio": 0.7,
-            "min_rsi_5m": 60.0,
+            "min_rsi_5m": 45.0,
             "max_bid_ask_spread": 0.2,
             "min_oi_accel": 0.0,
             "min_score": 90,
@@ -54,7 +57,7 @@
         },
         "execution": {
             "sl_pct": 0.025,
-            "tp_pct": 0.04,
+            "tp_pct": 0.05,
             "sl_trailing_swing_low": true,
             "swing_low_tf": "5m",
             "kelly_enabled": true,
