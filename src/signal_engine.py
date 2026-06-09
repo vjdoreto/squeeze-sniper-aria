@@ -749,16 +749,17 @@ class SqueezeIgnition:
             self._write_ghost_signal(symbol, "volume_quality_spike", d, _eff_score)
             return None
 
-        # F-18: EMA:4h bearish + fraqueza relativa ao BTC no 1h.
-        # 3 sessões consecutivas: ema_trend:4h <= -4 presente na maioria dos losers.
-        # Gate combinado evita entrar contra tendência macro de 4h em ativo já fraco vs BTC.
+        # F-18 (corrigido): EMA:4h bearish sozinho é suficiente para bloquear.
+        # Segunda condição (exp_btc_norm_1h < -1.5) removida — anulava o gate.
+        # Evidência: WAXPUSDT EMA:4h=-6, norm_1h=+1.378 → entrou → -16.93%.
+        # Todos os grandes losers por max_hold/trailing em queda tinham EMA:4h=-6
+        # com norm_1h positivo. O AND tornava o gate ineficaz.
         _ema_4h = d.get("ema_trend:4h") or 0
-        _exp_btc_norm_1h = d.get("exp_btc_norm_1h") or 0.0
-        if _ema_4h <= -4 and _exp_btc_norm_1h < -1.5:
+        if _ema_4h <= -4:
             self._maybe_log_refusal(
                 symbol,
                 "ema_4h_bearish",
-                {"ema_trend:4h": _ema_4h, "exp_btc_norm_1h": _exp_btc_norm_1h},
+                {"ema_trend:4h": _ema_4h},
             )
             self._write_ghost_signal(symbol, "ema_4h_bearish", d, _eff_score)
             return None
