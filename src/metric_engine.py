@@ -315,6 +315,15 @@ class MetricStore:
                         # Se veio 0/ausente, aí sim forçamos mínimo.
                         self._warmup_samples[sym] = max(self._warmup_samples.get(sym, 0), self._min_warmup)
 
+            # Recalcular RSI/EMAs após cache quente — campos podem estar None se o cache
+            # foi salvo antes do primeiro kline final (ex: rsi:1h = None por até 60min).
+            for sym in self.symbols:
+                if sym not in self._klines:
+                    continue
+                for tf, buf in self._klines[sym].items():
+                    if len(buf) >= 5:
+                        self._update_indicators(sym, tf)
+
             logger.info(
                 "🔥 Boot quente! Cache carregado (idade: %.0fs)",
                 time.time() - state.get("timestamp", 0),
