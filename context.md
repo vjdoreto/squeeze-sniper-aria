@@ -846,9 +846,68 @@ Causa raiz: `_update_indicators` não era chamado durante o load do cache quente
 
 ---
 
+---
+
+### 🔧 Sprint Forge — 09/06/2026 (v4.5 — sessão Brain × ARIA × Forge)
+
+**Migração Brain + ARIA para Antigravity (Claude Code)**
+
+Agentes Brain e ARIA migrados do Claude Desktop para cá. Estrutura de pastas:
+- `brain/` — BRAIN_CONTEXT.md, backlog-brain-doreto-v1.0.md (v3.4 · 47 itens)
+- `aria/` — ARIA_CONTEXT.md, análises .md, indicadores .py, pasta eAssets/
+- `AGENTS.md` — definição permanente dos 4 papéis e protocolos
+- `tasks.md` — fila Brain → Forge
+
+**Análise dos 4 trades de hoje (Brain × ARIA consenso)**
+
+| Trade | Resultado | Exit | MFE | Achado |
+|-------|-----------|------|-----|--------|
+| ARUSDT | ❌ -$0.77 | squeeze_failed 90s | 0% | eAssets: ema_trend:4h=-6 — bot via 0 (gate F-18 cego) |
+| PARTIUSDT | ❌ -$0.91 | squeeze_aborted 120s | 0.37% | Score=86 entrou (bug fit_score_min); eAssets: ema:4h=+6 ignorado |
+| KATUSDT | ✅ +$0.50 | trailing 181s | 11% | Capturou só 22.8% — eAssets: EXP_BTC:1h=40.09 sinalizava múltiplas pernas |
+| AIGENSYNUSDT | ✅ +$1.27 | trailing 181s | 7.28% | Captura 87% — trade modelo |
+
+**fix(ema_trend_4h) — gate F-18 estava cego** · commit `c7edbf8`
+
+`ema_trend_4h=0` em 3/4 trades enquanto eAssets mostrava -6 e +6 reais.
+Causa: `_update_indicators` exigia `len(closes) >= 100` para calcular EMA trend.
+Fix: reduzido para `>= 50`. Arquivo: `src/metric_engine.py:409`.
+
+**Confirmação na próxima sessão:** verificar se `ema_trend_4h` aparece com valores ≠ 0 nos signals após restart.
+
+**fix(fit_score_min) — score=86 entrava após troca de modo** · commit `562e172`
+
+`_apply_runtime_mode` em `main.py:1498` lia `fit_score_min` da raiz do preferences.json (valor=20) em vez de `signal_node.get("min_score")` (valor=90). Toda troca de modo pelo dashboard sobrescrevia o threshold para 20.
+Fix: `prefs.get("fit_score_min")` → `signal_node.get("min_score")`.
+
+**Limpeza src/ — 10 arquivos mortos removidos** · commit `82fd193`
+
+Scripts de auditoria one-shot nunca importados em produção. src/ agora tem 18 arquivos — todos ativos.
+
+**B-48 adicionado ao backlog Brain**
+
+Scripts automáticos `analyze_logs.py` (Brain) e `analyze_eassets.py` (ARIA) para substituir análise manual. Próxima sessão Brain define prioridade.
+
+**Descoberta ARIA — EXP_BTC:1h > 30 = movimento de múltiplas pernas**
+
+KATUSDT EXP_BTC:1h=40.09 → +17.93% em 15min pós-saída. Trailing 75% capturou só 2.51%. Tese nova: quando EXP_BTC:1h > 30, trailing atual é insuficiente. Aguarda 20+ trades para confirmar antes de virar gate/parâmetro.
+
+**Macro eAssets 09/06/2026 23:44 UTC**
+- BTC: -2.37% no dia · ema_trend:4h=-6 · rsi:1h=37.7
+- 410/531 ativos com ema_trend:4h negativo (77%) — mercado bearish amplo
+- 48/531 com ema_trend:4h positivo — ilhas de desacoplamento onde o SS opera
+
+**Próximos passos (próxima sessão):**
+1. Confirmar `ema_trend_4h ≠ 0` nos signals após restart com fix ativo
+2. Confirmar `liq_short_1m > 0` — F-12 fixado em 09/06, ainda chegava zerado
+3. Brain prioriza B-48 (scripts automáticos) no backlog
+4. MTF — Sprint 5+ (pré-requisito EA-02)
+
+---
+
 *Documento gerado em: 03/06/2026*
 *Última atualização: 09/06/2026*
-*Versão: 4.4 · Última atualização: 09/06/2026*
+*Versão: 4.5 · Última atualização: 09/06/2026*
 
 ---
 
