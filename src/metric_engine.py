@@ -406,7 +406,9 @@ class MetricStore:
             self.data[symbol][f"rsi:{timeframe}_warmup"] = True
 
         # 2. EMAs e EMA Trend (-6 a +6)
-        if len(closes) >= 100:
+        # Mínimo 50 candles para 4h (vs 100 antes) — símbolos que não receberam
+        # todos os klines no boot conseguem calcular após ~8 dias de buffer parcial.
+        if len(closes) >= 50:
             price = closes[-1]
             e10 = self._calc_ema(closes, 10)
             e20 = self._calc_ema(closes, 20)
