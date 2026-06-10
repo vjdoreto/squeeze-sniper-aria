@@ -47,7 +47,7 @@ from fastapi.responses import JSONResponse
 _ARIA_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(_ARIA_DIR))
 
-from scripts.crm import calculate_crm, fetch_crm_data
+from scripts.crm import calculate_crm
 from scripts.grm import calculate_grm, fetch_grm_data
 from scripts.btc_reset import calculate_btc_reset
 from scripts.models import BTCResetInput, RiskLevel, ResetState
@@ -187,9 +187,16 @@ async def _fetch_macro_once() -> None:
                 logger.debug(f"Binance BTC 24h: {e}")
 
         # ── Calcula CRM ──────────────────────────────────────────────────
-        crm_input = await fetch_crm_data(
-            btc_change_24h=state.get("btc_change_24h"),
-            funding_rate_avg=_avg_funding_from_signals(),
+        # Usa dados já buscados neste ciclo — evita requests duplicadas para CoinGecko/FGI
+        from scripts.models import CRMInput
+        cg = state.get("coingecko", {})
+        fgi_val = state["fgi"].get("value") if state.get("fgi") else None
+        crm_input = CRMInput(
+            usdt_dominance   = cg.get("usdt_d"),
+            fear_greed_index = fgi_val,
+            btc_change_24h   = state.get("btc_change_24h"),
+            funding_rate_avg = _avg_funding_from_signals(),
+            eth_dominance    = cg.get("eth_d"),
         )
         state["crm"] = calculate_crm(crm_input)
 
