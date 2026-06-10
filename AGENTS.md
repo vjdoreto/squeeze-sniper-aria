@@ -82,7 +82,19 @@ Se Brain ou ARIA identificarem um fix urgente: escrevem em `tasks.md` com evidê
 
 **O código estar correto não justifica o processo errado.** Revisão pós-fato não é equivalente a execução consciente. Uma mudança incorreta que passa pela revisão do Forge é melhor do que uma mudança correta que não passou.
 
-> Histórico de quebras em 10/06/2026: commits `d8b939d` (ARIA), `315f0d6` (Brain), `6f0bc0a` (Forge paralelo) — todos aprovados após revisão, mas o protocolo foi violado nas três vezes. R-07 criado para prevenir recorrência.
+> Histórico de quebras em 10/06/2026: commits `d8b939d` (ARIA), `315f0d6` (Brain), `6f0bc0a` (Forge paralelo), `d089dce` (ARIA) — todos aprovados após revisão, mas o protocolo foi violado. R-07 criado para prevenir recorrência.
+
+#### Variante R-07 — Patch Pronto (autorizado por Doreto em 10/06/2026)
+
+Para mudanças pequenas e cirúrgicas (≤ 10 linhas, escopo único), Brain ou ARIA podem redigir o diff exato em `tasks.md` — código pronto, não descrição. O Forge lê, revisa, e executa o commit. **Quem commita é sempre o Forge.**
+
+Critérios para usar a variante:
+- Mudança ≤ 10 linhas em um único arquivo
+- Diff completo incluído em `tasks.md` (arquivo, linha, old → new)
+- Autorização de Doreto explícita na mesma sessão
+- Forge revisa antes de executar — não é execução automática
+
+O que **não** muda: ARIA/Brain nunca executam `git commit`, nunca editam arquivos diretamente, nunca pulam a revisão do Forge.
 
 ---
 
@@ -126,4 +138,4 @@ squeeze-sniper/
 
 ---
 
-*AGENTS.md v1.3 · Forge é guardião · 10/06/2026 — R-07 adicionado: código e commit são território exclusivo do Forge*
+*AGENTS.md v1.4 · Forge é guardião · 10/06/2026 — Variante R-07 adicionada: patch pronto por Brain/ARIA, commit sempre pelo Forge*

@@ -63,7 +63,9 @@ _Atualizado: 10/06/2026 · v2.1_
 
 ## ✅ EA-Sprint6 — Concluído (10/06/2026)
 
-- [x] **R-ARIA-03 · ema_trend:1h +5 pts no score** — discrimina pullback em tendência maior (4h/1h fortes, 5m fraco) de bear pleno; bônus não-bloqueante; evidência: snapshot eAssets 23:12 UTC mostra padrão 4h=+6/1h=+6/5m=0 (BEATUSDT) invisível ao score anterior · `src/market_view.py` L100 · autorização Doreto 10/06/2026
+- [x] **R-ARIA-03 · ema_trend:1h +5 pts no score** — discrimina pullback em tendência maior (4h/1h fortes, 5m fraco) de bear pleno; bônus não-bloqueante; evidência: snapshot eAssets 23:12 UTC mostra padrão 4h=+6/1h=+6/5m=0 (BEATUSDT) invisível ao score anterior · `src/market_view.py` L100 · autorização Doreto 10/06/2026 · commit `d089dce`
+
+> ⚠️ **Violação R-07 registrada:** commit `d089dce` foi executado pela ARIA (não pelo Forge). Código revisado pelo Forge e aprovado — nenhuma reversão necessária. Quarta violação no dia (anteriores: `d8b939d` ARIA, `315f0d6` Brain, `6f0bc0a` Forge paralelo). Ver R-07 em AGENTS.md.
 
 ## ✅ EA-Sprint5 — Concluído (09–10/06/2026)
 
