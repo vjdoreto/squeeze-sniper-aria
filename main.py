@@ -318,11 +318,13 @@ async def trading_loop(
     inflight: set,
     telegram: Optional[TelegramAlert] = None,
     risk_manager: Optional[DrawdownManager] = None,
+    symbol_throttler: Optional[SymbolThrottler] = None,
 ) -> None:
     # SPRINT 12.170: Rastro local para evitar chamadas redundantes ao RiskManager
     last_processed_closed_count = 0
 
-    symbol_throttler = SymbolThrottler(window_seconds=3600) # 1h de cooldown
+    if symbol_throttler is None:
+        symbol_throttler = SymbolThrottler(window_seconds=3600)
 
     try:
         # SPRINT 6.24: Warmup Gate (Governança de Dados)
@@ -2034,6 +2036,8 @@ async def main():
 
             paper_tracker.reset()
             state.reset_signals()
+            risk_manager.reset()
+            symbol_throttler.reset()
 
             logger.info(
                 "✅ reset-paper done (after open=%s closed=%s)",
@@ -2187,7 +2191,9 @@ async def main():
             
             # 1. Limpa trades e arquivos (incluindo metric_state.json e history)
             paper_tracker.reset()
-            
+            risk_manager.reset()
+            symbol_throttler.reset()
+
             state.reset_liquidation_history() # Resolvido Erro 7 do Pyright
             # 1.1 Limpa rastreador LIVE se existir
             if live_tracker:
@@ -2340,6 +2346,7 @@ async def main():
 
     # SPRINT 12.155: Instancia o Gerenciador de Risco (DNA Sniper)
     risk_manager = DrawdownManager(max_dd_pct=15.0)
+    symbol_throttler = SymbolThrottler(window_seconds=3600)
 
     tasks = [
         asyncio.create_task(
@@ -2351,7 +2358,8 @@ async def main():
                 journal,
                 inflight,
                 telegram=telegram,
-                risk_manager=risk_manager
+                risk_manager=risk_manager,
+                symbol_throttler=symbol_throttler,
             )
         ),
         asyncio.create_task(heartbeat(engine, signal_engine, state)),

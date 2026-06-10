@@ -66,6 +66,15 @@ class DrawdownManager:
     def can_trade(self) -> bool:
         return not self.trading_paused
 
+    def reset(self) -> None:
+        self.consecutive_losses = 0
+        self.risk_multiplier = 1.0
+        self.trading_paused = False
+        try:
+            self.state_path.unlink(missing_ok=True)
+        except Exception as e:
+            logger.error("Erro ao remover risk_state: %s", e)
+
     def _save_state(self):
         try:
             state = {
@@ -117,6 +126,13 @@ class SymbolThrottler:
             self.symbol_history[symbol] = []
         self.symbol_history[symbol].append(now)
         self._save_state()
+
+    def reset(self) -> None:
+        self.symbol_history = {}
+        try:
+            self.state_path.unlink(missing_ok=True)
+        except Exception as e:
+            logger.error("Erro ao remover throttle_state: %s", e)
 
     def _save_state(self):
         try:
