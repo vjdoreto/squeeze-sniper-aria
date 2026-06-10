@@ -407,7 +407,7 @@ Revisar se qualidade das análises cair ou contexto começar a se perder entre s
 ---
 
 ### B-29 — BTC Reset Monitor — integração no SS
-**Status:** Backlog · Sprint 3-4 · código pronto e testado  
+**Status:** ⏸️ Pausado · Sprint 6+ · decisão Doreto 10/06/2026 — foco em DNA e coleta de trades primeiro  
 **Origem:** Indicador proprietário Doreto · entregue pelo Analista Externo · 05/06/2026
 
 Mede desalavancagem do BTC em múltiplos TFs simultaneamente. Teoria da Tempestade e Bonança — mercado cripto precisa de "limpeza" antes de novos movimentos sustentados. Detecta dois padrões: RESET CLÁSSICO (RSI < threshold por tempo mínimo) e V RELÂMPAGO (queda + recuperação rápida = sinal de entrada explosivo).
@@ -428,7 +428,7 @@ Mede desalavancagem do BTC em múltiplos TFs simultaneamente. Teoria da Tempesta
 ---
 
 ### B-30 — CRM — Crypto Risk Meter — integração no SS
-**Status:** Backlog · Sprint 3-4 · código pronto e testado  
+**Status:** ⏸️ Pausado · Sprint 6+ · decisão Doreto 10/06/2026 — foco em DNA e coleta de trades primeiro  
 **Origem:** Indicador proprietário Doreto · entregue pelo Analista Externo · 05/06/2026
 
 Mede risco do ambiente cripto em tempo real. Score 0-100 com lógica FGI invertida intencionalmente — medo extremo = oportunidade para o operador que opera contra a manada. Ganância extrema = mercado alavancado = risco real.
@@ -570,7 +570,7 @@ _Última atualização: 06/06/2026 · Sprint 3 EA_
 ---
 
 ### B-34 — LSR bypass quando OI forte + liquidações confirmadas
-**Status:** Hipótese · aguarda evidência nos refusals  
+**Status:** Logging ativo · commit `6f0bc0a` · aguarda próxima sessão com dados reais de liq_short_1m nos refusals · 10/06/2026  
 **Origem:** Documentos externos filtrados pelo Brain · 06/06/2026
 
 Em squeezes violentos de altcoins, o LSR pode ter repique técnico positivo no exato momento da ignição antes de desabar — causando bloqueio indevido pelo gate `lsr_trend_positive`. A hipótese é que se `oi_change_pct:5m > 25%` AND `liq_short_1m > 0`, o LSR positivo poderia ser ignorado porque o fluxo institucional confirma o squeeze independente do ruído do LSR.
@@ -716,7 +716,7 @@ _Revisão periódica: sempre que Brain e Doreto se reunirem com novidades._
 _Versão atual: 3.1 · 08/06/2026_
 
 ### B-43 — mover threshold exaustao_15m para preferences.json
-**Status:** Backlog · melhoria de governança · baixa prioridade  
+**Status:** ✅ Implementado · commit `6f0bc0a` · 10/06/2026  
 **Origem:** Verificação B-35 · 09/06/2026
 
 Gate `exaustao_15m` em `signal_engine.py:643` usa threshold `pc_15m > 3.0` hardcoded. Valor correto e bem calibrado — não mexer agora. Mas mover para `preferences.json` facilita calibração futura sem tocar no código.
@@ -787,7 +787,7 @@ ALLOUSDT bloqueado 1.009 vezes — estava nos 100? ROBOUSDT EMA 6/6/6 com 20 nea
 ---
 
 ### B-48 — Scripts de análise automática Brain × ARIA
-**Status:** Backlog · Sprint 4 · prioridade média-alta
+**Status:** ✅ Implementado · commit `6f0bc0a` · 10/06/2026
 **Origem:** Doreto · 09/06/2026 · sessão de migração Brain+ARIA para Antigravity
 
 Hoje a análise dos 4 trades e o cruzamento com o eAssets foram feitos manualmente — Brain leu os logs, ARIA leu o JSON, Forge extraiu os dados. Com volume crescente de trades e sessões diárias, isso não escala.
@@ -811,6 +811,30 @@ Hoje a análise dos 4 trades e o cruzamento com o eAssets foram feitos manualmen
 
 **Benefício:** Brain e ARIA rodam os scripts, leem o output e já chegam ao consenso com dados prontos. Forge implementa o que sair do consenso. Ciclo de análise cai de 30min para 5min.
 
-**Próximo passo:** quando Brain confirmar prioridade, Forge implementa os dois scripts em sequência.
+**Próximo passo:** Forge implementa os dois scripts em sequência. Autorizado por Doreto 10/06/2026.
+
+**Adendo B-34-log (ARIA 10/06):** adicionar `liq_short_1m` ao refusal gravado em `signal_engine.py` junto com B-48. Uma linha de código — desbloqueia validação de B-34 na próxima sessão com dados reais.
+
+---
+
+### B-49 — Score teto 83 — thresholds de liq calibrados para large caps
+**Status:** ✅ Implementado parcialmente · commit `315f0d6` · 10/06/2026
+**Origem:** Consenso Brain × ARIA × Forge · diagnóstico sessão VELVET/BEAT
+
+Com F-12 ativo, eventos de liquidação chegavam ($438–$6090) mas eram descartados por piso de $10k. Score máximo travado em 83, min_score 85 — zero trades por design.
+
+**Fix aplicado:** thresholds score $10k/$50k/$100k → $1k/$5k/$20k. Floor liq_cascade $10k → $1k.
+
+**Validar na próxima sessão:** `liq_short_1m_stable > 0` contribuindo pts ao score. Score máximo atingindo 85+. `liq_cascade = True` aparecendo em pelo menos 1 trade.
+
+---
+
+### B-50 — Bootstrap cego para ativos fora do top 50 volume 24h estático
+**Status:** ✅ Implementado · commit `315f0d6` · 10/06/2026
+**Origem:** ARIA análise VELVET/BEAT · Brain diagnóstico paradoxo estrutural
+
+VELVET com exp:5m=0 enquanto subia +95% — estava no universo dos 288 mas sem klines no boot. Bootstrap expandido para top 30% por volume usando dados já carregados por _bootstrap_prices(). Sem chamadas REST extras.
+
+**Validar na próxima sessão:** log de boot `Bootstrap klines: top50=50 + volume_recente=X → Y únicos` — confirma expansão. Ativos que "acordam" no dia devem ter exp:5m populado desde o início.
 
 ---

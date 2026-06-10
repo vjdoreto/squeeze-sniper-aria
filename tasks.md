@@ -71,6 +71,78 @@ _Atualizado: 10/06/2026 · v2.1_
 - [x] **gitignore brain repo corrigido** — `!aria/**` deixava passar .py/.html; novo padrão `!*/` + `!*.md` (apenas markdowns) · `abfd81d`
 - [x] **eAssets dashboard** — pausado; debug macro HTML pendente (baixa prioridade, DevTools necessário)
 
+## 🚨 BLOQUEIO CRÍTICO — Consenso Brain × ARIA × Forge (10/06/2026)
+
+> **Contexto:** Bot coletou apenas 2 trades. Forge diagnosticou dados internos do SS e concluiu erroneamente "mercado sem pressão". Doreto corrigiu: VELVETUSDT +95%, BEATUSDT +55%, AIOUSDT +25% — squeezes reais que o bot não capturou. O SS está cego a oportunidades que estão acontecendo.
+
+### Dados confirmados pelo Forge (logs SS)
+- **Score máximo atingido: 83** · threshold: 85 · 4.868 refusals por `score_below_threshold`
+- **liq_short_1m = 0 e liq_cascade = false em 100% dos signals** — mesmo com F-12 ativo
+- Esses dois campos valem **35 pts** do score → teto prático ~83 sem eles
+- Causa provável: threshold F-16 (`max(OI × 2%, $10k)`) alto demais para os ativos monitorados
+- Ghost signals: só HOMEUSDT e PARTIUSDT chegam perto do threshold — universo restrito
+
+### Questões abertas — requerem consenso antes de qualquer fix
+
+**Para ARIA (análise eAssets):**
+- [ ] **Case VELVETUSDT +95%, BEATUSDT +55%, AIOUSDT +25%** — analisar o que os snapshots eAssets mostravam ANTES desses movimentos. Quais indicadores estavam ativos? OI, LSR, EXP_BTC, ema_trend:4h? O SS teria visto esses setups?
+- [ ] Snapshot atual: quantos ativos têm OI+ · LSR- · EXP_BTC+ simultaneamente? Score teórico máximo dos melhores candidatos atinge 85?
+- [ ] O mercado está gerando condições de squeeze agora ou está em regime diferente?
+
+**Para Brain (decisão estratégica):**
+- [ ] **Como desbloquear o score?** Com liq_cascade/liq_short_1m sempre zero, teto é 83. Opções:
+  - A) Reduzir `min_score` para 80 (mais trades, sem confirmação real de liquidações)
+  - B) Redistribuir os 35 pts de liq para componentes funcionais (CVD, trades_1m, exp_btc)
+  - C) Manter 85 e corrigir o threshold do F-16 para capturar liquidações menores
+- [ ] **O DNA atual está alinhado com o mercado de hoje?** LSR trend positivo + CVD negativo dominam os refusals — isso é o mercado ou o SS olhando os dados errados?
+- [ ] **`min_oi_trend: 0.015` no preferences vs `0.008` do gate combo** — há duplicação de filtro?
+
+**Para Forge (aguardando consenso):**
+- [ ] Implementar decisão do Brain sobre o score após análise ARIA confirmar causa raiz
+
+### Achado técnico Forge — causa raiz ESTRUTURAL confirmada no código (10/06/2026)
+
+**O pipeline F-12 está ativo** — eventos chegando via `futures_multiplex_socket`. O problema são os thresholds do score calibrados para large caps:
+
+`market_view.py` L120-125 — score contributions de `liq_short_1m_stable`:
+- `> $100k` → +15 pts · `> $50k` → +10 pts · `> $10k` → +5 pts
+- **Abaixo de $10k = 0 pts** (piso absoluto)
+
+`metric_engine.py` L728 — `liq_cascade`:
+- `_liq_threshold = max(oi_usd * 0.02, 10_000)` — floor de $10k por minuto por símbolo
+
+**Eventos reais confirmados (DIAG F-12 09/06):** BTWUSDT $6.090 · VELVETUSDT $4.439 · STGUSDT $1.276 · TRUMPUSDT $438
+
+Conclusão: para 99%+ dos ativos small/mid cap, liq_short_1m nunca atinge $10k/min → **0 pts de liq** → score teto 83 → threshold 85 nunca atingido.
+
+**VELVET +95%, BEAT +55%, AIO +25%:** provavelmente tiveram eventos de liquidação reais abaixo de $10k/min por símbolo. O SS recebeu, acumulou, e descartou silenciosamente por threshold. Bot estava cego apesar de ter os dados.
+
+**Proposta técnica para consenso Brain × ARIA:** reduzir thresholds proporcionalmente ao OI do ativo — mesma lógica do F-16 mas também no score. ARIA confirmar: esses 3 casos tinham liq events? Qual notional?
+
+### Achado estrutural Forge — Radar Global é parcialmente cego (10/06/2026)
+
+**VELVET score 12/22 com exp:5m=0.0 enquanto subia +100% — causa raiz:**
+
+O SS declara "RADAR GLOBAL: 530+ símbolos" mas na prática:
+- Boot bootstrap de klines: apenas **top 50 por volume** (`data_engine.py` L247)
+- Ativos fora do top 50: precisam de ~2.5h de WebSocket para ter `exp:5m` válido (30 candles × 5min)
+- OI/LSR: top 100 prioritários + rotação esporádica dos demais — dados velhos para small alts
+- Critério de prioridade (`data_engine.py` L557): `top_100 OR exp:5m>0.01 OR score>=60`
+
+**O paradoxo estrutural:** para entrar na janela de dados o ativo precisa já ter dados → nunca aquece antes de explodir.
+
+**Resultado:** VELVET, BEAT, AIO — small/mid caps prestes a squeeze — ficam em modo "frio" com dados zerados. O SS os scanneia, gera score inválido (12/22), rejeita. +100% invisível.
+
+**Questão para consenso (Doreto + Brain + ARIA):**
+O SS foi projetado para surfar squeezes de ativos JÁ com volume alto (top 100). Ativos que ainda não explodiram são invisíveis por design. Isso é uma limitação arquitetural — não de parâmetro.
+
+Opções:
+- **A) Fix arquitetural** — expandir bootstrap + warm prioritário para qualquer ativo com OI crescente ou volume spike nas últimas 4h (requer dados do eAssets ou CMC como feed externo)
+- **B) Ajuste de escopo** — aceitar que o SS opera apenas em top 100 por volume e calibrar o DNA para esse universo (abrir mão de VELVET-type)
+- **C) Pivô** — se o alvo são small/mid caps, o SS precisa de redesign na camada de dados
+
+---
+
 ## 🔴 Sprint 5 — Em andamento (objetivo: 50+ trades válidos)
 
 ### Prioridade 1 — F-01 Persistência cockpit Live (bug UX · pendente desde Sprint 3)
@@ -132,6 +204,14 @@ _Atualizado: 10/06/2026 · v2.1_
 
 O Brain rodou análise de discriminação com 40 trades (ver `reports/analise-score-03-06-2026.md`).  
 Próximo run após 50+ trades com `rsi_5m` e `ob_imbalance` agora exportados no signal dict.
+
+---
+
+---
+
+## ⚠️ Nota de protocolo — 10/06/2026
+
+ARIA implementou diretamente o commit `d8b939d` (fix T-1) sem passar por Brain → tasks.md → Forge. O código foi revisado pelo Forge e está correto — aprovado para produção. Mas o fluxo correto é: ARIA entrega achados ao Brain, Brain escreve em tasks.md, Forge implementa. Regra R-06 do AGENTS.md. Não repetir.
 
 ---
 
