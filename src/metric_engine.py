@@ -727,12 +727,16 @@ class MetricStore:
             # --- DNA Squeeze: Liquidation Cascade Detector ---
             liq_curr = d_snap.get("liq_short_1m", 0.0) or 0.0
             liq_prev = d_snap.get("liq_short_prev", 0.0) or 0.0
-            # F-16: threshold proporcional ao OI do ativo (Brain×Forge 08/06/2026).
-            # Threshold fixo de $500 era arbitrário — $500K para altcoins de $3-5M OI
-            # é matematicamente impossível; $500 capturava ruído sem discriminar cascata real.
-            # fix(T-1): floor $10k → $1k para small/mid caps (OI $2-5M); 2% do OI mantido.
+            # B-liq-cascade-tiers (Brain×Forge 10/06/2026): tiers por OI em vez de 2% flat.
+            # 0.02×OI domina para qualquer OI > $50k, mantendo cascade inacessível para small caps.
+            # Tiers: OI < $1M → $500 · $1M–$10M → $2k · > $10M → $10k
             _oi_usd = (d_snap.get("oi") or 0.0) * (d_snap.get("price") or 0.0)
-            _liq_threshold = max(_oi_usd * 0.02, 1_000.0)
+            if _oi_usd < 1_000_000:
+                _liq_threshold = 500.0
+            elif _oi_usd < 10_000_000:
+                _liq_threshold = 2_000.0
+            else:
+                _liq_threshold = 10_000.0
             d_snap["liq_cascade"] = liq_curr > (liq_prev * 1.8) and liq_curr > _liq_threshold
             d_snap["liq_short_prev"] = liq_curr
 
