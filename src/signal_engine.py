@@ -767,6 +767,20 @@ class SqueezeIgnition:
             self._write_ghost_signal(symbol, "ema_4h_bearish", d, _eff_score)
             return None
 
+        # Gate CVD absoluto negativo (Brain Sprint 5 — 10/06/2026)
+        # Losers IDUSDT (-234k) e GPSUSDT (-189k) entraram com CVD profundamente negativo e MFE=0%.
+        # Exceção: liq_cascade=True → CVD negativo é ruído mecânico das liquidações, não pressão vendedora.
+        # Threshold -100k validado pelo Brain: -50k overbloqueia, -100k captura casos patológicos.
+        _cvd_abs = d.get("volume_delta_1min") or 0.0
+        if _cvd_abs < -100_000 and not liq_cascade:
+            self._maybe_log_refusal(
+                symbol,
+                "cvd_abs_negative",
+                {"volume_delta_1min": _cvd_abs},
+            )
+            self._write_ghost_signal(symbol, "cvd_abs_negative", d, _eff_score)
+            return None
+
         # Squeeze Detection logic (Relaxada se for High Quality DNA)
         # SPRINT 7.1: Relaxation baseada em FORÇAS INSTITUCIONAIS (OI + Liq), não em score geral
         # Score alto = sinal tardio confirmado → manter filtros
