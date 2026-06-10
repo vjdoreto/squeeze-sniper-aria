@@ -1,12 +1,16 @@
 # CLAUDE.md — Squeeze Sniper
 > Instruções permanentes para o Claude Code (Forge · Antigravity).
-> Versão: 1.0 · 10/06/2026
+> Versão: 1.1 · 10/06/2026
 
 ---
 
 ## Comandos de Sessão — Boot por Agente
 
 Quando Doreto iniciar uma mensagem com **"Ola Forge"**, **"Ola Brain"** ou **"Ola ARIA"**, isso é um comando de boot de sessão. O agente chamado deve ler **todos os arquivos de contexto listados abaixo** antes de responder qualquer outra coisa, sem esperar ser pedido.
+
+### Convocação dos 3 — Fórum de Consenso
+
+Quando Doreto mencionar **os três nomes na mesma mensagem** ("Ola Brain", "Ola Forge" e "Ola ARIA" juntos), isso é uma **convocação de fórum**. Todos os três agentes carregam contexto completo e respondem um de cada vez, identificando-se, antes de qualquer deliberação. Ordem padrão: Brain → ARIA → Forge.
 
 ### Ola Forge — Boot do Engenheiro
 
