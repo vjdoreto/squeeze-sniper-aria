@@ -513,16 +513,29 @@ class SqueezeIgnition:
                     )
                 return None
 
-        # DNA: o LSR não pode estar subindo (ruim para long). 
-        # Um LSR estável (0.0) ou caindo é aceitável para a ignição.
+        # DNA: o LSR não pode estar subindo (ruim para long).
+        # B-34-bypass (Brain×Forge 10/06/2026): demand breakout — liq massiva + trades + CVD
+        # confirmam squeeze real mesmo com LSR subindo. Logar para auditoria Brain.
+        lsr_bypass_active = False
         if lsr_trend > 0.0:
-            self._maybe_log_refusal(
-                symbol,
-                "lsr_trend_positive",
-                {"lsr_trend": lsr_trend, "threshold": 0.0},
-            )
-            if debug_mode: logger.debug("Refutado %s: LSR Trend subindo (%s)", symbol, lsr_trend)
-            return None
+            _liq_short = d.get("liq_short_1m_stable") or 0.0
+            _trades_1m = d.get("trades_count_1min_stable") or 0
+            _cvd_pct   = d.get("cvd_change_pct:5m") or 0.0
+            if _liq_short > 20_000 and _trades_1m >= 15 and _cvd_pct > 2.0:
+                lsr_bypass_active = True
+                logger.info(
+                    "B-34-bypass %s: lsr_trend=%.4f IGNORADO (liq=%.0f trades=%d cvd=%.2f)",
+                    symbol, lsr_trend, _liq_short, _trades_1m, _cvd_pct,
+                )
+            else:
+                self._maybe_log_refusal(
+                    symbol,
+                    "lsr_trend_positive",
+                    {"lsr_trend": lsr_trend, "threshold": 0.0,
+                     "liq_short": _liq_short, "trades_1m": _trades_1m, "cvd_pct": _cvd_pct},
+                )
+                if debug_mode: logger.debug("Refutado %s: LSR Trend subindo (%s)", symbol, lsr_trend)
+                return None
 
         # SPRINT 11 / BUG 1: Garantia de funcionamento do RSI Gate
         # Fallback neutro 50.0 impede que o bot ignore sinais legítimos por delay de indicador
@@ -917,6 +930,7 @@ class SqueezeIgnition:
                     "timestamp": time.time(),
                     "volume_quality": round((cvd_change_pct or 0.0) / (int(trades_1m) + 1), 4),
                     "exp_btc_norm_1h": d.get("exp_btc_norm_1h") or 0.0,
+                    "lsr_bypass_active": lsr_bypass_active,
                 }
             lsr_val = d.get("lsr")
             
