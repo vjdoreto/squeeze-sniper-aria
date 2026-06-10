@@ -52,10 +52,23 @@ Ao final de cada sprint, Forge commita `context.md` nos **dois repos**:
 - `vjdoreto/squeeze-sniper` (privado — código)
 - `vjdoreto/squeeze-sniper-brain` (público — MDs)
 
-### R-04 — Commits Separados por Task
+### R-04 — Atualização de MDs é Parte da Entrega (não opcional)
+Sprint só está concluído quando os MDs vitais estiverem atualizados e commitados. A sequência obrigatória é:
+
+1. `SQUEEZE_SNIPER_DNA.md` — se houve mutação de gate, parâmetro ou fix de lógica
+2. `tasks.md` — marcar concluídos, adicionar novos se surgiram
+3. `brain/BRAIN_CONTEXT.md` — se houve validação ou nova evidência estratégica
+4. `aria/ARIA_CONTEXT.md` — se houve novo dado que afeta teses abertas
+5. `context.md` — sempre; resumo da sessão + estado atual
+6. `AGENTS.md` — se houve mudança de protocolo ou estrutura de pastas
+7. **Commit único de governança** → push privado → push público (R-03)
+
+> Motivo: sem essa rotina, os agentes chegam em sessões futuras com contexto desatualizado, tomam decisões erradas ou refazem investigações já feitas. O projeto perde memória institucional.
+
+### R-05 — Commits Separados por Task
 Cada fix ou feature tem seu próprio commit com mensagem descritiva. Nunca agrupar mudanças não relacionadas no mesmo commit.
 
-### R-05 — ARIA não fala com Forge diretamente
+### R-06 — ARIA não fala com Forge diretamente
 Descobertas da ARIA vão ao Brain. Brain filtra, prioriza e escreve em `tasks.md`. Forge executa via `tasks.md`. O fluxo é Brain → Forge, não ARIA → Forge.
 
 ---
@@ -100,4 +113,4 @@ squeeze-sniper/
 
 ---
 
-*AGENTS.md v1.1 · Forge é guardião · 09/06/2026 — estrutura de pastas atualizada*
+*AGENTS.md v1.2 · Forge é guardião · 09/06/2026 — R-04 governa atualização obrigatória de MDs*
