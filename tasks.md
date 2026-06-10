@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 04/06/2026 · v1.4_
+_Atualizado: 09/06/2026 · v2.0_
 
 ---
 
@@ -35,79 +35,51 @@ _Atualizado: 04/06/2026 · v1.4_
 - [x] **Signal dict completo em paper_closed** — 22 campos persistidos (era 8) · `src/paper_tracker.py` L793
 - [x] **Manifesto v2.0** — arquitetura Brain×Forge + protocolo GitHub · `docs/Engenheiro e DNA do Sniper v2.0.md`
 
-## 🔴 Sprint 3 — Em andamento
+## ✅ Sprint 3 — Concluído (05–06/06/2026)
 
-### Proteção de Capital
+- [x] **F-02 Toggle Paper/Live** — colapso automático de cockpit oposto · `src/web_dashboard.py` · `51be306`
+- [x] **F-03 Bracket tiers Binance** — bot valida notional antes do sizing · `src/sniper.py`
+- [x] **F-04 Squeezometer relatório** — snapshot agora lê max dos últimos 60min · `src/web_dashboard.py`
+- [x] **F-05 PaperAnalyzer** — threshold `min_trades_for_calibration: 30` implementado · `src/paper_analyzer.py`
+- [x] **F-06 Placeholders dashboard** — canvas vazio substituído por mensagem contextual · `src/web_dashboard.py`
+- [x] **F-10 Warm cache de klines** — buffer salvo/recarregado no boot; RSI/EMA disponíveis desde o 1º segundo
+- [x] **F-11 Ghost signals** — gate `rsi_1h_warmup` (300s warmup) eliminou sinais artificiais pós-restart
+- [x] **Gate combo** — `trades_1m ≥ 10 + oi_trend ≥ 0.008 + lsr_trend ≤ -0.3` bloqueou 78%+ dos losers em n=33
+- [x] **volume_quality_spike ≥ 2.0** — bloqueou 3 losers, 0 winners em n=33 · `src/signal_engine.py`
+- [x] **mae_guard_late** — 240s / pnl < -3% / mfe < 3% (janela entre squeeze_aborted e trailing) · `src/paper_tracker.py`
+- [x] **liq_threshold proporcional** — `max(oi_usd×0.02, $10k)` para altcoins de baixo OI · `src/metric_engine.py`
+- [x] **Correlation Guard expandido** — cobertura >100 símbolos · `src/risk_manager.py`
 
-- [ ] **Correlation Guard expandido** — cobrir 100+ símbolos além dos ~40 atuais · `src/risk_manager.py` CORR_GROUPS
-- [ ] **Margem de segurança Sniper** — reinstaurar `balance < usdt_amount × 1.1` quando > $100 · `src/sniper.py`
-- [ ] **Kelly floor** — verificar guard `min($20, capital×10%)` para casos kelly=0.001–0.017 bypassando o floor · `src/paper_tracker.py`
-- [ ] **MAE gate 60s** _(condicional)_ — implementar só se 20+ trades confirmarem WR 78% com MAE < 2% nos primeiros 60s
-- [ ] **Filtro de divergência temporal** — standby quando EXP_BTC:1m < 0 mas 15m/1h forte · `src/signal_engine.py`
+## ✅ EA-Sprint4 — Concluído (07–09/06/2026)
 
-### F-01 — Persistência do cockpit Live (bugs UX críticos) · Brain · 04/06/2026
+- [x] **F-12 WebSocket endpoint** — `futures_multiplex_socket` em vez de `multiplex_socket` → `liq_short_1m_stable` funcional · **CONFIRMADO boot 21:27:47** · `src/data_engine.py` · `4f2df00`
+- [x] **F-18 Gate ema_4h_bearish** — `ema_trend:4h ≤ -4` sem AND (AND anulava gate, WAXPUSDT -16.93%) · `src/signal_engine.py` ~753 · `9bce976`
+- [x] **F-17 min_rsi_5m paper 60→45** — zona de ignição do squeeze é 40–55, não >60; BANANAS31 +17% desbloqueado · `preferences.json` · `e52f2e9`
+- [x] **ema_trend:4h min candles 100→50** — gate F-18 cego para símbolos sem 100 klines 4h · `src/metric_engine.py` · `c7edbf8`
+- [x] **fix fit_score_min** — `_apply_runtime_mode` sobrescrevia min_score para 20 em vez de 90 · `src/sniper.py` · `562e172`
+- [x] **rsi_1h_warmup gate** — RSI:1h travado em 50.0 artificial nos primeiros 10min; gate de 600s corrigido · `src/signal_engine.py` · `d4446dd`
+- [x] **Organização do projeto** — `assets/`, `aria/scripts/`, `docs/_arquivo/` criados; root limpo; logo path corrigido · `9b... (commit housekeeping)`
+- [x] **Blacklist zerada** — EPICUSDT/HOLOUSDT/JTOUSDT/NILUSDT/PARTIUSDT/PROVEUSDT removidos; gates dinâmicos substituem lista estática · `preferences.json`
 
-- [ ] **Capital/Risco%/Alav/MaxPos/Compound não persistem** — voltam ao padrão a cada restart. Verificar se `loadLiveAdvancedConfig` lê `preferences.json["live"]` no boot · `src/web_dashboard.py`
-- [ ] **Saldo e Margem param de atualizar** — carregam na primeira conexão mas não atualizam em tempo real. Verificar se snapshot do LiveTracker está nos broadcasts do WebSocket após boot · `src/web_dashboard.py` + `main.py`
-- [ ] **Compound não persiste** — verificar se toggle salva em `preferences.json` ou só em memória · `src/web_dashboard.py`
+## 🔴 Sprint 5 — Em andamento (objetivo: 50+ trades válidos)
 
-> Critério: Capital/Risco%/Alav/MaxPos carregam do preferences.json ao reiniciar. Saldo atualiza em tempo real. Compound persiste entre sessões.
+### Prioridade 1 — F-01 Persistência cockpit Live (bug UX · pendente desde Sprint 3)
+- [ ] **Capital/Risco%/Alav/MaxPos/Compound não persistem** após restart → verificar `loadLiveAdvancedConfig` lê `preferences.json["live"]` no boot · `src/web_dashboard.py`
+- [ ] **Saldo e Margem não atualizam em tempo real** após boot → verificar snapshot LiveTracker nos broadcasts WS · `src/web_dashboard.py` + `main.py`
 
-### F-02 — Toggle Paper/Live com colapso automático de cockpit · Brain · 04/06/2026
+### Prioridade 2 — Validação estatística
+- [ ] **Coletar 50+ trades** com todos os fixes ativos (F-12 confirmado, ema_4h_bearish ativo, fit_score_min correto)
+- [ ] **Auditar gate ema_4h_bearish** — verificar `signal_refusals.jsonl` para confirmar gate disparando em losers
+- [ ] **Auditar tese T-01** (liq_cascade discrimina MFE) — analisar 20+ trades com `liq_short_1m > 0`
+- [ ] **Auditar tese T-02** (ema_trend_4h × win rate) — cruzar `ema_trend_4h` × `exit_reason` × `mfe`
+- [ ] **Auditar tese T-03** (rsi_1h > 60 → MFE 2×) — verificar dispersão de `rsi_1h` nos próximos trades
 
-- [ ] **Cockpit oposto recolhe ao trocar de modo** — Paper ativo: cockpit Live recolhido. Live ativo: cockpit Paper recolhido. Botão PAPER/LIVE já existe — adicionar comportamento de colapso do painel oposto · `src/web_dashboard.py`
-- [ ] Verificar se o botão já dispara evento de estado no frontend e se os cockpits têm IDs/classes separados para toggle CSS
-
-> Critério: Alternar Paper/Live recolhe o painel oposto sem perder dados.
-
-### F-03 — Verificar bracket tiers da Binance no sizing · Brain · 04/06/2026
-
-- [ ] **Bot consulta `GET /fapi/v1/leverageBracket` antes do sizing?** — Se não, sizing pode calcular margem acima do notional máximo permitido para aquele símbolo/alavancagem · `src/sniper.py` ou `src/paper_tracker.py`
-- [ ] **Verificar `kelly_fraction` nos logs** — se chegando abaixo de 2% consistentemente, o problema é Kelly subestimando, não o floor $20. Se confirmado, Brain precisa ver os dados antes de qualquer ajuste
-
-> Critério: Bot valida bracket tier antes de abrir posição. Se kelly_fraction < 2% consistente → pauta para o Brain antes de codar.
-
-### F-04 — Squeezometer zerado nos relatórios horários · Brain · 04/06/2026
-
-- [ ] **Relatório horário captura valor zerado** — Evidência: 3 relatórios seguidos com Squeezometer 0/100 enquanto alertas do mesmo período mostravam 80–83. Hipótese: relatório lê o valor num momento de reset entre ciclos. Verificar de onde o snapshot lê o Squeezometer e se há reset periódico coincidindo com o horário · `src/web_dashboard.py` ou `main.py`
-- [ ] Se reset confirmado — relatório deve ler o **valor máximo dos últimos 60min** em vez do valor instantâneo
-
-> Critério: Relatório horário mostra valor consistente com os alertas do mesmo período.
-
-### F-05 — PaperAnalyzer: threshold mínimo de amostras + hot-reload do preferences.json · Brain · 04/06/2026
-
-- [ ] **Threshold mínimo para auto-calibração** — PaperAnalyzer só dispara sugestões com ≥ 30 trades fechados. Abaixo disso: apenas loga a análise, sem aplicar ao `preferences.json`. Evidência: com 10 trades sugeriu `min_trades_1m = 150` — bloquearia winner legítimo (MEME 98 Tr/1m +2.18%) e não teria evitado loser (AIXBT 420 Tr/1m MFE=0). Parâmetro: `min_trades_for_calibration: 30` em `preferences.json` · `src/paper_analyzer.py`
-- [ ] **Hot-reload do preferences.json** — confirmar se mudanças em runtime entram em vigor imediatamente ou só no próximo boot. Se só no boot: log explícito quando parâmetro auto-calibrado entrar em vigor · `main.py`
-
-> Critério: Auto-calibração só aplica com 30+ trades. Log explícito quando parâmetro entra em vigor.
-
-### F-06 — Gráficos do dashboard: placeholder "aguardando trades" · Brain · 04/06/2026
-
-- [ ] **Canvas vazio substituído por placeholder contextual** — Equity/Drawdown: "Aguardando primeiros trades para gerar curva". Kelly/Win Rate por Ativo: "Disponível após 10+ trades". Código dos gráficos permanece intacto — só lógica de exibição condicional · `src/web_dashboard.py`
-
-> Critério: Dashboard não exibe canvas vazio — mensagem contextual aparece até ter dados suficientes.
+### KPIs GO/LIVE
+- [ ] WR ≥ 60%, PF ≥ 1.5, MaxDD ≤ 12%, MFE ≥ 50%, nenhum loss > 8%
 
 ---
 
-## 🟡 Dashboard & UX — Bugs Identificados (Sprint 2)
-
-- [ ] **Live config não persiste após restart** — Capital, Risco%, Alav., Max Pos do painel LIVE voltam ao padrão a cada reinício. Deve carregar do `preferences.json["live"]` no boot do dashboard. Arquivo: `src/web_dashboard.py` (loadLiveAdvancedConfig ou equivalente)
-
-- [ ] **Live data não atualiza dinamicamente** — Saldo e Margem carregam na primeira conexão mas param de atualizar. Verificar se o snapshot do LiveTracker está sendo incluído nos broadcasts do WebSocket após o boot. Arquivo: `src/web_dashboard.py` + `main.py` (ws send_loop)
-
-- [ ] **Charts do dashboard sem expressão** — Equity, Drawdown, Kelly e Win Rate ficam vazios até ter trades fechados. Considerar placeholder visual com mensagem de contexto (ex: "aguardando primeiros trades") em vez de canvas em branco.
-
----
-
-## 🔵 Infraestrutura — Warm Cache de Klines (Sprint 2 ou 3)
-
-- [ ] **Persistir buffer de klines em disco** — salvar `logs/kline_cache/{symbol}_5m.json` no shutdown e recarregar no boot. Elimina o warmup de 70min para RSI/EMA após restart ou hard reset. Cache com TTL de 24h — se mais antigo, descarta e baixa do zero. Formato: JSON ou SQLite. Banco completo é overkill para esse volume.
-  - Impacto: RSI e EMA disponíveis desde o primeiro segundo após reinício
-  - Origem: Forge · 03/06/2026 · identificado durante sessão noturna
-
----
-
-## 🟡 Sprint 4 — Liquidity Guard
+## 🟡 Sprint 6 — Liquidity Guard (pós-validação 50+ trades)
 
 - [ ] **validate_liquidity()** — validar profundidade OB antes de entrar · `src/paper_tracker.py` → `src/sniper.py`
 - [ ] **Critério:** ≥ 1 trade rejeitado por sessão com log auditável

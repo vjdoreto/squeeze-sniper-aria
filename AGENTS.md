@@ -85,14 +85,19 @@ squeeze-sniper/
 ├── SQUEEZE_SNIPER_DNA.md        ← guardião: Forge
 ├── context.md                   ← memória compartilhada (versionada)
 ├── tasks.md                     ← fila Brain → Forge
+├── docs/
+│   ├── HOUSEKEEPING.md          ← regras de higiene do projeto
+│   └── _arquivo/                ← scripts legados arquivados
+├── assets/                      ← logo.png, imagens — não executáveis
 ├── brain/
 │   ├── BRAIN_CONTEXT.md         ← contexto estratégico do Brain
 │   └── backlog-brain-doreto-v*.md  ← backlog (Brain coloca manualmente)
 ├── aria/
-│   └── ARIA_CONTEXT.md          ← contexto e teses da ARIA
+│   ├── ARIA_CONTEXT.md          ← contexto e teses da ARIA
+│   └── scripts/                 ← scripts de análise ARIA (não produção)
 └── src/                         ← código (Forge only)
 ```
 
 ---
 
-*AGENTS.md v1.0 · Forge é guardião · 09/06/2026*
+*AGENTS.md v1.1 · Forge é guardião · 09/06/2026 — estrutura de pastas atualizada*

@@ -1024,7 +1024,7 @@ Ainda exige `liq_curr > liq_prev * 1.8` (aceleração de 80%).
 | lsr_trend_not_negative | lsr_trend > -0.3 | `lsr_trend_not_negative` |
 | volume_quality_spike | vq >= 2.0 | `volume_quality_spike` |
 | rsi_1h_warmup | rsi_1h == 50.0 E uptime < 600s | `rsi_1h_warmup` |
-| **ema_4h_bearish (novo)** | ema_4h <= -4 E exp_btc_norm_1h < -1.5 | `ema_4h_bearish` |
+| **ema_4h_bearish** | ema_4h <= -4 (AND removido — `9bce976`) | `ema_4h_bearish` |
 | mae_guard_late | dur >= 240s E pnl < -3% E mfe < 3% | `mae_guard_late` |
 
 ### O que monitorar na próxima sessão
@@ -1058,6 +1058,45 @@ BANANAS31 (+17%, melhor winner da amostra) estava bloqueado com RSI=48. A zona d
 | `paper.signal.min_rsi_5m` | 60.0 | **45.0** | Zona de acumulação 40–55 |
 | Gate `ema_4h_bearish` | `<= -4 AND norm_1h < -1.5` | **`<= -4` (só)** | AND anulava o gate |
 
-### ⏳ Pendente F-12
+### ✅ F-12 CONFIRMADO (09/06/2026 — boot 21:27:47)
 
-O fix do notional (`ap*z`) corrige o cálculo mas a validação real só acontece na próxima sessão de paper trading. Se `F-12 liq_accum:` não aparecer nos logs → stream não está ativo → investigar se `bsm.multiplex_socket(["!forceOrder@arr"])` está conectando corretamente na biblioteca `python-binance` em uso.
+`DIAG F-12 payload bruto (#1)` apareceu 42 segundos após o boot. Pipeline funcional:
+- `F-12 liq_accum:` registrando notionals reais — TRUMPUSDT $438, STGUSDT $1276, BTWUSDT $6090, VELVETUSDT $4439
+- `F-12 liq_stable:` gerando valores estáveis para o signal dict
+- Todos os 42+ trades anteriores a essa sessão tinham `liq_short_1m_stable = 0` — dados históricos invalidados para teses T-01/T-02/T-03
+
+---
+
+## 🧹 Sessão 09/06/2026 — Validação e Higiene do Projeto
+
+### Validações confirmadas nesta sessão
+
+| Fix | Status | Evidência |
+|-----|--------|-----------|
+| **F-12** WebSocket endpoint Futures | ✅ CONFIRMADO | DIAG 21:27:47, notionals reais |
+| **ema_trend_4h** no signal dict | ✅ CONFIRMADO | fix candles 100→50, commit `c7edbf8` |
+| **rsi:1h** real pós-cache | ✅ CONFIRMADO | gate rsi_1h_warmup fora do top-5 no 2º boot |
+| **fit_score_min=90** mantido | ✅ CONFIRMADO | bug _apply_runtime_mode corrigido `562e172` |
+| **boot quente** (cache 30s) | ✅ CONFIRMADO | klines com age=30s na 2ª inicialização |
+
+### Organização do projeto executada
+
+- `assets/` criado — logo.png e imagens movidos da raiz
+- `aria/scripts/` criado — scripts de análise ARIA movidos de `aria/`
+- `docs/_arquivo/` criado — scripts legados arquivados (`claude_hub.py`, `preferences.suggested.json`)
+- `logo.png` path corrigido em `src/web_dashboard.py:2826` → `assets/logo.png`
+- `docs/HOUSEKEEPING.md` criado — regras de higiene permanentes do projeto
+
+### Blacklist zerada
+
+`preferences.json → blacklist: []`
+
+EPICUSDT, HOLOUSDT, JTOUSDT, NILUSDT, PARTIUSDT, PROVEUSDT removidos.
+Filosofia: ativos mudam de comportamento por minuto. Gates dinâmicos (`ema_4h_bearish`, `spread_too_high`, `cvd_not_confirming`) cobrem os casos de forma precisa e adaptativa, sem penalizar símbolos que voltaram a se comportar bem.
+
+### Estado atual (09/06/2026 — fim de sessão)
+
+- Bot rodando em paper mode, todos os gates ativos, pipeline liq funcional
+- 50+ trades necessários para auditoria estatística (T-01/T-02/T-03)
+- F-01 (cockpit Live persistence) ainda pendente — único bug UX aberto
+- Próxima pauta Brain: gate momentum sub-minuto (ring buffers 10s/20s/30s) e macro CMC

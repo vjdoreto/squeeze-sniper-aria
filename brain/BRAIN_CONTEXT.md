@@ -73,10 +73,11 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 ## 6. O Que Está Pendente de Validação
 
 ### Alta prioridade — aguardando primeiros trades com sistema limpo
-- [ ] `liq_short_1m_stable` e `liq_cascade` com dados reais (F-12 corrigido em 09/06 — era endpoint Spot, corrigido para Futures)
-- [ ] `ema_trend_4h` no signal dict (corrigido 09/06 — não estava sendo exportado)
-- [ ] `rsi:1h` real pós-cache quente (corrigido 09/06 — não recalculava após load)
-- [ ] Gate `ema_4h_bearish` disparando de fato em losers (auditar via `signal_refusals.jsonl`)
+- [x] `liq_short_1m_stable` e `liq_cascade` com dados reais — **CONFIRMADO 09/06 21:27:47** (TRUMPUSDT $438, BTWUSDT $6090 — pipeline funcional)
+- [x] `ema_trend_4h` no signal dict — **CONFIRMADO 09/06** (fix candles 100→50, commit `c7edbf8`)
+- [x] `rsi:1h` real pós-cache quente — **CONFIRMADO 09/06** (gate rsi_1h_warmup não aparece no top-5 após 2º boot)
+- [ ] Gate `ema_4h_bearish` disparando de fato em losers (auditar via `signal_refusals.jsonl` — aguarda 50+ trades)
+- [ ] `liq_cascade` (boolean) gerando entradas de qualidade — aguarda amostras com liq_short_1m ativo
 
 ### Backlog estratégico (Brain define prioridade)
 - [ ] **Gate momentum sub-minuto** — ring buffers 10s/20s/30s AggTrade
@@ -100,4 +101,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.0 · Forge é guardião · 09/06/2026*
+*BRAIN_CONTEXT.md v1.1 · Forge é guardião · 09/06/2026 — F-12/ema_4h/rsi:1h confirmados, blacklist zerada*

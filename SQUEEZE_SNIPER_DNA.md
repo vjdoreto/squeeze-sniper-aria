@@ -2,7 +2,7 @@
 > **Guardião:** Forge (Antigravity) — atualiza a cada sprint quando o DNA sofrer mutação.  
 > **Brain:** consulta, não edita.  
 > **Mutações:** requerem autorização expressa de Bob Doreto.  
-> **Versão:** 1.0 · 08/06/2026
+> **Versão:** 1.3 · 09/06/2026
 
 ---
 
@@ -157,7 +157,7 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | `oi_trend_too_weak` | oi_trend < 0.008 | signal_engine.py ~708 |
 | `lsr_trend_not_negative` | lsr_trend > -0.3 | signal_engine.py ~717 |
 | `volume_quality_spike` ⭐ **F-15** | cvd_change_pct / (trades_1m+1) >= 2.0 | signal_engine.py ~742 |
-| `ema_4h_bearish` ⭐ **F-18** | ema_trend:4h <= -4 E exp_btc_norm_1h < -1.5 | signal_engine.py ~753 |
+| `ema_4h_bearish` ⭐ **F-18** | ema_trend:4h <= -4 (sozinho — AND removido) | signal_engine.py ~753 |
 
 ### Grupo 7 — Squeeze Detection (dentro do bloco final)
 
@@ -207,6 +207,8 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 09/06/2026 | min_rsi_5m paper 60 → 45 | BANANAS31 (+17%) bloqueado com RSI=48; zona ignição squeeze é 40–55, não >60 | `e52f2e9` |
 | 09/06/2026 | fix ema_trend:4h — mínimo candles 100→50 | Gate F-18 cego: campo ficava 0 para símbolos sem 100 klines 4h no buffer. ARUSDT eAssets=-6, bot via 0 | `c7edbf8` |
 | 09/06/2026 | fix fit_score_min — _apply_runtime_mode lia raiz prefs (20) | PARTIUSDT entrou com score=86; toda troca de modo sobrescrevia threshold para 20 em vez de 90 | `562e172` |
+| 09/06/2026 | blacklist zerada — filosfia dinâmica | EPICUSDT/HOLOUSDT/etc removidos: ativos mudam por minuto, ema_4h_bearish + spread_too_high cobrem os casos | manual |
+| 09/06/2026 | **F-12 CONFIRMADO** — liq_short_1m_stable funcional | Pipeline liquidações gerando dados reais (TRUMPUSDT $438, STGUSDT $1276, BTWUSDT $6090); 42 trades anteriores com liq=0 invalidados | boot 21:27:47 |
 
 ---
 
@@ -227,7 +229,8 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | `min_hold_seconds` | 180s | 180s | Tempo mínimo antes do trailing |
 | `trailing_activation_delay_sec` | 180s | 180s | Delay ativação trailing |
 | `trailing_stop_callback` | 75% (ou 50% se MFE≥3%) | 75% | Callback adaptativo |
+| `blacklist` | `[]` | `[]` | Zerada 09/06 — gates dinâmicos substituem lista estática |
 
 ---
 
-*SQUEEZE_SNIPER_DNA.md v1.2 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
+*SQUEEZE_SNIPER_DNA.md v1.3 · 09/06/2026 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*

@@ -66,18 +66,18 @@ ARUSDT: EXP_BTC:1m=-2.47 (fraco) mas EXP_BTC:1h=+42 (fortíssimo) → bot entrou
 
 ### T-01: liq_cascade como discriminador principal
 **Hipótese:** trades com `liq_cascade = True` têm MFE e PnL significativamente maiores que os sem cascade.
-**Bloqueio:** `liq_short_1m` era sempre 0 até 09/06 (endpoint WebSocket errado). Dados reais só a partir desta sessão.
+**Status:** 🟢 DESBLOQUEADA — pipeline funcional desde 09/06 21:27:47 (TRUMPUSDT $438, BTWUSDT $6090 confirmados)
 **Próximo passo:** analisar primeiros 20+ trades com `liq_short_1m > 0` — distribuição por exit_reason e MFE.
 
 ### T-02: ema_trend_4h como filtro de qualidade
 **Hipótese:** trades com `ema_trend_4h ≥ 0` têm win rate > 70%; com `ema_trend_4h ≤ -2` win rate < 40%.
-**Bloqueio:** campo não estava no signal dict até 09/06.
+**Status:** 🟢 DESBLOQUEADA — campo no signal dict desde 09/06 (fix candles 100→50, gate F-18 ativo sem AND)
 **Próximo passo:** cruzar `ema_trend_4h` × `exit_reason` × `mfe` nos próximos trades.
 
 ### T-03: rsi_1h como gate de momentum
 **Hipótese:** entradas com `rsi_1h > 60` têm MFE médio 2× maior que `rsi_1h < 50`.
-**Bloqueio:** rsi_1h estava travado em 50.0 artificial por bug de cache (corrigido 09/06).
-**Próximo passo:** validar distribuição de rsi_1h nos próximos trades — confirmar que valores reais aparecem.
+**Status:** 🟢 DESBLOQUEADA — bug de cache corrigido 09/06 (rsi_1h recalculado após load; gate rsi_1h_warmup fora do top-5 no 2º boot)
+**Próximo passo:** validar distribuição de rsi_1h nos próximos 20 trades — confirmar dispersão real (≠ 50.0).
 
 ### T-04: exp_btc_norm_1h como contexto macro
 **Hipótese:** Z-score > +1.0 = ativo quente acima da média histórica = squeeze com mais momentum.
@@ -97,4 +97,4 @@ Cada análise ARIA entrega:
 
 ---
 
-*ARIA_CONTEXT.md v1.0 · Forge é guardião · 09/06/2026*
+*ARIA_CONTEXT.md v1.1 · Forge é guardião · 09/06/2026 — T-01/T-02/T-03 desbloqueadas*
