@@ -129,7 +129,7 @@ class MetricStore:
                     "ema_trend:5m": 0,
                     "ema_trend:15m": 0,
                     "ema_trend:1h": 0,
-                    "ema_trend:4h": 0,  # F-18
+                    "ema_trend:4h": None,  # F-18: None = sem dados ainda (< 50 candles)
                     "range_level:5m": 0,
                     "range_level:15m": 0,
                     "range_level:1h": 0,
@@ -184,7 +184,7 @@ class MetricStore:
                 if "4h" not in existing_kl:  # F-18
                     existing_kl["4h"] = []
                 if "ema_trend:4h" not in self.data[s]:  # F-18
-                    self.data[s]["ema_trend:4h"] = 0
+                    self.data[s]["ema_trend:4h"] = None
                 if "volume_3h_avg" not in self.data[s]:
                     self.data[s]["volume_3h_avg"] = 0.0
                 if "vol_3h_warmup" not in self.data[s]:

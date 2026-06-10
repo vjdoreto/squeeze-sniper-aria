@@ -757,8 +757,8 @@ class SqueezeIgnition:
         # Evidência: WAXPUSDT EMA:4h=-6, norm_1h=+1.378 → entrou → -16.93%.
         # Todos os grandes losers por max_hold/trailing em queda tinham EMA:4h=-6
         # com norm_1h positivo. O AND tornava o gate ineficaz.
-        _ema_4h = d.get("ema_trend:4h") or 0
-        if _ema_4h <= -4:
+        _ema_4h = d.get("ema_trend:4h")  # None = klines 4h ainda não carregadas (< 50 candles)
+        if _ema_4h is not None and _ema_4h <= -4:
             self._maybe_log_refusal(
                 symbol,
                 "ema_4h_bearish",

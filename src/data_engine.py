@@ -162,6 +162,7 @@ class DataEngine:
         
         tasks = [
             self._fetch_initial_klines(),
+            self._fetch_4h_klines_all(),
             self._listen_agg_trades(),
             self._listen_klines(),
             self._listen_liquidations(),
@@ -267,6 +268,45 @@ class DataEngine:
 
         await asyncio.gather(*(fetch_symbol(s) for s in missing))
         logger.info("✅ Klines iniciais completas.")
+
+    async def _fetch_4h_klines_all(self):
+        """Baixa klines 4h para TODOS os símbolos (não apenas top 50).
+        Roda com semáforo dedicado de 3 para evitar rate-limit.
+        Gate F-18 (ema_trend:4h) fica cego sem esses dados — executa no boot
+        e repete a cada 4h para manter o buffer atualizado.
+        """
+        assert self.store is not None
+        assert self.client is not None
+        store = self.store
+        client = self.client
+        sem_4h = asyncio.Semaphore(3)
+
+        async def _run():
+            while self.running:
+                missing = [
+                    s for s in self.symbols
+                    if len(store._klines.get(s, {}).get("4h", [])) < 50
+                ]
+                if missing:
+                    logger.info("📊 Bootstrap 4h: %d simbolos sem dados suficientes...", len(missing))
+                    async def fetch_4h(symbol: str):
+                        async with sem_4h:
+                            try:
+                                k = await client.futures_klines(symbol=symbol, interval='4h', limit=110)  # type: ignore
+                                if k:
+                                    store.init_klines(symbol, "4h", [float(x[4]) for x in k], [float(x[5]) for x in k])
+                                await asyncio.sleep(0.15)
+                            except asyncio.CancelledError:
+                                raise
+                            except Exception as e:
+                                logger.debug("Erro 4h klines %s: %s", symbol, e)
+
+                    await asyncio.gather(*(fetch_4h(s) for s in missing))
+                    remaining = sum(1 for s in self.symbols if len(store._klines.get(s, {}).get("4h", [])) < 50)
+                    logger.info("✅ Bootstrap 4h concluido. Ainda sem dados: %d simbolos.", remaining)
+                await asyncio.sleep(4 * 3600)  # repete a cada 4h
+
+        asyncio.create_task(_run())
 
     async def _periodic_reset_1m(self):
         """Centraliza o reset de métricas de 1m para evitar conflitos entre tarefas de lote."""
