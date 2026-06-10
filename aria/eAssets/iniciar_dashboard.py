@@ -1,29 +1,38 @@
+"""
+iniciar_dashboard.py — Launcher do eAssets Dashboard
+Doreto Squeeze Sniper · v2.0 · 09/06/2026
+
+Inicia UM único processo (server.py) e abre o browser.
+O server.py já faz tudo: monitor de arquivos + fetch macro + cálculo dos indicadores.
+"""
+
 import subprocess
 import webbrowser
 import time
-import os
 import sys
 from pathlib import Path
 
-BASE_PATH = Path("c:/Apps/#5 SqueezeSniper-V4/eAssets")
+BASE_PATH = Path(__file__).parent
 HTML_FILE = BASE_PATH / "doreto-squeeze-sniper.html"
+SERVER    = BASE_PATH / "server.py"
+
 
 def launch():
-    print("🔥 Iniciando Ecossistema eAssets...")
-    
-    # 1. Inicia o Servidor de Enriquecimento
-    subprocess.Popen([sys.executable, str(BASE_PATH / "enrich_server.py")], 
-                     creationflags=subprocess.CREATE_NEW_CONSOLE)
-    
-    # 2. Inicia o Monitor de Downloads/Pastas
-    subprocess.Popen([sys.executable, str(BASE_PATH / "monitorar_eassets.py")], 
-                     creationflags=subprocess.CREATE_NEW_CONSOLE)
-    
-    print("⏳ Aguardando inicialização dos serviços...")
-    time.sleep(2)
-    
-    # 3. Abre o Dashboard no Navegador
+    print("🔥 Iniciando eAssets Dashboard Server v2.0...")
+
+    proc = subprocess.Popen(
+        [sys.executable, str(SERVER)],
+        creationflags=subprocess.CREATE_NEW_CONSOLE,
+    )
+
+    print(f"⏳ Servidor iniciado (PID {proc.pid}) — aguardando 3s...")
+    time.sleep(3)
+
+    print(f"🌐 Abrindo dashboard: {HTML_FILE.as_uri()}")
     webbrowser.open(HTML_FILE.absolute().as_uri())
+
+    print("✅ Pronto! Feche a janela do servidor para encerrar.")
+
 
 if __name__ == "__main__":
     launch()
