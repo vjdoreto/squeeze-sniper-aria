@@ -551,11 +551,26 @@ class DataEngine:
                     self._last_volume_24h_refresh = now
                 except Exception: pass
 
+            # fix(T-1): promoção dinâmica por trades_1m — símbolos fora do top 100
+            # que "acordam" entram na fila VIP para popular _history e calcular
+            # exp:5m corretamente. Cap de 10 simultâneos protege rate limit REST.
+            # Threshold 300/min · Brain×ARIA 10/06/2026.
+            _ELEVATION_THRESHOLD = 300
+            _ELEVATION_CAP = 10
+            elevated_candidates = sorted(
+                [s for s in self.symbols
+                 if s not in self._top_n_symbols
+                 and (self.data.get(s) or {}).get("trades_count_1min_stable", 0) >= _ELEVATION_THRESHOLD],
+                key=lambda x: -(self.data.get(x) or {}).get("trades_count_1min_stable", 0)
+            )
+            elevated_symbols = set(elevated_candidates[:_ELEVATION_CAP])
+
             for s in self.symbols:
                 d = self.data.get(s, {})
-                # CRITÉRIO VIP: Top 50, Moedas com Ignição ou Score alto
+                # CRITÉRIO VIP: Top 100, spike de atividade, Ignição ou Score alto
                 is_prio = (
-                    s in self._top_n_symbols 
+                    s in self._top_n_symbols
+                    or s in elevated_symbols
                     or abs(d.get("exp:5m") or 0) > 0.01
                     or (d.get("score") or 0) >= 60
                 )

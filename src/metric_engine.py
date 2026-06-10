@@ -713,8 +713,15 @@ class MetricStore:
             }
             if symbol not in self._history:
                 self._history[symbol] = []
-            
+
             hist = self._history[symbol]
+
+            # fix(T-1): remove entradas com price=0 do boot quando chega preço real.
+            # Símbolos frios nascem com 2 entradas price=0.0 — _calc_exp_slope sobre
+            # [0, 0, ..., real] retorna ~0 por ~5 min. Limpa antes de append.
+            if snap["price"] > 0 and hist and hist[0].get("price", 0) == 0.0:
+                hist[:] = [e for e in hist if e.get("price", 0) > 0]
+
             hist.append(snap)
 
             # --- DNA Squeeze: Liquidation Cascade Detector ---
