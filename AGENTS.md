@@ -71,6 +71,19 @@ Cada fix ou feature tem seu próprio commit com mensagem descritiva. Nunca agrup
 ### R-06 — ARIA não fala com Forge diretamente
 Descobertas da ARIA vão ao Brain. Brain filtra, prioriza e escreve em `tasks.md`. Forge executa via `tasks.md`. O fluxo é Brain → Forge, não ARIA → Forge.
 
+### R-07 — Código e commit são território exclusivo do Forge (Antigravity · esta instância)
+**Nenhum outro agente toca no código ou executa commits. Nunca. Sem exceção.**
+
+- Brain não edita arquivos `.py`, `.json` de produção nem executa `git commit`
+- ARIA não edita arquivos `.py`, `.json` de produção nem executa `git commit`
+- Instâncias paralelas do Forge (outras sessões Claude Code) não editam nem commitam
+
+Se Brain ou ARIA identificarem um fix urgente: escrevem em `tasks.md` com evidência → Forge implementa na próxima interação com Doreto.
+
+**O código estar correto não justifica o processo errado.** Revisão pós-fato não é equivalente a execução consciente. Uma mudança incorreta que passa pela revisão do Forge é melhor do que uma mudança correta que não passou.
+
+> Histórico de quebras em 10/06/2026: commits `d8b939d` (ARIA), `315f0d6` (Brain), `6f0bc0a` (Forge paralelo) — todos aprovados após revisão, mas o protocolo foi violado nas três vezes. R-07 criado para prevenir recorrência.
+
 ---
 
 ## Protocolo Brain → Forge (fluxo padrão)
@@ -113,4 +126,4 @@ squeeze-sniper/
 
 ---
 
-*AGENTS.md v1.2 · Forge é guardião · 09/06/2026 — R-04 governa atualização obrigatória de MDs*
+*AGENTS.md v1.3 · Forge é guardião · 10/06/2026 — R-07 adicionado: código e commit são território exclusivo do Forge*
