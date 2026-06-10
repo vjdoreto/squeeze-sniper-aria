@@ -7,14 +7,7 @@
     "initial_capital": 1000,
     "risk_pct_per_trade": 0.05,
     "fee_pct": 0.0004,
-    "blacklist": [
-        "EPICUSDT",
-        "HOLOUSDT",
-        "JTOUSDT",
-        "NILUSDT",
-        "PARTIUSDT",
-        "PROVEUSDT"
-    ],
+    "blacklist": [],
     "fit_score_min": 20,
     "dashboard": {
         "enabled": true,
