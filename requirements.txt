@@ -12,3 +12,8 @@ rich
 fastapi
 uvicorn[standard]
 cryptography
+flask
+flask-cors
+requests
+types-Flask-Cors
+types-requests

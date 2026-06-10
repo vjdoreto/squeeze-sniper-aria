@@ -1,5 +1,10 @@
 {
   "execution": {
     "tp_pct": 0.05
-  }
+  },
+  "blacklist": [
+    "HOLOUSDT",
+    "NILUSDT",
+    "PROVEUSDT"
+  ]
 }
