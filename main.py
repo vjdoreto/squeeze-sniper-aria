@@ -1495,7 +1495,7 @@ def _apply_runtime_mode(
         max_lsr_change_pct=float(signal_node.get("max_lsr_change_pct", cfg.max_lsr_change_pct)),
         min_oi_trend=float(signal_node.get("min_oi_trend", cfg.min_oi_trend)),
         blacklist=list(prefs.get("blacklist", [])),
-        fit_score_min=float(prefs.get("fit_score_min", cfg.fit_score_min)),
+        fit_score_min=float(signal_node.get("min_score", cfg.fit_score_min)),
         min_cvd_change_pct_no_cascade=float(signal_node.get("min_cvd_change_pct_no_cascade", 1.0)),
     )
 
