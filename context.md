@@ -905,9 +905,41 @@ KATUSDT EXP_BTC:1h=40.09 → +17.93% em 15min pós-saída. Trailing 75% capturou
 
 ---
 
-*Documento gerado em: 03/06/2026*
-*Última atualização: 09/06/2026*
-*Versão: 4.5 · Última atualização: 09/06/2026*
+---
+
+## 🔧 Sprint 10/06/2026 — Sessão Forge + Brain + ARIA (v4.6)
+
+### Diagnóstico de bloqueio (Forge)
+
+Score máximo observado: **83**. Threshold: 85. Causa raiz dupla:
+1. **lsr_trend_positive** gate cegava VELVETUSDT ($69k liq) antes do score — padrão demand breakout não reconhecido
+2. **liq_cascade** (+20 pts) inacessível: `0.02×OI` floor dominante ($5M OI → floor $100k vs liq real $4k)
+
+### Fixes implementados (todos com autorização Doreto)
+
+| Fix | Commit | Impacto |
+|-----|--------|---------|
+| B-liq-cascade-tiers | `6154a7d` | OI-based tiers: <$1M→$500 / $1M-$10M→$2k / >$10M→$10k |
+| B-34-bypass | `519b56d` | Bypass lsr_trend_positive quando liq>$20k + trades≥15 + cvd>2.0 |
+| ema_trend:1h +5 pts bônus | `d089dce` | Discrimina pullback em tendência maior de bear pleno |
+| AGENTS.md variante R-07 | `5f79921` | Brain/ARIA podem entregar diff pronto; Forge commita |
+
+> ⚠️ `d089dce` foi commitado pela ARIA (violação R-07 #4). Código revisado e aprovado pelo Forge. Registrado em tasks.md.
+
+### Análise ARIA — snapshot eAssets 10/06 23:12 UTC
+
+Macro bearish: 79.1% dos 531 ativos com EMA:4h negativo. Apenas 28 ilhas de desacoplamento — universo exato do SS. Teses novas:
+- **T-05**: range_level:1h ≥ 4 + EMA:4h ≥ 0 + EXP_BTC:1h > 5 → MFE médio 1.5× maior (campo não no pipeline SS — backlog)
+- **T-06**: FR > +0.001 em ativo forte = catalisador de squeeze. `funding_rate` já no signal dict — ARIA pode auditar agora
+
+### Estado ao final da sessão
+
+- Bot aguardando restart para carregar os 3 fixes (`6154a7d`, `519b56d`, `d089dce`)
+- Sem trades ainda (hard reset manual executado por Doreto — logs limpos, state preservado)
+- Warmup concluído às 20:28:41 — bot ativo
+- MDs todos atualizados, commits prontos para push
+
+*Versão: 4.6 · Última atualização: 10/06/2026*
 
 ---
 

@@ -209,14 +209,19 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 09/06/2026 | fix fit_score_min — _apply_runtime_mode lia raiz prefs (20) | PARTIUSDT entrou com score=86; toda troca de modo sobrescrevia threshold para 20 em vez de 90 | `562e172` |
 | 09/06/2026 | blacklist zerada — filosfia dinâmica | EPICUSDT/HOLOUSDT/etc removidos: ativos mudam por minuto, ema_4h_bearish + spread_too_high cobrem os casos | manual |
 | 09/06/2026 | **F-12 CONFIRMADO** — liq_short_1m_stable funcional | Pipeline liquidações gerando dados reais (TRUMPUSDT $438, STGUSDT $1276, BTWUSDT $6090); 42 trades anteriores com liq=0 invalidados | boot 21:27:47 |
+| 10/06/2026 | **B-liq-cascade-tiers** — liq_threshold OI-based tiers | 0.02×OI sempre acima $50k para altcoins $3-5M OI → cascade nunca disparava. Tiers: OI<$1M→$500 / $1M-$10M→$2k / >$10M→$10k | `6154a7d` |
+| 10/06/2026 | **B-34-bypass** — bypass gate lsr_trend_positive para demand breakouts | VELVETUSDT $69k liq_short rejeitado pelo gate lsr_trend_positive antes do score. Critérios bypass: liq>$20k AND trades_1m≥15 AND cvd>2.0 | `519b56d` |
+| 10/06/2026 | **min_score 90→85** | Score máximo atingido=88; 25.307 rejeições; zero trades em 6h. KATUSDT 17× a 88pts bloqueado | `470a658` |
+| 10/06/2026 | **ema_trend:1h +5 pts bônus no score** | Discrimina pullback em tendência maior (4h/1h fortes, 5m fraco) de bear pleno. BEATUSDT 4h=+6/1h=+6/5m=0 invisível ao score anterior. Não-bloqueante | `d089dce` |
+| 10/06/2026 | **cvd_abs_negative gate** | CVD < -100k sem liq_cascade bloqueia entrada | `3a4...` (ver tasks.md) |
 
 ---
 
-## 6. Parâmetros Críticos (preferences.json · estado 09/06/2026)
+## 6. Parâmetros Críticos (preferences.json · estado 10/06/2026)
 
 | Parâmetro | Valor Paper | Valor Live | Descrição |
 |-----------|-------------|------------|-----------|
-| `min_score` | 90 | 90 | Score mínimo para entrada |
+| `min_score` | **85** | 90 | Score mínimo para entrada — reduzido 90→85 em 10/06 (`470a658`) |
 | `min_trades_1m` | 10 | 5 | Gate combo — atividade mínima |
 | `min_oi_trend` | 0.015 (base) / 0.008 (gate combo) | 0.02 | OI crescendo |
 | `max_lsr_trend` | -0.002 (base) / -0.3 (gate combo) | -0.002 | Shorts capitulando |
@@ -233,4 +238,12 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 
 ---
 
-*SQUEEZE_SNIPER_DNA.md v1.3 · 09/06/2026 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
+### Grupo B-34 — Demand Breakout Bypass (adicionado 10/06/2026)
+
+| Reason Code | Condição | Arquivo:Linha |
+|-------------|----------|---------------|
+| `lsr_bypass_active` | liq_short_1m_stable > $20k AND trades_1m ≥ 15 AND cvd_change_pct > 2.0 → ignora gate lsr_trend_positive | signal_engine.py L518 · `519b56d` |
+
+> Quando bypass ativo: `lsr_bypass_active = True` logado no signal dict para auditoria do Brain. Validação: Brain audita WR após 20+ trades com `lsr_bypass_active=True`. Se WR < 50% → reverter.
+
+*SQUEEZE_SNIPER_DNA.md v1.4 · 10/06/2026 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
