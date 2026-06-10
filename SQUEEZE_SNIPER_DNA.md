@@ -205,6 +205,8 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 08/06/2026 | ema_trend:4h no MetricStore + gate ema_4h_bearish | 3 sessões: EMA:4h=-6 na maioria dos losers | `adaed4f` |
 | 09/06/2026 | Gate ema_4h_bearish: removido AND exp_btc_norm_1h < -1.5 | AND anulava gate — WAXPUSDT EMA:4h=-6, norm_1h=+1.378 → entrou → -16.93% | `9bce976` |
 | 09/06/2026 | min_rsi_5m paper 60 → 45 | BANANAS31 (+17%) bloqueado com RSI=48; zona ignição squeeze é 40–55, não >60 | `e52f2e9` |
+| 09/06/2026 | fix ema_trend:4h — mínimo candles 100→50 | Gate F-18 cego: campo ficava 0 para símbolos sem 100 klines 4h no buffer. ARUSDT eAssets=-6, bot via 0 | `c7edbf8` |
+| 09/06/2026 | fix fit_score_min — _apply_runtime_mode lia raiz prefs (20) | PARTIUSDT entrou com score=86; toda troca de modo sobrescrevia threshold para 20 em vez de 90 | `562e172` |
 
 ---
 
@@ -228,4 +230,4 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 
 ---
 
-*SQUEEZE_SNIPER_DNA.md v1.1 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*
+*SQUEEZE_SNIPER_DNA.md v1.2 · Forge é guardião exclusivo · Autorização de mutação: Bob Doreto*

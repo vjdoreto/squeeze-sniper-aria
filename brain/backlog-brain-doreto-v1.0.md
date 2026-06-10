@@ -785,3 +785,32 @@ ALLOUSDT bloqueado 1.009 vezes — estava nos 100? ROBOUSDT EMA 6/6/6 com 20 nea
 **Próximo passo:** Brain solicita lista dos 100 ao Forge nesta sessão.
 
 ---
+
+### B-48 — Scripts de análise automática Brain × ARIA
+**Status:** Backlog · Sprint 4 · prioridade média-alta
+**Origem:** Doreto · 09/06/2026 · sessão de migração Brain+ARIA para Antigravity
+
+Hoje a análise dos 4 trades e o cruzamento com o eAssets foram feitos manualmente — Brain leu os logs, ARIA leu o JSON, Forge extraiu os dados. Com volume crescente de trades e sessões diárias, isso não escala.
+
+**Proposta — dois scripts dedicados:**
+
+**Script Brain (`brain/analyze_logs.py`):**
+- Lê `logs/paper_closed.jsonl` automaticamente
+- Calcula KPIs da sessão: WR, PnL, Profit Factor, MFE médio, MAE médio, captura MFE
+- Tabela winners vs losers por campo do signal dict (trades_1m, cvd_change_pct, rsi_5m, ema_trend_4h, volume_quality, cvd_streak)
+- Identifica padrões automáticos: squeeze_failed com MFE=0, trades com captura < 30%
+- Output: markdown estruturado pronto para o Brain ler e gerar recomendações
+
+**Script ARIA (`aria/eAssets/analyze_eassets.py`):**
+- Lê o JSON mais recente de `aria/eAssets/dados_eassets/` automaticamente
+- Cruza símbolos do eAssets com trades do dia (`paper_closed.jsonl`)
+- Para cada trade: extrai ema_trend:4h, exp_btc:1h, rsi:1h, oi_trend:5m do eAssets
+- Identifica divergências: campo do bot vs campo do eAssets (ex: ema_trend_4h=0 bot vs -6 eAssets)
+- Tier 1/2: top ativos por EXP_BTC:1h com EMA:4h positivo fora dos trades do dia
+- Output: markdown estruturado pronto para ARIA gerar contraponto
+
+**Benefício:** Brain e ARIA rodam os scripts, leem o output e já chegam ao consenso com dados prontos. Forge implementa o que sair do consenso. Ciclo de análise cai de 30min para 5min.
+
+**Próximo passo:** quando Brain confirmar prioridade, Forge implementa os dois scripts em sequência.
+
+---
