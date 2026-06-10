@@ -2823,7 +2823,7 @@ def create_app(
     async def logo():
         """SPRINT 12: Serve o logo.png do Sniper."""
         from pathlib import Path
-        logo_path = Path("logo.png")
+        logo_path = Path("assets/logo.png")
         if not logo_path.exists():
             return Response(status_code=status.HTTP_404_NOT_FOUND)
         return FileResponse(logo_path, media_type="image/png")
