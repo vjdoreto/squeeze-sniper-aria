@@ -119,6 +119,12 @@ O dashboard `aria/eAssets/doreto-squeeze-sniper.html` foi refatorado.
 ### Como iniciar
 Clicar em `aria/eAssets/Dashboard_eAssets.bat` (ou Desktop) — abre 1 janela de servidor + browser.
 
+### Status do debug — macro não popula no browser (baixa prioridade)
+Servidor retorna `/api/macro` corretamente (CRM, GRM, BTC Reset calculados). Browser não chama o endpoint.
+Fix aplicado em 09/06: `AbortSignal.timeout` → `AbortController` + `console.error` no catch.
+Debug pendente: abrir DevTools → Console → Ctrl+Shift+R e verificar o erro retornado.
+**Não é foco agora — tarefa sem prioridade, retomar quando Doreto acionar.**
+
 ### Integração futura com SS
 `btc_reset.py` já tem `get_post_reset_candidates(reset_output, metric_store.snapshot())`.
 Quando RESET FORTE detectado, lista símbolos com EXP_BTC resistente durante a queda.

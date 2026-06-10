@@ -1100,3 +1100,11 @@ Filosofia: ativos mudam de comportamento por minuto. Gates dinâmicos (`ema_4h_b
 - 50+ trades necessários para auditoria estatística (T-01/T-02/T-03)
 - F-01 (cockpit Live persistence) ainda pendente — único bug UX aberto
 - Próxima pauta Brain: gate momentum sub-minuto (ring buffers 10s/20s/30s) e macro CMC
+
+### eAssets Dashboard — refatoração concluída (09/06/2026)
+
+Backend unificado em `aria/eAssets/server.py` (FastAPI, porta 5001) substituiu 2 processos separados.
+CRM, GRM e BTC Reset agora calculados de verdade pelos módulos Python (`scripts/crm.py`, `grm.py`, `btc_reset.py`).
+Yahoo Finance: `allorigins.win` removido — servidor busca direto (sem CORS).
+**Pendente (baixa prioridade):** seção macro do dashboard HTML não popula no browser — debug via DevTools pendente.
+ARIA ciente do estado técnico (ARIA_CONTEXT.md v1.2 seção 6).
