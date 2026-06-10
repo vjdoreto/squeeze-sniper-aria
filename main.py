@@ -1752,6 +1752,7 @@ async def main():
         min_vol_1m=cfg.min_vol_1m,
         min_rsi_5m=cfg.min_rsi_5m,
         mtf_1h_crash_threshold=cfg.mtf_1h_crash_threshold,
+        exaustao_15m_pct=cfg.exaustao_15m_pct,
         min_exp_btc_for_btc_dump=cfg.min_exp_btc_for_btc_dump,
         min_cvd_change_pct=cfg.min_cvd_change_pct,
         min_oi_change_pct=cfg.min_oi_change_pct,

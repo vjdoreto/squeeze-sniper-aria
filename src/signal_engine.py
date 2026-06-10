@@ -67,6 +67,7 @@ class SqueezeIgnition:
         min_vol_1m: float = 0.0,
         min_rsi_5m: float = 48.0,
         mtf_1h_crash_threshold: float = -0.05,
+        exaustao_15m_pct: float = 3.0,
         min_exp_btc_for_btc_dump: float = 0.0,
         # Filtros % de crescimento (P1 — primary)
         min_cvd_change_pct: float = 3.5,
@@ -91,6 +92,7 @@ class SqueezeIgnition:
         self.min_vol_1m = min_vol_1m
         self.min_rsi_5m = min_rsi_5m
         self.mtf_1h_crash_threshold = mtf_1h_crash_threshold
+        self.exaustao_15m_pct = exaustao_15m_pct
         self.min_exp_btc_for_btc_dump = min_exp_btc_for_btc_dump
         
         # Throttler para prevenir race condition
@@ -416,6 +418,7 @@ class SqueezeIgnition:
                     "exp:5m": d.get("exp:5m"),
                     "oi_trend:5m": d.get("oi_trend:5m"),
                     "lsr_trend:5m": d.get("lsr_trend:5m"),
+                    "liq_short_1m": d.get("liq_short_1m_stable", 0.0),
                 },
             )
             return None
@@ -643,8 +646,8 @@ class SqueezeIgnition:
             return None
 
         # Se o preço subiu 3%+ em 15m, é exaustão próxima
-        if pc_15m > 3.0 and not liq_cascade:
-            self._maybe_log_refusal(symbol, "exaustao_15m", {"pc_15m": pc_15m, "limit": 3.0})
+        if pc_15m > self.exaustao_15m_pct and not liq_cascade:
+            self._maybe_log_refusal(symbol, "exaustao_15m", {"pc_15m": pc_15m, "limit": self.exaustao_15m_pct})
             return None
 
         # Gate anti squeeze_failed: CVD deve confirmar agressão real antes da entrada.
