@@ -2471,59 +2471,39 @@ async function fetchMacro() {
         }
       } catch (e) { setMacro('m-fgi', null); }
 
-      // ── YAHOO FINANCE: DXY + S&P500 + Nasdaq + Nikkei + DAX + Shanghai ──
-      const yahooSymbols = [
-        { sym: 'DX-Y.NYB', idVal: 'm-dxy', idChg: 'm-dxychg', dec: 2, stateKey: 'dxyPrice', stateType: 'price' },
-        { sym: '%5EGSPC', idVal: 'm-sp500', idChg: 'm-sp500chg', dec: 0, stateKey: 'sp500Chg', stateType: 'chg' },
-        { sym: '%5EIXIC', idVal: 'm-ndx', idChg: 'm-ndxchg', dec: 0, stateKey: 'nasdaqChg', stateType: 'chg' },
-        { sym: '%5EVIX', idVal: 'm-vix', idChg: 'm-vixchg', dec: 2, stateKey: 'vix', stateType: 'price' },
-        { sym: 'GC%3DF', idVal: 'm-gold', idChg: 'm-goldchg', dec: 0, stateKey: 'goldChg', stateType: 'chg' },
-      ];
-      // Fetch sequencialmente com delay para evitar rate-limit do proxy
-      for (const { sym, idVal, idChg, dec, stateKey, stateType } of yahooSymbols) {
-        try {
-          const symDecoded = decodeURIComponent(sym);
-          const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symDecoded)}?interval=1d&range=1d`;
-          const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`);
-          if (!r.ok) throw new Error('proxy error');
-          const wrapper = await r.json();
-          const d = JSON.parse(wrapper.contents);
-          if (!d.chart || !d.chart.result || !d.chart.result[0]) throw new Error('no data');
-          const meta = d.chart.result[0].meta;
-
-          let price = meta.regularMarketPrice;
-          let prev = meta.previousClose || meta.chartPreviousClose;
-
-          // Fallback para VIX e índices quando o metadado de fechamento anterior falha
-          const result = d.chart.result[0];
-          if (!prev && result.indicators && result.indicators.quote[0].close) {
-            const quotes = result.indicators.quote[0].close.filter(v => v !== null);
-            if (quotes.length > 1) {
-              prev = quotes[0];
-              price = quotes[quotes.length - 1];
-            }
+      // ── YAHOO FINANCE: via servidor local (server.py busca direto, sem proxy) ──
+      try {
+        const r = await fetch('http://127.0.0.1:5001/api/macro',
+          { signal: AbortSignal.timeout(4000) });
+        if (!r.ok) throw new Error('server unavailable');
+        const md = await r.json();
+        const yahooMap = [
+          { key: 'dxy',    idVal: 'm-dxy',   idChg: 'm-dxychg',   dec: 2, stateKey: 'dxyPrice',  stateType: 'price' },
+          { key: 'sp500',  idVal: 'm-sp500',  idChg: 'm-sp500chg', dec: 0, stateKey: 'sp500Chg',  stateType: 'chg'   },
+          { key: 'nasdaq', idVal: 'm-ndx',    idChg: 'm-ndxchg',   dec: 0, stateKey: 'nasdaqChg', stateType: 'chg'   },
+          { key: 'vix',    idVal: 'm-vix',    idChg: 'm-vixchg',   dec: 2, stateKey: 'vix',       stateType: 'price' },
+          { key: 'gold',   idVal: 'm-gold',   idChg: 'm-goldchg',  dec: 0, stateKey: 'goldChg',   stateType: 'chg'   },
+        ];
+        for (const { key, idVal, idChg, dec, stateKey, stateType } of yahooMap) {
+          const item = md.yahoo && md.yahoo[key];
+          if (!item || item.price == null) {
+            setMacro(idVal, null);
+            if (idChg) setMacro(idChg, '');
+            continue;
           }
-
-          const { str, cls, pct } = macroChg(price, prev);
-          if (stateKey) {
-            if (stateType === 'price') {
-              macroState[stateKey] = price;
-              macroState[stateKey + 'Chg'] = pct; // Salva variação diária para o meter
-            } else {
-              macroState[stateKey] = pct;
-            }
-          }
+          const price = item.price;
+          const pct   = item.change_pct || 0;
+          if (stateType === 'price') { macroState[stateKey] = price; macroState[stateKey + 'Chg'] = pct; }
+          else                       { macroState[stateKey] = pct; }
           let valHtml = fmtPrice(price, dec);
-          if (sym === 'DX-Y.NYB' && price > 104) valHtml = `<span class="dxy-high">${valHtml}</span>`;
-          if (sym === '%5EVIX' && price > 20) valHtml = `<span style="color:${price > 30 ? 'var(--red)' : 'var(--amber)'}">${valHtml}</span>`;
+          if (key === 'dxy' && price > 104) valHtml = `<span class="dxy-high">${valHtml}</span>`;
+          if (key === 'vix' && price > 20)  valHtml = `<span style="color:${price > 30 ? 'var(--red)' : 'var(--amber)'}">${valHtml}</span>`;
           setMacro(idVal, valHtml);
-          if (idChg) setMacro(idChg, `<span class="macro-chg ${cls}">${str}</span>`);
-        } catch (e) {
-          setMacro(idVal, null);
-          if (idChg) setMacro(idChg, '');
+          const str = (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%';
+          if (idChg) setMacro(idChg, `<span class="macro-chg ${pct >= 0 ? 'pos' : 'neg'}">${str}</span>`);
         }
-        // Pequeno delay entre requests para não saturar o proxy gratuito
-        await new Promise(res => setTimeout(res, 400));
+      } catch (e) {
+        ['m-dxy', 'm-sp500', 'm-ndx', 'm-vix', 'm-gold'].forEach(id => setMacro(id, null));
       }
 
       // Funding rate avg from loaded panel data

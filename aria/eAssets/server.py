@@ -430,6 +430,43 @@ def _indicators_payload() -> dict:
 # ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+@app.get("/api/macro")
+async def get_macro():
+    """
+    Retorna todos os dados externos já buscados pelo servidor em memória.
+    O HTML usa este endpoint para popular a seção macro sem precisar
+    de proxy (allorigins.win) ou fetch direto de APIs externas do browser.
+
+    Formato compatível com o que fetchMacro() espera:
+      yahoo.{dxy,sp500,nasdaq,vix,gold} → {price, change_pct}
+      btc  → {price, change_pct}
+      coingecko → {btc_d, eth_d, usdt_d}
+      fgi  → {value, label}
+    """
+    mr = state["macro_raw"]
+    cg = state.get("coingecko", {})
+    return JSONResponse({
+        "yahoo": {
+            "dxy":    mr.get("dxy"),
+            "sp500":  mr.get("sp500"),
+            "nasdaq": mr.get("nasdaq"),
+            "vix":    mr.get("vix"),
+            "gold":   mr.get("gold"),
+        },
+        "btc": {
+            "price":      None,           # browser já busca do Binance diretamente
+            "change_pct": state.get("btc_change_24h"),
+        },
+        "coingecko": {
+            "btc_d":  cg.get("btc_d"),
+            "eth_d":  cg.get("eth_d"),
+            "usdt_d": cg.get("usdt_d"),
+        },
+        "fgi": state.get("fgi", {}),
+        "last_update": state["last_macro_update"],
+    })
+
+
 @app.get("/health")
 async def health():
     return {
