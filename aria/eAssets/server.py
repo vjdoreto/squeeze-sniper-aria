@@ -99,109 +99,114 @@ app.add_middleware(
 # TASKS DE BACKGROUND
 # ═══════════════════════════════════════════════════════════════════════════════
 
+async def _fetch_macro_once() -> None:
+    """
+    Um único ciclo de fetch macro: Yahoo + CoinGecko + FGI + Binance.
+    Chamado no startup (para dados prontos antes do 1º request do HTML)
+    e periodicamente pelo _task_macro.
+    """
+    from scripts.models import GRMInput
+
+    try:
+        async with aiohttp.ClientSession(
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as session:
+            # ── Yahoo Finance: VIX, DXY, S&P500, Nasdaq, Gold ────────────
+            yahoo_symbols = {
+                "vix":    "%5EVIX",
+                "sp500":  "%5EGSPC",
+                "nasdaq": "%5EIXIC",
+                "dxy":    "DX-Y.NYB",
+                "gold":   "GC%3DF",
+            }
+            macro_raw = {}
+            for key, sym in yahoo_symbols.items():
+                url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1d"
+                try:
+                    async with session.get(url) as r:
+                        if r.status == 200:
+                            d = await r.json(content_type=None)
+                            meta  = d["chart"]["result"][0]["meta"]
+                            price = meta["regularMarketPrice"]
+                            prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
+                            pct   = ((price - prev) / prev * 100) if prev else None
+                            macro_raw[key] = {"price": price, "change_pct": pct}
+                except Exception as e:
+                    logger.debug(f"Yahoo {key}: {e}")
+
+            state["macro_raw"] = macro_raw
+
+            # ── CoinGecko: USDT.D, ETH.D, BTC.D ────────────────────────
+            try:
+                async with session.get("https://api.coingecko.com/api/v3/global") as r:
+                    if r.status == 200:
+                        d = await r.json()
+                        pct = d["data"]["market_cap_percentage"]
+                        state["coingecko"] = {
+                            "usdt_d": pct.get("usdt"),
+                            "eth_d":  pct.get("eth"),
+                            "btc_d":  pct.get("btc"),
+                        }
+            except Exception as e:
+                logger.debug(f"CoinGecko: {e}")
+
+            # ── Alternative.me: Fear & Greed ─────────────────────────────
+            try:
+                async with session.get("https://api.alternative.me/fng/?limit=1") as r:
+                    if r.status == 200:
+                        d = await r.json()
+                        state["fgi"] = {
+                            "value": int(d["data"][0]["value"]),
+                            "label": d["data"][0]["value_classification"],
+                        }
+            except Exception as e:
+                logger.debug(f"FGI: {e}")
+
+            # ── Binance: BTC 24h ──────────────────────────────────────────
+            try:
+                async with session.get(
+                    "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
+                ) as r:
+                    if r.status == 200:
+                        d = await r.json()
+                        state["btc_change_24h"] = float(d["priceChangePercent"])
+            except Exception as e:
+                logger.debug(f"Binance BTC 24h: {e}")
+
+        # ── Calcula CRM ──────────────────────────────────────────────────
+        crm_input = await fetch_crm_data(
+            btc_change_24h=state.get("btc_change_24h"),
+            funding_rate_avg=_avg_funding_from_signals(),
+        )
+        state["crm"] = calculate_crm(crm_input)
+
+        # ── Calcula GRM ──────────────────────────────────────────────────
+        mr = state["macro_raw"]
+        grm_input = GRMInput(
+            vix           = mr.get("vix",    {}).get("price"),
+            dxy           = mr.get("dxy",    {}).get("price"),
+            sp500_change  = mr.get("sp500",  {}).get("change_pct"),
+            nasdaq_change = mr.get("nasdaq", {}).get("change_pct"),
+            gold_change   = mr.get("gold",   {}).get("change_pct"),
+        )
+        state["grm"] = calculate_grm(grm_input)
+
+        state["last_macro_update"] = time.time()
+        logger.info(
+            f"Macro atualizado — CRM={state['crm'].score:.1f} [{state['crm'].level.value}] "
+            f"GRM={state['grm'].score:.1f} [{state['grm'].level.value}]"
+        )
+
+    except Exception as e:
+        logger.warning(f"_fetch_macro_once erro: {e}")
+
+
 async def _task_macro():
-    """
-    Busca dados macro a cada 3 minutos e calcula CRM + GRM.
-    Fontes: Yahoo Finance (GRM) + CoinGecko (CRM parcial) + Alternative.me (FGI).
-    Sem proxy — requisições feitas server-side, sem restrição CORS.
-    """
+    """Chama _fetch_macro_once a cada 3 minutos."""
     while True:
-        try:
-            async with aiohttp.ClientSession(
-                headers={"User-Agent": "Mozilla/5.0"},
-                timeout=aiohttp.ClientTimeout(total=10),
-            ) as session:
-                # ── Yahoo Finance: VIX, DXY, S&P500, Nasdaq, Gold ──────────
-                yahoo_symbols = {
-                    "vix":    "%5EVIX",
-                    "sp500":  "%5EGSPC",
-                    "nasdaq": "%5EIXIC",
-                    "dxy":    "DX-Y.NYB",
-                    "gold":   "GC%3DF",
-                }
-                macro_raw = {}
-                for key, sym in yahoo_symbols.items():
-                    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{sym}?interval=1d&range=1d"
-                    try:
-                        async with session.get(url) as r:
-                            if r.status == 200:
-                                d = await r.json(content_type=None)
-                                meta = d["chart"]["result"][0]["meta"]
-                                price = meta["regularMarketPrice"]
-                                prev  = meta.get("previousClose") or meta.get("chartPreviousClose")
-                                pct   = ((price - prev) / prev * 100) if prev else None
-                                macro_raw[key] = {"price": price, "change_pct": pct}
-                    except Exception as e:
-                        logger.debug(f"Yahoo {key}: {e}")
-
-                state["macro_raw"] = macro_raw
-
-                # ── CoinGecko: USDT.D, ETH.D ────────────────────────────────
-                try:
-                    async with session.get("https://api.coingecko.com/api/v3/global") as r:
-                        if r.status == 200:
-                            d = await r.json()
-                            pct = d["data"]["market_cap_percentage"]
-                            state["coingecko"] = {
-                                "usdt_d": pct.get("usdt"),
-                                "eth_d":  pct.get("eth"),
-                                "btc_d":  pct.get("btc"),
-                            }
-                except Exception as e:
-                    logger.debug(f"CoinGecko: {e}")
-
-                # ── Alternative.me: Fear & Greed ─────────────────────────────
-                try:
-                    async with session.get("https://api.alternative.me/fng/?limit=1") as r:
-                        if r.status == 200:
-                            d = await r.json()
-                            state["fgi"] = {
-                                "value": int(d["data"][0]["value"]),
-                                "label": d["data"][0]["value_classification"],
-                            }
-                except Exception as e:
-                    logger.debug(f"FGI: {e}")
-
-                # ── Binance: BTC 24h ─────────────────────────────────────────
-                try:
-                    async with session.get(
-                        "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
-                    ) as r:
-                        if r.status == 200:
-                            d = await r.json()
-                            state["btc_change_24h"] = float(d["priceChangePercent"])
-                except Exception as e:
-                    logger.debug(f"Binance BTC 24h: {e}")
-
-            # ── Calcula CRM ──────────────────────────────────────────────────
-            crm_input = await fetch_crm_data(
-                btc_change_24h=state.get("btc_change_24h"),
-                funding_rate_avg=_avg_funding_from_signals(),
-            )
-            state["crm"] = calculate_crm(crm_input)
-
-            # ── Calcula GRM ──────────────────────────────────────────────────
-            mr = state["macro_raw"]
-            from scripts.models import GRMInput
-            grm_input = GRMInput(
-                vix           = mr.get("vix",    {}).get("price"),
-                dxy           = mr.get("dxy",    {}).get("price"),
-                sp500_change  = mr.get("sp500",  {}).get("change_pct"),
-                nasdaq_change = mr.get("nasdaq", {}).get("change_pct"),
-                gold_change   = mr.get("gold",   {}).get("change_pct"),
-            )
-            state["grm"] = calculate_grm(grm_input)
-
-            state["last_macro_update"] = time.time()
-            logger.info(
-                f"Macro atualizado — CRM={state['crm'].score:.1f} [{state['crm'].level.value}] "
-                f"GRM={state['grm'].score:.1f} [{state['grm'].level.value}]"
-            )
-
-        except Exception as e:
-            logger.warning(f"_task_macro erro: {e}")
-
-        await asyncio.sleep(180)  # 3 minutos
+        await _fetch_macro_once()
+        await asyncio.sleep(180)
 
 
 async def _task_btc_rsi():
@@ -574,10 +579,12 @@ async def enrich_json(request: Request):
 
 @app.on_event("startup")
 async def on_startup():
-    asyncio.create_task(_task_macro())
+    logger.info("Buscando dados macro iniciais (Yahoo + CoinGecko + FGI)...")
+    await _fetch_macro_once()          # garante dados prontos antes do 1º request
+    asyncio.create_task(_task_macro()) # depois mantém ciclo periódico de 3min
     asyncio.create_task(_task_btc_rsi())
     asyncio.create_task(_task_file_monitor())
-    logger.info("eAssets Server v2.0 iniciado — CRM + GRM + BTC Reset ativos")
+    logger.info("eAssets Server v2.0 pronto — macro + RSI + file monitor ativos")
 
 
 if __name__ == "__main__":
