@@ -99,6 +99,12 @@ def calculate_fit_score(d: Dict) -> int:
         elif ema_tr >= 3: score += 5
         elif ema_tr <= -5: score -= 15 # Anti-faca caindo
 
+    # 5.2.1 EMA Trend 1h — Bônus +5 pts (R-ARIA-03 · 10/06/2026)
+    # Discrimina pullback em tendência maior (4h/1h fortes, 5m fraco) de bear pleno
+    ema_tr_1h = d.get("ema_trend:1h")
+    if ema_tr_1h is not None and ema_tr_1h >= 2:
+        score += 5
+
     # 5.3 Acumulação (Range Level) — Até 10 pts
     rng = d.get("range_level:5m")
     if rng is not None:
