@@ -37,6 +37,7 @@ from typing import Optional
 
 import aiohttp
 import uvicorn
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -86,7 +87,18 @@ state = {
 }
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
-app = FastAPI(title="eAssets Dashboard Server", version="2.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Buscando dados macro iniciais (Yahoo + CoinGecko + FGI)...")
+    await _fetch_macro_once()
+    asyncio.create_task(_task_macro())
+    asyncio.create_task(_task_btc_rsi())
+    asyncio.create_task(_task_file_monitor())
+    logger.info("eAssets Server v2.0 pronto — macro + RSI + file monitor ativos")
+    yield  # servidor rodando
+    # shutdown: nada a limpar (tasks asyncio encerram com o processo)
+
+app = FastAPI(title="eAssets Dashboard Server", version="2.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -576,16 +588,6 @@ async def enrich_json(request: Request):
 # ═══════════════════════════════════════════════════════════════════════════════
 # STARTUP
 # ═══════════════════════════════════════════════════════════════════════════════
-
-@app.on_event("startup")
-async def on_startup():
-    logger.info("Buscando dados macro iniciais (Yahoo + CoinGecko + FGI)...")
-    await _fetch_macro_once()          # garante dados prontos antes do 1º request
-    asyncio.create_task(_task_macro()) # depois mantém ciclo periódico de 3min
-    asyncio.create_task(_task_btc_rsi())
-    asyncio.create_task(_task_file_monitor())
-    logger.info("eAssets Server v2.0 pronto — macro + RSI + file monitor ativos")
-
 
 if __name__ == "__main__":
     print("🔥 eAssets Dashboard Server v2.0")
