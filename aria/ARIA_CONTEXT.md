@@ -97,4 +97,33 @@ Cada análise ARIA entrega:
 
 ---
 
-*ARIA_CONTEXT.md v1.1 · Forge é guardião · 09/06/2026 — T-01/T-02/T-03 desbloqueadas*
+---
+
+## 6. eAssets Dashboard — Estado Técnico (09/06/2026)
+
+O dashboard `aria/eAssets/doreto-squeeze-sniper.html` foi refatorado.
+
+### Arquitetura atual
+| Componente | Localização | Função |
+|---|---|---|
+| `server.py` | `aria/eAssets/` | Backend FastAPI unificado — substitui 2 processos separados |
+| `crm.py` | `aria/scripts/` | Calcula CRM — **agora chamado de verdade** pelo server.py |
+| `grm.py` | `aria/scripts/` | Calcula GRM — **agora chamado de verdade** pelo server.py |
+| `btc_reset.py` | `aria/scripts/` | Calcula BTC Reset — **agora chamado de verdade** pelo server.py |
+
+### Endpoints disponíveis (porta 5001)
+- `GET /api/indicators` — CRM + GRM + BTC Reset calculados pelo Python
+- `GET /api/macro` — dados Yahoo/CoinGecko/FGI em memória (sem proxy)
+- `GET /api/latest-enriched` — JSON eAssets + scores + enriquecimento SS
+
+### Como iniciar
+Clicar em `aria/eAssets/Dashboard_eAssets.bat` (ou Desktop) — abre 1 janela de servidor + browser.
+
+### Integração futura com SS
+`btc_reset.py` já tem `get_post_reset_candidates(reset_output, metric_store.snapshot())`.
+Quando RESET FORTE detectado, lista símbolos com EXP_BTC resistente durante a queda.
+Aguarda validação estatística dos 50+ trades do SS antes de implementar.
+
+---
+
+*ARIA_CONTEXT.md v1.2 · Forge é guardião · 09/06/2026 — T-01/T-02/T-03 desbloqueadas + eAssets backend v2.0*
