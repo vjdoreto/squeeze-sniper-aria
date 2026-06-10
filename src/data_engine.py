@@ -244,7 +244,24 @@ class DataEngine:
         # SPRINT 11.4: Prioriza klines apenas para Top N e Macros no boot.
         # O resto aquece via WebSocket para evitar IP Ban em Radar Global (500+ ativos).
         # CORREÇÃO P0.2: RSI Bootstrap Expandido (Top 20 → Top 50) para reduzir gaps de RSI
-        priority_targets = set(self.symbols[:50]) | {"BTCUSDT", "ETHUSDT", "BTCDOMUSDT"}
+        # fix(T-1): expandir bootstrap para ativos com volume recente alto — captura ativos
+        # que "acordaram" hoje mas não estão no top 50 por volume 24h estático.
+        # Usa volume_24h já populado por _bootstrap_prices() — sem chamada REST extra.
+        recent_active: set = set()
+        try:
+            vols = {s: self.data.get(s, {}).get("volume_24h") or 0.0 for s in self.symbols}
+            vols = {s: v for s, v in vols.items() if v > 0}
+            if vols:
+                sorted_vols = sorted(vols.values(), reverse=True)
+                threshold_idx = min(int(len(sorted_vols) * 0.30), len(sorted_vols) - 1)
+                vol_threshold = sorted_vols[threshold_idx]
+                recent_active = {s for s, v in vols.items() if v >= vol_threshold}
+        except Exception as e:
+            logger.debug("Bootstrap volume recente: %s", e)
+
+        priority_targets = set(self.symbols[:50]) | {"BTCUSDT", "ETHUSDT", "BTCDOMUSDT"} | recent_active
+        logger.info("Bootstrap klines: top50=%d + volume_recente=%d → %d únicos",
+                    50, len(recent_active), len(priority_targets))
         missing = [s for s in self.symbols if s in priority_targets and (needs_tf(s, "5m") or needs_tf(s, "15m") or needs_tf(s, "1h"))]
 
         if not missing:

@@ -116,12 +116,13 @@ def calculate_fit_score(d: Dict) -> int:
             score -= 10
 
     # 7. Liquidações de short — Até 15 pts extras (SPRINT 6.9: Usa versão estável)
+    # fix(T-1): thresholds calibrados para small/mid caps — era $10k/$50k/$100k (large cap only)
     liq_short = d.get("liq_short_1m_stable", 0) or 0
-    if liq_short > 100000:  # $100k em shorts liquidados em 1m
+    if liq_short > 20000:   # $20k em shorts liquidados em 1m
         score += 15
-    elif liq_short > 50000:
+    elif liq_short > 5000:  # $5k
         score += 10
-    elif liq_short > 10000:
+    elif liq_short > 1000:  # $1k
         score += 5
 
     # 7.1. Bônus de Cascata (DNA Squeeze) — +20 pts
