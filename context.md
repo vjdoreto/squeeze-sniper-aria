@@ -1101,6 +1101,15 @@ Filosofia: ativos mudam de comportamento por minuto. Gates dinâmicos (`ema_4h_b
 - F-01 (cockpit Live persistence) ainda pendente — único bug UX aberto
 - Próxima pauta Brain: gate momentum sub-minuto (ring buffers 10s/20s/30s) e macro CMC
 
+### Tuning min_score — 10/06/2026 (madrugada)
+
+Bot rodou 6h+ sem nenhum trade. Diagnóstico via `signal_refusals.jsonl` (25.307 eventos):
+- Score máximo atingido: **88** (KATUSDT 17x, STGUSDT 11x). Threshold `min_score: 90` → nunca entrava.
+- Maiores bloqueadores: `lsr_trend_positive` (27%), `cvd_negative_quarantine` (26%) — ambos corretos para o mercado atual.
+- `min_score` reduzido 90 → **85** em `preferences.json` · commit `470a658`. Hot reload via `_apply_runtime_mode`.
+- Análise eAssets (snapshot 01:48 UTC): JCTUSDT (EXP1h=74, LSR=-12, OI=15), ZBTUSDT, AGTUSDT com melhores setups.
+- BTWUSDT +20%: LSR=+18 positivo quando snapshot foi tirado → squeeze já aconteceu, bot bloqueou corretamente.
+
 ### eAssets Dashboard — refatoração concluída (09/06/2026)
 
 Backend unificado em `aria/eAssets/server.py` (FastAPI, porta 5001) substituiu 2 processos separados.

@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 09/06/2026 · v2.0_
+_Atualizado: 10/06/2026 · v2.1_
 
 ---
 
@@ -60,6 +60,16 @@ _Atualizado: 09/06/2026 · v2.0_
 - [x] **rsi_1h_warmup gate** — RSI:1h travado em 50.0 artificial nos primeiros 10min; gate de 600s corrigido · `src/signal_engine.py` · `d4446dd`
 - [x] **Organização do projeto** — `assets/`, `aria/scripts/`, `docs/_arquivo/` criados; root limpo; logo path corrigido · `9b... (commit housekeeping)`
 - [x] **Blacklist zerada** — EPICUSDT/HOLOUSDT/JTOUSDT/NILUSDT/PARTIUSDT/PROVEUSDT removidos; gates dinâmicos substituem lista estática · `preferences.json`
+
+## ✅ EA-Sprint5 — Concluído (09–10/06/2026)
+
+- [x] **eAssets backend refatorado** — 2 processos Flask → 1 FastAPI unificado (`server.py`); CRM/GRM/BTC Reset calculados pelos módulos Python reais · `aria/eAssets/server.py` · `a204403`
+- [x] **allorigins.win removido** — Yahoo Finance via servidor local (sem proxy CORS); race condition de startup corrigida com `await _fetch_macro_once()` · `aria/eAssets/server.py`
+- [x] **Dashboard HTML macro** — bloco Yahoo reescrito para consumir `/api/macro`; `AbortSignal.timeout` → `AbortController` (suporte universal) · `a204403`
+- [x] **min_score 90 → 85** — threshold matematicamente inalcançável (max atingido=88, 25.307 rejeições, zero trades em 6h); KATUSDT 17x a 88pts bloqueado · `preferences.json` · `470a658`
+- [x] **Análise eAssets 10/06 01:48 UTC** — top setups: JCTUSDT (EXP1h=74, LSR=-12), ZBTUSDT, AGTUSDT, BEATUSDT; BTWUSDT +20% já havia subido (LSR=+18, tarde demais)
+- [x] **gitignore brain repo corrigido** — `!aria/**` deixava passar .py/.html; novo padrão `!*/` + `!*.md` (apenas markdowns) · `abfd81d`
+- [x] **eAssets dashboard** — pausado; debug macro HTML pendente (baixa prioridade, DevTools necessário)
 
 ## 🔴 Sprint 5 — Em andamento (objetivo: 50+ trades válidos)
 
