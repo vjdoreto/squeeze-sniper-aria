@@ -2473,8 +2473,10 @@ async function fetchMacro() {
 
       // ── YAHOO FINANCE: via servidor local (server.py busca direto, sem proxy) ──
       try {
-        const r = await fetch('http://127.0.0.1:5001/api/macro',
-          { signal: AbortSignal.timeout(4000) });
+        const _ctrl = new AbortController();
+        const _timer = setTimeout(() => _ctrl.abort(), 4000);
+        const r = await fetch('http://127.0.0.1:5001/api/macro', { signal: _ctrl.signal });
+        clearTimeout(_timer);
         if (!r.ok) throw new Error('server unavailable');
         const md = await r.json();
         const yahooMap = [
@@ -2503,6 +2505,7 @@ async function fetchMacro() {
           if (idChg) setMacro(idChg, `<span class="macro-chg ${pct >= 0 ? 'pos' : 'neg'}">${str}</span>`);
         }
       } catch (e) {
+        console.error('[eAssets] /api/macro falhou:', e);
         ['m-dxy', 'm-sp500', 'm-ndx', 'm-vix', 'm-gold'].forEach(id => setMacro(id, null));
       }
 
