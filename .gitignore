@@ -47,6 +47,9 @@ backups/
 .mypy_cache/
 .pytest_cache/
 
+# Pastas locais — não entram no repo
+"#3 Monitor"/
+
 # Lock de instância
 logs/instance_lock_main.pid
 *.pid
