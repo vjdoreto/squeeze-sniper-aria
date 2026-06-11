@@ -164,4 +164,4 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.7 · Forge é guardião · 11/06/2026 — D1 validado (funding_rate ≠ 0 em signals.jsonl · SQDUSDT); F-19 ativo pós-restart (alpha decay 4h/12h/24h sobrevive a restarts); backlog ARIA v1.0 formalizado em AGENTS.md como fonte equivalente ao Brain*
+*ARIA_CONTEXT.md v1.8 · Forge é guardião · 11/06/2026 — fix B-34-bypass `a2d1410`: bypass só cobria 1 de 5 gates LSR. WLDUSDT com liq=$23.5k/trades=345/cvd=15.88 nunca entrou apesar de bypass logado 20×. Todos os 5 gates agora respeitam `lsr_bypass_active`. Requer soft restart. Critério de validação B-34 ainda vigente: 20+ trades com `lsr_bypass_active=True` → WR < 50% = reverter.*

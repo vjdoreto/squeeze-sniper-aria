@@ -1,5 +1,22 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.6_
+_Atualizado: 11/06/2026 · v2.7_
+
+---
+
+## ✅ Forge — fix(B-34-bypass): 5 gates LSR sem bypass · `signal_engine.py:717,728,761,891,901` · `a2d1410`
+
+**Bug confirmado nos logs (11/06/2026 07:20–07:21):** WLDUSDT com `liq=$23.5k / trades=345 / cvd=15.88` — todas as condições do bypass satisfeitas. `lsr_bypass_active=True` logado ~20 vezes consecutivas mas trade nunca entrou.
+
+**Causa raiz:** `lsr_bypass_active` era verificado apenas no gate `lsr_trend_positive` (L531). Outros 4 gates LSR downstream ignoravam o bypass:
+- `lsr_change_not_negative` (L717) — `lsr_change_pct >= 0` → return None
+- `lsr_change_above_max` (L728) — `not is_high_quality and lsr_change_pct > max` → return None
+- `lsr_trend_not_negative` (L761) — `lsr_trend > -0.3` → return None
+- `lsr_trend_too_weak` (L891) — `lsr_trend > -0.01 and not is_high_quality` → return None
+- `lsr_change_too_weak` (L901) — `lsr_change_pct > -0.05 and not is_high_quality` → return None
+
+**Fix:** `not lsr_bypass_active and ...` adicionado em todos os 5 gates. Commits `a2d1410`. **Requer soft restart para entrar em efeito.**
+
+**Para Brain:** B-34 bypass agora funcional de verdade. Após 20+ trades com `lsr_bypass_active=True`, auditar WR — se WR < 50% → reverter (critério original mantido).
 
 ---
 

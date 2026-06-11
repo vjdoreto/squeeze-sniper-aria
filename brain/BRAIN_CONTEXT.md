@@ -62,6 +62,7 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **funding_rate no ghost signal dict** | Campo ausente do `_write_ghost_signal` — T-06 era inauditável nos logs históricos. Paridade com sinal real restaurada | 11/06 |
 | **ema_trend_1h no signal dict** | Campo ausente dos dois blocos de signal_engine.py — bônus +5 pts existia em market_view.py mas não era exportado. Brain pode agora auditar ema_trend_1h × MFE após 30+ trades | 11/06 |
 | **Caso AIOUSDT +29% — miss por design** | Demand ramp orgânica (CVD+OI+FR escalando por horas) ≠ squeeze de liquidação. DNA funcionou corretamente para o padrão que foi projetado. Demand ramp = backlog estratégico pós-50 trades | 11/06 |
+| **fix(B-34-bypass) — 5 gates LSR não checavam bypass** | `lsr_bypass_active=True` ignorava só o gate `lsr_trend_positive`. Quatro gates downstream bloqueavam de qualquer forma. Evidência: WLDUSDT liq=$23.5k/trades=345/cvd=15.88 — bypass logado 20× mas sem entrada. `a2d1410` corrige todos os 5 gates. Requer restart. | 11/06 |
 | **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
 | **D1: funding_rate no signal dict real** | Campo ausente de `signals.jsonl` e `paper_closed.jsonl` — T-06 inauditável nos trades reais. **Validado:** SQDUSDT `funding_rate=0.00005` no primeiro signal pós-restart | 11/06 |
@@ -91,7 +92,7 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 - [x] **CVD e klines de Futuros** — **CONFIRMADO 10/06** (`fde21af`). Bug simétrico ao F-12 corrigido: `_listen_klines` + `_listen_agg_trades` agora usam `futures_multiplex_socket`. Todos os trades anteriores a essa sessão têm CVD e RSI calculados com dados do Spot — histórico invalidado para T-01/T-02/T-03.
 - [ ] Gate `ema_4h_bearish` disparando de fato em losers (auditar via `signal_refusals.jsonl` — aguarda 50+ trades)
 - [ ] `liq_cascade` (boolean) gerando entradas de qualidade — aguarda amostras com liq_short_1m ativo
-- [ ] **B-34-bypass WR** — após 20+ trades com `lsr_bypass_active=True`, Brain audita WR. WR < 50% → reverter bypass (`519b56d`)
+- [ ] **B-34-bypass WR** — bypass agora funcional (`a2d1410` corrigiu 5 gates que ignoravam `lsr_bypass_active`). Após 20+ trades com `lsr_bypass_active=True` + entrada real, Brain audita WR. WR < 50% → reverter
 - [ ] **T-06 FR × MFE** — `funding_rate` agora presente nos ghost signals (T-09 · `4ffd73f`). Auditar após 30+ trades: FR > +0.0015 + EMA:4h≥0 + OI crescendo → MFE médio mais alto?
 - [ ] **T-08 ema4h bypass virada** — logging enriquecido ativo (`4332d36`). Aguardando ~50 eventos `ema_4h_bearish` pós-restart para auditar falso positivo rate → go/no-go Passo 2
 - [ ] **T-05 range_level × MFE** — backlog pós-50 trades. Hipótese: range_level:1h ≥ 3 + entrada = MFE médio 1.5× maior
@@ -123,4 +124,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.5 · Forge é guardião · 11/06/2026 — D1 validado (funding_rate ≠ 0 em signals.jsonl); D2+F-19 aguardam restart; 7 violações R-07 registradas nesta sessão; backlog ARIA formalizado como fonte equivalente ao Brain*
+*BRAIN_CONTEXT.md v1.6 · Forge é guardião · 11/06/2026 — D1 validado; F-19 ativo (15 trades reinseridos no boot); fix B-34-bypass `a2d1410` (5 gates LSR agora cobertos — requer restart); WLDUSDT foi o caso de evidência do bug*
