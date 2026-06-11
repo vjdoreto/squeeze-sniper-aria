@@ -818,6 +818,28 @@ Não é dado corrompido nem buffer insuficiente — é limitação do cálculo s
 
 ---
 
+### 🔧 Sprint Forge — 10/06/2026 (bug simétrico F-12 + queue overflow + listener raw)
+
+**fix(data): klines e aggTrades para futures_multiplex_socket** · commit `fde21af`
+
+Bug simétrico ao F-12: `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) em vez de `futures_multiplex_socket` (Futuros). CVD e klines de **todos os trades anteriores** ao restart desta sessão foram calculados com dados do mercado Spot — inválidos para análise de Futuros. Teses T-01 a T-04 só podem ser validadas com trades coletados a partir desta correção.
+
+Arquivo: `src/data_engine.py` — 2 linhas (L401 e L508).
+
+**feat(tools): `tools/binance_raw_listener.py`** · mesmo commit `fde21af`
+
+Listener WebSocket puro Binance Futures sem filtro. Captura por símbolo: `@aggTrade`, `@kline_1m`, `@markPrice`, `@bookTicker`. Stream global: `!forceOrder@arr`. Output: `tools/raw_logs/raw_YYYYMMDD_HHMMSS.jsonl`. Uso: `python tools/binance_raw_listener.py BTCUSDT VELVETUSDT STGUSDT`.
+
+**fix(ws): `queue_size=10000` no BinanceSocketManager** · commit `d44e89d`
+
+Overflow silencioso em spikes de volume — fila padrão insuficiente.
+
+**fix(ws): `queue_size` → `max_queue_size`** · commit `cd7c5b3`
+
+Nome correto do parâmetro na biblioteca `python-binance`. Fix de nomenclatura aplicado em `data_engine.py` e `tools/binance_raw_listener.py`.
+
+---
+
 ### 🔧 Sprint Forge — 09/06/2026 (fix F-12 causa raiz)
 
 **fix(F-12) — causa raiz definitiva do `liq_short_1m = 0`** · commit `ed54d36`
@@ -939,7 +961,7 @@ Macro bearish: 79.1% dos 531 ativos com EMA:4h negativo. Apenas 28 ilhas de desa
 - Warmup concluído às 20:28:41 — bot ativo
 - MDs todos atualizados, commits prontos para push
 
-*Versão: 4.6 · Última atualização: 10/06/2026*
+*Versão: 4.7 · Última atualização: 10/06/2026*
 
 ---
 

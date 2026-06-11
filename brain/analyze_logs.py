@@ -5,7 +5,8 @@ Uso: python brain/analyze_logs.py [caminho_opcional_para_jsonl]
 """
 import json, sys, os
 from collections import defaultdict
-sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 LOG_PATH = sys.argv[1] if len(sys.argv) > 1 else "logs/paper_closed.jsonl"
 

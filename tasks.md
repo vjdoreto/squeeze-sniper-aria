@@ -182,6 +182,85 @@ Opções:
 
 ---
 
+## 🟠 Brain → Forge — Demanda T-08 (11/06/2026)
+
+### B-ema4h-bypass-virada — Análise + bypass condicional do gate `ema_4h_bearish` na janela pós-virada
+
+**Autorizado por Doreto em 11/06/2026.**
+
+> ✅ **Passo 1 concluído:** logging enriquecido para refusals `ema_4h_bearish` · `signal_engine.py` · `4332d36` · push origin ✅ · aria ✅
+> Cada refusal agora loga: `ema_trend:4h`, `ema_trend:15m`, `ema_trend:1h`, `lsr_trend`, `lsr`, `exp_btc:1h`.
+> **Aguardando:** ~50 eventos pós-restart → Brain audita falso positivo rate → go/no-go para Passo 2.
+
+**Evidência (ARIA 00:58 UTC · 11/06):** 13 ativos com ema_trend:4h=-6 subiram >3% na janela 00:00–01:00 UTC (21h–22h BRT). Caso mais forte: ASTRUSDT +15.8% — ema_1h=0, ema_15m=+6, lsr_trend=-46.63, oi_trend=+109.49 — bloqueado pelo candle 4h anterior bearish, que não capturou o movimento atual. O gate está usando foto de 4h atrás para bloquear movimento em curso.
+
+**Passo 1 — Análise (Forge executa antes de qualquer mudança de código):**
+
+Rodar análise no `logs/signal_refusals.jsonl` filtrando:
+- `reason_code = "ema_4h_bearish"`
+- timestamp entre 00:00–02:00 UTC de qualquer dia disponível
+
+Para cada refusal nessa janela, extrair: `ema_trend_4h`, `ema_trend_1h` (se disponível), `lsr_trend`, `oi_trend`, `symbol`, `timestamp`.
+
+Responder: quantos desses refusals teriam passado no bypass proposto abaixo? Quantos teriam sido corretamente mantidos?
+
+**Bypass proposto (implementar SOMENTE se análise confirmar):**
+```python
+# bypass ema_4h_bearish quando TFs menores já confirmam reversão
+bypass = (
+    ema_trend_15m >= 4
+    and ema_trend_1h >= 0
+    and lsr_trend <= -15
+)
+```
+
+- ASTRUSDT-type (15m=+6, 1h=0, lsr=-46): bypass ativo ✅
+- HUSDT-type (15m=+4, 1h=-6): gate mantido ✅
+- SONICUSDT-type (15m=0, 1h=-6): gate mantido ✅
+
+**Passo 2 — Implementação (somente após análise confirmar):**
+- `src/signal_engine.py` — gate `ema_4h_bearish`: adicionar verificação de bypass antes do return None
+- Logar `reason_code = "ema_4h_bypass_virada"` quando bypass ativo (observacional)
+- Campo `ema4h_bypass_active: bool` no signal dict
+
+**Critério de go/no-go:** se análise mostrar que o bypass teria deixado passar principalmente perfis ASTRUSDT (1h ≥ 0 + 15m forte + lsr colapsando) e bloqueado HUSDT/SONIC (1h negativo) → implementar. Se falso positivo rate > 40% → revisar threshold antes de implementar.
+
+---
+
+## 🟠 Brain → Forge — Demanda T-07 (10/06/2026)
+
+### ✅ B-candle-age — Logar `last_4h_candle_age_minutes` no signal dict · `signal_engine.py` · `c30ebbf`
+
+**Autorizado por Doreto em 10/06/2026. Implementado pelo Forge em 10/06/2026. Push: origin ✅ · aria ✅**
+
+**Evidência (deliberação Brain × ARIA · 10/06/2026):** o SS combina dados tick-level (CVD, liq_cascade — latência <1s) com dados candle-level (ema_trend:4h — latência até 4h) no mesmo score sem rastrear a idade dos campos. O gate mais crítico (`ema_trend:4h`) é o mais lento. Um ativo pode ter virado de bearish para bullish dentro do candle 4h em formação e o SS só descobrirá no fechamento. Sem o campo de idade, não há como saber se esse lag está custando trades.
+
+**Implementação (Forge):**
+- Em `src/signal_engine.py`, no bloco de construção do signal dict (junto com `ema_trend_4h`): calcular quantos minutos passaram desde o timestamp do último candle 4h fechado até o momento da entrada.
+- Campo: `last_4h_candle_age_minutes: int` — valor esperado: 0 a 240.
+- Fonte: `metric_engine` já mantém o buffer de klines 4h — o timestamp do último kline fechado está disponível.
+- **Campo puramente observacional** — não altera nenhum gate, não muda comportamento do bot.
+- Incluir também nos ghost signals.
+
+**Critério de validação (T-07):** após 30+ trades, Brain cruza `last_4h_candle_age_minutes` × `exit_reason` × `mfe`. Se trades com candle 4h velho (>200min) tiverem WR sistematicamente pior → evidência para repensar o gate `ema_4h_bearish` ou adotar candle aberto no score. Se não houver correlação → hipótese descartada com dados.
+
+---
+
+## ✅ Fix crítico — klines + aggTrades para futures_multiplex_socket · `data_engine.py` · `fde21af`
+
+> Mesmo padrão do F-12 (liquidações) mas nos streams de klines e CVD. Spot aceitava conexão silenciosamente — dados "parecidos" mas do mercado errado. CVD e klines agora chegam do endpoint correto (fstream.binance.com). Push origin ✅ · aria ✅
+> **Impacto:** todos os trades anteriores ao restart têm CVD e klines calculados do Spot — dados históricos parcialmente invalidados para T-01/T-02/T-03. Ver nota abaixo.
+
+## ✅ Fix — queue overflow WebSocket · `data_engine.py` + `tools/binance_raw_listener.py` · `d44e89d` + `cd7c5b3`
+
+> `queue_size=10000` adicionado no `BinanceSocketManager` para evitar overflow silencioso em spikes de volume. Segundo commit corrigiu nomenclatura: `queue_size` → `max_queue_size` (parâmetro correto da biblioteca python-binance).
+
+## ✅ Ferramenta — `tools/binance_raw_listener.py` · `fde21af`
+
+> Listener WebSocket puro Binance Futures sem filtro. Captura aggTrade, kline_1m, markPrice, bookTicker e forceOrder por símbolo. Uso: `python tools/binance_raw_listener.py BTCUSDT VELVETUSDT`. Output em `tools/raw_logs/`. Criado para diagnóstico de dados brutos — inspecionar payload antes de qualquer processamento do SS.
+
+---
+
 ## ✅ Brain → Forge — Demandas autorizadas por Doreto (10/06/2026)
 
 ### B-score-ema1h — ema_trend:1h como bônus de score (+5 pts)

@@ -59,6 +59,8 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **B-liq-cascade-tiers** | 0.02×OI → floor $100k p/ OI $5M → cascade impossível. Tiers por OI desbloqueiam | 10/06 |
 | **B-34-bypass** | VELVETUSDT $69k liq bloqueado pelo gate lsr_trend_positive antes do score | 10/06 |
 | **ema_trend:1h +5 pts bônus** | BEAT 4h=+6/1h=+6/5m=0 invisível ao score anterior — pullback em tendência | 10/06 |
+| **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
+| **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
 
 ---
 
@@ -81,6 +83,7 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 - [x] `liq_short_1m_stable` e `liq_cascade` com dados reais — **CONFIRMADO 09/06 21:27:47** (TRUMPUSDT $438, BTWUSDT $6090 — pipeline funcional)
 - [x] `ema_trend_4h` no signal dict — **CONFIRMADO 09/06** (fix candles 100→50, commit `c7edbf8`)
 - [x] `rsi:1h` real pós-cache quente — **CONFIRMADO 09/06** (gate rsi_1h_warmup não aparece no top-5 após 2º boot)
+- [x] **CVD e klines de Futuros** — **CONFIRMADO 10/06** (`fde21af`). Bug simétrico ao F-12 corrigido: `_listen_klines` + `_listen_agg_trades` agora usam `futures_multiplex_socket`. Todos os trades anteriores a essa sessão têm CVD e RSI calculados com dados do Spot — histórico invalidado para T-01/T-02/T-03.
 - [ ] Gate `ema_4h_bearish` disparando de fato em losers (auditar via `signal_refusals.jsonl` — aguarda 50+ trades)
 - [ ] `liq_cascade` (boolean) gerando entradas de qualidade — aguarda amostras com liq_short_1m ativo
 - [ ] **B-34-bypass WR** — após 20+ trades com `lsr_bypass_active=True`, Brain audita WR. WR < 50% → reverter bypass (`519b56d`)
@@ -113,4 +116,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.1 · Forge é guardião · 09/06/2026 — F-12/ema_4h/rsi:1h confirmados, blacklist zerada*
+*BRAIN_CONTEXT.md v1.2 · Forge é guardião · 10/06/2026 — bug simétrico F-12 corrigido (CVD/klines Spot→Futuros), queue overflow corrigido, listener raw criado*

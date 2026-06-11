@@ -28,6 +28,7 @@ ARIA não implementa nada — entrega descobertas estruturadas ao Brain, que rep
 | `rsi_1h` | signal dict | Momentum de médio prazo |
 | `rsi_5m` | signal dict | Combustível técnico da squeeze |
 | `liq_short_1m` | signal dict | Liquidações reais no minuto (dados reais só a partir de 09/06) |
+| `cvd_change_pct` | signal dict | CVD de Futuros reais (dados reais só a partir de 10/06 — antes vinha do Spot) |
 | `liq_cascade` | signal dict | Confirmação de colapso institucional |
 | `volume_quality` | signal dict | cvd_change_pct/(trades_1m+1) — qualidade vs quantidade |
 | `exp_btc_norm_1h` | signal dict | Z-score normalizado (window=14) força vs BTC |
@@ -64,10 +65,16 @@ ARUSDT: EXP_BTC:1m=-2.47 (fraco) mas EXP_BTC:1h=+42 (fortíssimo) → bot entrou
 
 ## 4. Teses Abertas — Aguardando Dados
 
+### ⚠️ Nota crítica de validade de dados (10/06/2026)
+
+Todos os trades coletados **antes do restart pós-`fde21af`** têm CVD e klines calculados com dados do **Spot** (não Futuros). Bug simétrico ao F-12, corrigido em `fde21af`. Os dados históricos de `paper_closed.jsonl` anteriores a essa data são inválidos para qualquer análise que envolva `cvd_change_pct`, `ema_trend`, `rsi_*`. As teses T-01 a T-04 só podem ser validadas com trades coletados a partir da sessão pós-fix.
+
+---
+
 ### T-01: liq_cascade como discriminador principal
 **Hipótese:** trades com `liq_cascade = True` têm MFE e PnL significativamente maiores que os sem cascade.
 **Status:** 🟢 DESBLOQUEADA — pipeline funcional desde 09/06 21:27:47 (TRUMPUSDT $438, BTWUSDT $6090 confirmados)
-**Próximo passo:** analisar primeiros 20+ trades com `liq_short_1m > 0` — distribuição por exit_reason e MFE.
+**Próximo passo:** analisar primeiros 20+ trades com `liq_short_1m > 0` — distribuição por exit_reason e MFE. Usar apenas trades pós-`fde21af`.
 
 ### T-02: ema_trend_4h como filtro de qualidade
 **Hipótese:** trades com `ema_trend_4h ≥ 0` têm win rate > 70%; com `ema_trend_4h ≤ -2` win rate < 40%.
@@ -157,4 +164,4 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.3 · Forge é guardião · 10/06/2026 — T-05/T-06 adicionadas + snapshot 10/06 23:12 UTC*
+*ARIA_CONTEXT.md v1.4 · Forge é guardião · 10/06/2026 — nota crítica validade dados: CVD/klines Spot→Futuros corrigido em fde21af; teses T-01 a T-04 só válidas com trades pós-fix*
