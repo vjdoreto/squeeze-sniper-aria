@@ -304,12 +304,22 @@ class TelegramAlert:
         text += f"\n━━━━━━━━━━━━━━━━━━━━\n⏱️ <b>Uptime:</b> {uptime_h}h"
         await self._send(text)
 
+    async def market_warming(self, level: float) -> None:
+        """Alerta leve: Squeezometer ≥ 70 — mercado aquecendo."""
+        text = (
+            f"🟡 <b>MERCADO AQUECENDO</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"🌡️ Squeezometer: <b>{level:.0f}/100</b>\n"
+            f"Atividade institucional acima da média."
+        )
+        await self._send(text)
+
     async def panic_warning(self, level: float) -> None:
-        """Alerta: Squeezometer acima de 80 — atividade institucional extrema."""
+        """Alerta crítico: Squeezometer ≥ 85 — pânico institucional iminente."""
         text = (
             f"🚨 <b>SQUEEZOMETER CRÍTICO</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
             f"🌡️ Nível: <b>{level:.0f}/100</b>\n"
-            f"Atividade institucional extrema detectada."
+            f"Pânico institucional — squeeze pode disparar agora."
         )
         await self._send(text)

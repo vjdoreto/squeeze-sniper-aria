@@ -421,13 +421,20 @@ async def trading_loop(
             # Roadmap P0: notificações Telegram no PAPER devem ser só em eventos reais
             # (trade open/close) + relatório horário. Então, panic fica somente no LIVE.
             # SPRINT 12.125: Alerta de pânico ativado para ambos os modos (visibilidade institucional)
-            if telegram and state.market_squeeze_level > 80:
-                # Evita spam: só envia se não enviou nos últimos 5 minutos
+            if telegram and state.market_squeeze_level >= 70:
                 now = time.time()
-                last_panic = _safe_float(getattr(state, "_last_panic_ts", 0.0), 0.0)
-                if now - last_panic > 300:  # 5 minutos de cooldown
-                    asyncio.create_task(telegram.panic_warning(state.market_squeeze_level))
-                    setattr(state, "_last_panic_ts", now)
+                sq = state.market_squeeze_level
+                if sq >= 85:
+                    last_panic = _safe_float(getattr(state, "_last_panic_ts", 0.0), 0.0)
+                    if now - last_panic > 300:  # cooldown 5min — crítico
+                        asyncio.create_task(telegram.panic_warning(sq))
+                        setattr(state, "_last_panic_ts", now)
+                        setattr(state, "_last_warming_ts", now)  # reset warming ao enviar crítico
+                else:
+                    last_warming = _safe_float(getattr(state, "_last_warming_ts", 0.0), 0.0)
+                    if now - last_warming > 900:  # cooldown 15min — aquecendo
+                        asyncio.create_task(telegram.market_warming(sq))
+                        setattr(state, "_last_warming_ts", now)
             if state.market_paused:
                 # Se o Squeezometer estiver abaixo de 20 por mais de 10 min, entra em hibernação
                 await asyncio.sleep(30)
