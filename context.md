@@ -1042,7 +1042,32 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.16 · Última atualização: 11/06/2026*
+*Versão: 4.17 · Última atualização: 11/06/2026*
+
+---
+
+## 🔧 Sprint Forge — 11/06/2026 (infraestrutura + fix shutdown gracioso)
+
+### fix(shutdown): EXIT via dashboard não encerrava graciosamente · commit `f2f6caf`
+
+**Problema:** ao clicar EXIT no dashboard, o bot reiniciava em vez de encerrar. O `finally` (Telegram bot_shutdown, backup, kill_process_tree) não executava corretamente.
+
+**Causa raiz — 3 bugs combinados em `main.py`:**
+1. `asyncio.gather(..., return_exceptions=False)` — propagava `CancelledError` abortando o fluxo antes do `finally`
+2. Ordem errada dos `except`: `except Exception` vinha antes de `except asyncio.CancelledError` — o segundo nunca era alcançado
+3. `_stop_watcher` cancelava as tasks mas não aguardava o cancelamento propagar antes de retornar
+
+**Fix:**
+- `return_exceptions=True` no gather principal
+- `except asyncio.CancelledError` movido para antes de `except Exception`
+- `_stop_watcher` faz `await asyncio.gather(*all_tasks, return_exceptions=True)` após cancelar — aguarda todas as tasks antes de sair
+
+**Impacto:** shutdown gracioso agora executa corretamente via dashboard (Telegram notificação, backup automático, kill_process_tree). Requer soft restart para entrar em efeito.
+
+### fix(vscode): configurações de ambiente corrigidas
+
+- `python.defaultInterpreterPath`: `${workspaceFolder}` substituído por caminho absoluto — `#` no nome da pasta quebrava a resolução da variável
+- `tasks.json`: `runOn: folderOpen` removido do watcher de testes — `ptw` não instalado causava erro ao abrir o projeto
 
 ---
 
