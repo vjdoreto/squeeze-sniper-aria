@@ -2714,6 +2714,24 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
     }
     loadLiveAdvancedConfig();
 
+    // F-01: carrega configurações Paper salvas antes do primeiro WS update
+    (async function loadPaperConfig() {
+        try {
+            const res = await fetch('/api/paper-config');
+            const j = await res.json();
+            if (j.ok) {
+                const capEl = document.getElementById('initialCapitalInput');
+                const rskEl = document.getElementById('riskPctInput');
+                const levEl = document.getElementById('leverageInput');
+                const mxpEl = document.getElementById('maxPosInput');
+                if (capEl && document.activeElement !== capEl) capEl.value = j.initial_capital.toFixed(2);
+                if (rskEl && document.activeElement !== rskEl) rskEl.value = j.risk_pct.toFixed(1);
+                if (levEl && document.activeElement !== levEl) levEl.value = j.leverage;
+                if (mxpEl && document.activeElement !== mxpEl) mxpEl.value = j.max_open_positions;
+            }
+        } catch (e) { console.error('Erro ao carregar configurações Paper:', e); }
+    })();
+
     // Anti-flicker: debounce render calls to one per animation frame.
     // Prevents double-renders when WS and polling both fire simultaneously.
     let _rafId = null;
@@ -2952,6 +2970,24 @@ def create_app(
             return on_update_live_settings(usdt_amount, risk_pct, leverage, max_pos)
         except Exception as e:
             logger.exception("set-live-settings handler error: %s", e)
+            return {"ok": False, "error": str(e)}
+
+    @app.get("/api/paper-config")
+    async def get_paper_config():
+        """F-01: Retorna configurações Paper salvas em preferences.json para preencher cockpit no boot."""
+        try:
+            from config import load_preferences, resolve_preferences_path
+            prefs = load_preferences(resolve_preferences_path())
+            paper_node = prefs.get("paper") or {}
+            return {
+                "ok": True,
+                "initial_capital": float(paper_node.get("initial_capital", 1000.0)),
+                "risk_pct": float(paper_node.get("risk_pct_per_trade", 0.05)) * 100,
+                "leverage": int(paper_node.get("leverage", 10)),
+                "max_open_positions": int(paper_node.get("max_open_positions", 20)),
+            }
+        except Exception as e:
+            logger.exception("Erro ao buscar configurações Paper: %s", e)
             return {"ok": False, "error": str(e)}
 
     @app.get("/api/live-advanced-config")
