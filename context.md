@@ -1019,7 +1019,30 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 
 **min_score paper 85→80** · commit `a628a3b` · autorizado Brain/Doreto 11/06/2026. Cenário A+B confirmado (stream F-12 ok, volume baixo 01h UTC + 73% bearish → teto ~83 sem liq_cascade). Condição de reversão: WR<45% ou MAE>8% em 20+ trades score 80–84. Paper reset executado por Doreto no restart.
 
-*Versão: 4.13 · Última atualização: 11/06/2026*
+### 🔧 Sprint Forge — 11/06/2026 (D1 · D2 · F-19 · R-07 governança)
+
+**D1: `funding_rate` no signal dict real** · commit `3616b1b` (Brain — violação R-07 #5, aprovado Forge)
+
+`funding_rate` presente em ghost signals mas ausente em `signals.jsonl` e `paper_closed.jsonl`. 1 linha adicionada em `signal_engine.py:954`. **Validado:** SQDUSDT primeiro signal pós-restart com `funding_rate=0.00005` — T-06 agora auditável nos trades reais.
+
+**D2: PaperTracker setLevel DEBUG para breakeven diag** · commit `a1949d9` (Brain — violação R-07 #6, aprovado Forge)
+
+`logger.debug()` em `paper_tracker.py` silenciado pelo nível INFO global. Fix: `logging.getLogger("PaperTracker").setLevel(logging.DEBUG)` em `main.py:74`. Próximo trade com MFE > 3.4% vai gerar ticks `PAPER-BREAKEVEN-DIAG`.
+
+**F-19: Reconstrução `_post_trade_pending` no boot** · commit `e451f19` (Brain — violação R-07 #7, aprovado Forge)
+
+`_post_trade_pending` era 100% in-memory — snapshots 4h/12h/24h perdidos a cada restart. Fix: `_rebuild_post_trade_pending()` chamado no boot, lê `paper_closed.jsonl`, reinsere trades das últimas 24h com snapshots incompletos. 38 linhas em `paper_tracker.py`. Alpha decay agora sobrevive a restarts.
+
+**Governança R-07:** 7 violações registradas nesta sessão. Brain e ARIA continuam implementando e commitando diretamente. Doreto reconheceu ter autorizado erroneamente em algumas ocorrências. Todos os códigos revisados e aprovados pelo Forge. Padrão registrado em tasks.md e memória persistente.
+
+**Backlogs formalizados:** `aria/backlog-aria-doreto-v1.0.md` criado com 9 entradas (padrões A-01 a A-04, teses TA-01/TA-02, descobertas AP-01 a AP-04). Equivalente ao backlog do Brain como fonte de demandas — ambos alimentam `tasks.md` via autorização de Doreto.
+
+**Estado ao reiniciar (pré-restart):**
+- `paper_closed.jsonl`: 13+ trades (inclui SQDUSDT trailing_stop +$1.12, MFE 10.12%)
+- D1 validado · D2 + F-19 aguardam restart para entrar em efeito
+- Meta: 50 trades para validação estatística T-01 a T-04
+
+*Versão: 4.14 · Última atualização: 11/06/2026*
 
 ---
 

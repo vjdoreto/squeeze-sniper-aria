@@ -64,6 +64,8 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **Caso AIOUSDT +29% — miss por design** | Demand ramp orgânica (CVD+OI+FR escalando por horas) ≠ squeeze de liquidação. DNA funcionou corretamente para o padrão que foi projetado. Demand ramp = backlog estratégico pós-50 trades | 11/06 |
 | **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
+| **D1: funding_rate no signal dict real** | Campo ausente de `signals.jsonl` e `paper_closed.jsonl` — T-06 inauditável nos trades reais. **Validado:** SQDUSDT `funding_rate=0.00005` no primeiro signal pós-restart | 11/06 |
+| **F-19: _post_trade_pending reconstruído no boot** | Alpha decay 4h/12h/24h perdido a cada restart. `_rebuild_post_trade_pending()` reinsere trades das últimas 24h com snapshots incompletos | 11/06 |
 
 ---
 
@@ -121,4 +123,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.4 · Forge é guardião · 11/06/2026 — B-score-ema1h concluído (ema_trend_1h exportado ghost+real); dashboard: near-miss table + badge 1h EMA nas posições*
+*BRAIN_CONTEXT.md v1.5 · Forge é guardião · 11/06/2026 — D1 validado (funding_rate ≠ 0 em signals.jsonl); D2+F-19 aguardam restart; 7 violações R-07 registradas nesta sessão; backlog ARIA formalizado como fonte equivalente ao Brain*

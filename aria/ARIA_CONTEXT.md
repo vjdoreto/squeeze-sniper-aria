@@ -164,4 +164,4 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.6 · Forge é guardião · 11/06/2026 — ema_trend_1h exportado nos ghost signals (B-score-ema1h · 90d3e3b); near-miss table no dashboard mostra ema_trend_1h + funding_rate em tempo real*
+*ARIA_CONTEXT.md v1.7 · Forge é guardião · 11/06/2026 — D1 validado (funding_rate ≠ 0 em signals.jsonl · SQDUSDT); F-19 ativo pós-restart (alpha decay 4h/12h/24h sobrevive a restarts); backlog ARIA v1.0 formalizado em AGENTS.md como fonte equivalente ao Brain*
