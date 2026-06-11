@@ -88,6 +88,7 @@ _Atualizado: 11/06/2026 · v2.3_
 - [x] **F-01 Paper persistence** — endpoint `/api/paper-config` + `loadPaperConfig()` no boot · `1772fd9`
 - [x] **B-28 Janela de silêncio 20:50–21:05 BRT** — gate `silence_window_2100` em `signal_engine.py:analyze()` + relatório diário → 21:01 BRT · `a0f0b57`
 - [x] **B-47 oi_trend VIP criterion** — `oi_trend > 0.015` como critério de priorização de ciclo; acumulação silenciosa agora detectada · `data_engine.py` · `92483e3`
+- [x] **min_score paper 85→80** — autorizado Brain/Doreto; condição de reversão monitorada pelo Brain · `preferences.json` · `a628a3b`
 - [x] **T-08 diagnóstico** — sem bug no logging; 0 eventos `ema_4h_bearish` porque 79% mercado bearish bloqueia em `score_below_threshold` antes do gate F-18. Aguarda macro virar.
 - [x] **B-43 diagnóstico** — `exaustao_15m_pct` já estava em `preferences.json`. Backlog desatualizado — nada a implementar.
 
@@ -201,6 +202,8 @@ Opções:
 ## ✅ Brain → Forge — Demanda T-09 (11/06/2026) · `signal_engine.py` L261 · `funding_rate` no ghost signal dict
 
 ### B-funding-ghost — Adicionar `funding_rate` ao dict dos ghost signals
+
+> **Nota de correção (11/06/2026):** `funding_rate` já estava no signal dict real (`signal_engine.py:1007`) antes desta sessão. T-09 adicionou apenas ao ghost signal dict (`L261`) — que era o gap real. T-06 é auditável em ambos os logs.
 
 **Autorizado por Doreto em 11/06/2026. Variante R-07 (≤ 10 linhas, escopo único). Implementado pelo Forge em 11/06/2026.**
 

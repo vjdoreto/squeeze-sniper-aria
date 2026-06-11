@@ -224,6 +224,7 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 11/06/2026 | **Squeezometer crítico 80→85 + nível aquecendo ≥70** | Alinhado com min_score=85. Sieve thresholds (80/60) intocados | `576b5d7` |
 | 11/06/2026 | **B-28 gate silence_window_2100** | Bloqueia novas entradas 20:50–21:05 BRT (virada candle diário + funding reset). Relatório diário → 21:01 BRT | `a0f0b57` |
 | 11/06/2026 | **B-47 oi_trend > 0.015 como critério VIP** | Acumulação silenciosa agora eleva ativo a prioridade de processamento. Threshold = min_oi_trend para consistência semântica | `92483e3` |
+| 11/06/2026 | **min_score paper 85→80** | Cenário A+B: stream ok, volume baixo + 73% bearish → teto ~83 sem liq_cascade. Reversão se WR<45% ou MAE>8% em 20+ trades score 80–84 | `a628a3b` |
 
 ---
 
@@ -231,7 +232,7 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 
 | Parâmetro | Valor Paper | Valor Live | Descrição |
 |-----------|-------------|------------|-----------|
-| `min_score` | **85** | 90 | Score mínimo para entrada — reduzido 90→85 em 10/06 (`470a658`) |
+| `min_score` | **80** | 90 | Score mínimo para entrada — reduzido 90→85 em 10/06, 85→80 em 11/06 (`a628a3b`) |
 | `min_trades_1m` | 10 | 5 | Gate combo — atividade mínima |
 | `min_oi_trend` | 0.015 (base) / 0.008 (gate combo) | 0.02 | OI crescendo |
 | `max_lsr_trend` | -0.002 (base) / -0.3 (gate combo) | -0.002 | Shorts capitulando |

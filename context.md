@@ -1002,7 +1002,9 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 
 **paper_tracker:** adicionados ao `_stats()`: `gross_profit`, `gross_loss`, `avg_mfe_pct`, `avg_mae_pct`, `max_drawdown_pct`. Adicionados ao `snapshot()`: `peak_capital`, `best_trade`, `worst_trade`.
 
-*Versão: 4.10 · Última atualização: 11/06/2026*
+**min_score paper 85→80** · commit `a628a3b` · autorizado Brain/Doreto 11/06/2026. Cenário A+B confirmado (stream F-12 ok, volume baixo 01h UTC + 73% bearish → teto ~83 sem liq_cascade). Condição de reversão: WR<45% ou MAE>8% em 20+ trades score 80–84. Paper reset executado por Doreto no restart.
+
+*Versão: 4.11 · Última atualização: 11/06/2026*
 
 ---
 
