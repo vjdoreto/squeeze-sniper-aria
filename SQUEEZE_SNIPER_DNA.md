@@ -98,7 +98,7 @@ Persistido em `signals.jsonl` e `paper_closed.jsonl → entry.signal`.
 | `timestamp` | float | unix epoch | `time.time()` |
 | `volume_quality` | float | cvd_chg_pct / (trades_1m+1) | calculado inline |
 | `exp_btc_norm_1h` | float | Z-score rolling window=14 | `d["exp_btc_norm_1h"]` |
-| `ema_trend_1h` | int | -6 a +6 | `d["ema_trend:1h"]` |
+| `ema_trend_1h` | int | -6 a +6 | `d["ema_trend:1h"]` · ghost + sinal real (adicionado signal_engine.py · B-score-ema1h) |
 | `lsr_bypass_active` | bool | — | lógica B-34 inline |
 | `last_4h_candle_age_minutes` | int | 0–240 min | calculado inline |
 | `funding_rate` | float | ratio | `d["funding_rate"]` |
