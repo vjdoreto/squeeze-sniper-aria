@@ -4,7 +4,7 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Dict, Optional, List, Set, Any, Counter as TypingCounter
 from collections import Counter as PyCounter
@@ -307,7 +307,6 @@ class SqueezeIgnition:
 
         # B-28: Janela de silêncio 20:50–21:05 BRT (virada de candle diário + funding reset)
         # Só bloqueia novas entradas — trades abertos não são afetados.
-        from datetime import datetime, timezone, timedelta
         _brt = datetime.now(timezone(timedelta(hours=-3)))
         _h, _m = _brt.hour, _brt.minute
         if (_h == 20 and _m >= 50) or (_h == 21 and _m < 5):
