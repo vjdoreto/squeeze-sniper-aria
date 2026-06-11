@@ -31,14 +31,16 @@ Cada símbolo tem bracket tiers que definem o notional máximo por faixa de alav
 ---
 
 ### B-03 — BTC.D, USDT.D, OTHERS.D em múltiplos TF
-**Status:** Parcialmente documentado no tasks.md anterior  
+**Status:** ⚡ Caminho simplificado · revisão 11/06/2026  
 **Origem:** Doreto + visão macro de fluxo de capital
 
-BTC.D e USDT.D mostram para onde o capital está indo — dolarização vs rotação para altcoins. OTHERS.D mostra força das small caps. Juntos formam um painel de contexto macro que complementa o EXP_BTC do Sniper.
+BTC.D e USDT.D mostram para onde o capital está indo — dolarização vs rotação para altcoins. OTHERS.D mostra força das small caps.
 
-Ideia: bloco "Macro Cripto" no topo do dashboard com BTC.D, USDT.D, OTHERS.D e Fear & Greed do CoinMarketCap (Doreto já tem a chave de API no `.env`).
+**Atualização 11/06/2026:** o eAssets dashboard já consome BTC.D, USDT.D, ETH.D como componentes do CRM — sem CoinMarketCap. A lógica está em `calcCRM()` no `doreto-squeeze-sniper.html`. Se quisermos esses dados no SS dashboard, vêm junto com a portagem de B-05, não separado.
 
-**Próximo passo:** quando GRM (B-05) for para desenvolvimento, esses dados entram juntos.
+**CoinMarketCap não é mais necessário para este item.**
+
+**Próximo passo:** entra junto com B-05 quando decidirmos adicionar bloco macro ao SS dashboard.
 
 ---
 
@@ -60,24 +62,18 @@ Dois modos discutidos:
 
 ## DASHBOARD / UX
 
-### B-05 — GRM (Global Risk Management) no dashboard
-**Status:** Backlog · prioridade média-alta para quando Live  
+### B-05 — GRM/CRM no dashboard SS
+**Status:** ⚡ Caminho simplificado · revisão 11/06/2026  
 **Origem:** Doreto tem código de outro projeto (King Kong) com parte disso implementado
 
-Visão do Doreto: bloco no topo do dashboard com:
-- Fear & Greed Index (CoinMarketCap — chave já no `.env`)
-- BTC.D, ETH, BTC em destaque
-- Índices tradicionais: US500, Nikkei, DAX, China (via yfinance)
+**Atualização 11/06/2026:** o `doreto-squeeze-sniper.html` (eAssets) já tem CRM e GRM **implementados e funcionando** sem CoinMarketCap e sem Yahoo Finance. As funções `calcCRM()` e `calcGRM()` são JavaScript puro calculado a partir dos dados do próprio painel.
 
-**✅ Módulo garimpado do King Kong — 04/06/2026**
+- **CRM:** USDT.D variação + BTC.D variação + ETH.D variação + Fear & Greed + BTC 24h change + funding rate médio
+- **GRM:** VIX nível/variação + DXY nível/variação + S&P500 + Nasdaq + Gold
 
-`cmc_client.py` está pronto para reaproveitamento direto. Cliente assíncrono (aiohttp) com dois métodos:
-- `get_quotes(symbols)` — cotações de símbolos específicos
-- `get_global_metrics()` — dados globais incluindo Fear & Greed e OTHERS.D
+**`cmc_client.py` do King Kong não é mais o caminho.** Se quisermos trazer CRM/GRM para o dashboard do SS, o Forge porta `calcCRM()` e `calcGRM()` do eAssets — funções testadas em uso real, sem novas dependências.
 
-Chave de API já existe no `.env` do Sniper. Adaptação é mínima — integrar ao `data_engine.py` e expor no dashboard.
-
-**Próximo passo:** quando B-05 entrar em sprint, Brain prepara briefing para o Forge com o `cmc_client.py` como base. Forge não constrói do zero.
+**Próximo passo:** quando quiser adicionar ao SS dashboard, Brain passa o trecho relevante do eAssets HTML ao Forge. Trabalho de horas, não de sprint.
 
 ---
 
