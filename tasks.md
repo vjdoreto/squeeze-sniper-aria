@@ -116,6 +116,8 @@ _Atualizado: 11/06/2026 · v2.5_
 
 > ⚠️ **Violação R-07 registrada:** commit `d089dce` foi executado pela ARIA (não pelo Forge). Código revisado pelo Forge e aprovado — nenhuma reversão necessária. Quarta violação no dia (anteriores: `d8b939d` ARIA, `315f0d6` Brain, `6f0bc0a` Forge paralelo). Ver R-07 em AGENTS.md.
 
+> ⚠️ **Violação R-07 registrada (6ª):** commit `a1949d9` executado pelo Brain em 11/06/2026. Mudança: `logging.getLogger("PaperTracker").setLevel(logging.DEBUG)` em `main.py:74`. 1 linha, correto, aprovado pelo Forge. **Agravante:** Doreto autorizou Brain diretamente ("faz agora" → Brain implementou e commitou) — o fluxo correto seria Doreto pedir ao Forge. Doreto reconheceu o erro na sessão. O caminho "Brain descreve diff em tasks.md → Forge commita" existe exatamente para evitar esse atalho.
+
 > ⚠️ **Violação R-07 registrada (5ª):** commit `3616b1b` executado pelo Brain em 11/06/2026. Mudanças: `funding_rate` no signal dict real (`signal_engine.py:952`) + log DEBUG breakeven (`paper_tracker.py:1063`). Código revisado pelo Forge e aprovado — ambas as mudanças são cirúrgicas e corretas, nenhuma reversão necessária. Brain deve usar a Variante R-07 (diff em tasks.md) e aguardar o Forge commitar.
 
 ## ✅ EA-Sprint5 — Concluído (09–10/06/2026)
