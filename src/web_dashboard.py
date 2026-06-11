@@ -502,8 +502,28 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
 
       <section class="card">
         <h2 style="color:var(--muted); font-size:0.8rem;">👻 Ghost Signals (Audit)</h2>
-        <div id="ghosts" style="padding:12px 16px 16px;">
+        <div id="ghosts" style="padding:12px 16px 8px;">
           <div class="sig meta">Nenhum fantasma detectado</div>
+        </div>
+        <div style="padding:0 16px 16px;">
+          <div style="font-size:0.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px;">Near-misses (últimos 10)</div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:10px;">
+              <thead>
+                <tr style="color:#8b949e;border-bottom:1px solid #21262d;">
+                  <th style="text-align:left;padding:3px 6px;">Símbolo</th>
+                  <th style="text-align:right;padding:3px 6px;">Score</th>
+                  <th style="text-align:right;padding:3px 6px;">1h EMA</th>
+                  <th style="text-align:right;padding:3px 6px;">FR</th>
+                  <th style="text-align:left;padding:3px 6px;">Bloqueio</th>
+                  <th style="text-align:right;padding:3px 6px;">Hora</th>
+                </tr>
+              </thead>
+              <tbody id="ghost-near-miss-rows">
+                <tr><td colspan="6" style="color:#8b949e;padding:6px;text-align:center;">aguardando...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -2094,10 +2114,14 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
           var fee_out = ex.fee_usdt || 0;
           var margin_val = entry.initial_usdt_margin ?? ((entry.initial_quantity != null && entry.price != null) ? ((entry.initial_quantity * entry.price) / (entry.leverage || 10)) : entry.usdt_margin);
           var sltp_str = (sl_price!=='' ? fmt(sl_price,4) : '—') + ' / ' + (tp_price!=='' ? fmt(tp_price,4) : '—');
+          var ema1h = sig.ema_trend_1h != null ? sig.ema_trend_1h : null;
+          var ema1hBadge = ema1h != null
+            ? '<span style="font-size:9px;font-weight:700;margin-left:4px;padding:1px 4px;border-radius:3px;background:'+(ema1h>=2?'rgba(46,204,113,0.15)':'rgba(139,148,158,0.12)')+';color:'+(ema1h>=2?'#3fb950':'#8b949e')+'" title="EMA 1h">1h:'+(ema1h>=0?'+':'')+ema1h+'</span>'
+            : '';
 
           // Nova ordem: Símbolo | PnL% | PnL$ | MFE | [sec] MAE | Margem | [sec] Entrada | Atual | Size | Notional | Alav | Fee In | Fee Out | Risk% | SL/TP | Tempo | Qual | Ação
           return '<tr>'
-            + '<td><b>'+t.symbol.replace('USDT','')+'</b></td>'
+            + '<td><b>'+t.symbol.replace('USDT','')+'</b>'+ema1hBadge+'</td>'
             + '<td class="'+cls+'" style="font-weight:700;">'+fmt(pnl)+'%</td>'
             + '<td>'+fmt(pnl_usdt,2)+'</td>'
             + '<td style="color:#3fb950;">'+fmt(live.mfe_pct)+'%</td>'
@@ -2208,6 +2232,39 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
         }
       } else {
         ghostEl.innerHTML = '<div class="sig meta">Nenhum fantasma detectado</div>';
+      }
+
+      // Near-miss table (#2 — 11/06/2026)
+      const nmBody = document.getElementById('ghost-near-miss-rows');
+      if (nmBody && data.ghosts && data.ghosts.length) {
+        const nmRows = data.ghosts
+          .filter(g => (g.score||0) >= 70)
+          .sort((a,b) => (b.logged_at||0) - (a.logged_at||0))
+          .slice(0, 10);
+        if (nmRows.length) {
+          nmBody.innerHTML = nmRows.map(g => {
+            const sc = g.score || 0;
+            const scColor = sc >= 85 ? '#d29922' : sc >= 75 ? '#58a6ff' : '#8b949e';
+            const ema1h = g.ema_trend_1h != null ? g.ema_trend_1h : null;
+            const ema1hCell = ema1h != null
+              ? `<span style="color:${ema1h>=2?'#3fb950':'#8b949e'}">${ema1h>=0?'+':''}${ema1h}</span>`
+              : '—';
+            const fr = g.funding_rate != null ? (g.funding_rate * 100).toFixed(4) + '%' : '—';
+            const frColor = g.funding_rate > 0.0015 ? '#f85149' : g.funding_rate < 0 ? '#3fb950' : '#8b949e';
+            const reason = (g.reason || '—').replace(/_/g, ' ');
+            const hora = g.logged_at ? new Date(g.logged_at*1000).toLocaleTimeString() : '—';
+            return `<tr style="border-bottom:1px solid #161b22;">
+              <td style="padding:3px 6px;font-weight:700;">${g.symbol.replace('USDT','')}</td>
+              <td style="padding:3px 6px;text-align:right;color:${scColor};font-weight:700;">${Math.round(sc)}</td>
+              <td style="padding:3px 6px;text-align:right;">${ema1hCell}</td>
+              <td style="padding:3px 6px;text-align:right;color:${frColor}">${fr}</td>
+              <td style="padding:3px 6px;color:#f85149;font-size:9px;">${reason}</td>
+              <td style="padding:3px 6px;text-align:right;color:#8b949e;">${hora}</td>
+            </tr>`;
+          }).join('');
+        } else {
+          nmBody.innerHTML = '<tr><td colspan="6" style="color:#8b949e;padding:6px;text-align:center;">score ≥ 70 ainda não detectado</td></tr>';
+        }
       }
     }
 
