@@ -584,12 +584,13 @@ class DataEngine:
 
             for s in self.symbols:
                 d = self.data.get(s, {})
-                # CRITÉRIO VIP: Top 100, spike de atividade, Ignição ou Score alto
+                # CRITÉRIO VIP: Top 100, spike de atividade, Ignição, Score alto ou OI acumulando
                 is_prio = (
                     s in self._top_n_symbols
                     or s in elevated_symbols
                     or abs(d.get("exp:5m") or 0) > 0.01
                     or (d.get("score") or 0) >= 60
+                    or (d.get("oi_trend") or 0) > 0.015  # B-47: acumulação silenciosa
                 )
                 if is_prio: priority_syms.append(s)
                 else: cold_syms.append(s)
