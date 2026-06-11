@@ -433,7 +433,7 @@ async def trading_loop(
                         setattr(state, "_last_warming_ts", now)  # reset warming ao enviar crítico
                 else:
                     last_warming = _safe_float(getattr(state, "_last_warming_ts", 0.0), 0.0)
-                    if now - last_warming > 900:  # cooldown 15min — aquecendo
+                    if now - last_warming > 300:  # cooldown 5min — aquecendo
                         asyncio.create_task(telegram.market_warming(sq))
                         setattr(state, "_last_warming_ts", now)
             if state.market_paused:
@@ -2059,6 +2059,10 @@ async def main():
                 len(getattr(paper_tracker, "_closed", []) or []),
             )
 
+            if telegram:
+                snap = paper_tracker.snapshot()
+                asyncio.run_coroutine_threadsafe(telegram.paper_reset(snap), loop)
+
             paper_tracker.reset()
             state.reset_signals()
             risk_manager.reset()
@@ -2213,7 +2217,11 @@ async def main():
                 return {"ok": False, "error": "paper tracker not configured"}
 
             logger.warning("🔥 HARD RESET iniciado via Dashboard... (deep_clean=%s)", deep_clean)
-            
+
+            if telegram:
+                snap = paper_tracker.snapshot()
+                asyncio.run_coroutine_threadsafe(telegram.hard_reset(deep_clean=deep_clean, snap=snap), loop)
+
             # 1. Limpa trades e arquivos (incluindo metric_state.json e history)
             paper_tracker.reset()
             risk_manager.reset()

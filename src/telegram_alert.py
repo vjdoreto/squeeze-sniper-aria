@@ -304,6 +304,45 @@ class TelegramAlert:
         text += f"\n━━━━━━━━━━━━━━━━━━━━\n⏱️ <b>Uptime:</b> {uptime_h}h"
         await self._send(text)
 
+    async def paper_reset(self, snap: Optional[Dict[str, Any]] = None) -> None:
+        """Notifica que o paper reset foi executado via Dashboard."""
+        stats = (snap or {}).get("stats", {}) or {}
+        wins = stats.get("wins", 0) or 0
+        losses = stats.get("losses", 0) or 0
+        total = wins + losses
+        capital = (snap or {}).get("current_capital", 0) or 0
+        wr = stats.get("win_rate_pct", 0) or 0
+        text = (
+            f"🔄 <b>PAPER RESET</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"📊 <b>Sessão encerrada:</b> {wins}W / {losses}L ({total} trades)"
+        )
+        if total > 0:
+            text += f" · {wr}% WR"
+        text += (
+            f"\n🏦 <b>Capital final:</b> ${capital:.2f}"
+            f"\n<i>Estado paper limpo — novo ciclo iniciado.</i>"
+        )
+        await self._send(text)
+
+    async def hard_reset(self, deep_clean: bool = False, snap: Optional[Dict[str, Any]] = None) -> None:
+        """Notifica que o hard reset foi executado via Dashboard."""
+        capital = (snap or {}).get("current_capital", 0) or 0
+        stats = (snap or {}).get("stats", {}) or {}
+        wins = stats.get("wins", 0) or 0
+        losses = stats.get("losses", 0) or 0
+        total = wins + losses
+        clean_txt = " + DEEP CLEAN" if deep_clean else ""
+        text = (
+            f"🔥 <b>HARD RESET{clean_txt}</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"📊 <b>Sessão encerrada:</b> {wins}W / {losses}L ({total} trades)\n"
+            f"🏦 <b>Capital final:</b> ${capital:.2f}\n"
+            f"⏳ <b>Warmup:</b> 300s reiniciado.\n"
+            f"<i>Sistema em estado puro — aguardando squeeze.</i>"
+        )
+        await self._send(text)
+
     async def market_warming(self, level: float) -> None:
         """Alerta leve: Squeezometer ≥ 70 — mercado aquecendo."""
         text = (
