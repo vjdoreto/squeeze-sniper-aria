@@ -135,7 +135,7 @@ class DataEngine:
         )
         # BinanceSocketManager repassa **ws_kwargs para websockets.connect().
         # SPRINT 9.5: estabilizar Kline WS batch (reduzir reconexões e gaps de dados)
-        self.bsm = BinanceSocketManager(self.client)
+        self.bsm = BinanceSocketManager(self.client, queue_size=10000)
         self.bsm.ws_kwargs = {
             "ping_interval": 20,
             "ping_timeout": 10,
