@@ -2412,6 +2412,10 @@ async def main():
         for t in list(tasks):
             t.cancel()
         engine_task.cancel()
+        # Aguarda todas as tasks reconhecerem o cancelamento antes de sair
+        all_tasks = [t for t in list(tasks) + [engine_task] if t and not t.done()]
+        if all_tasks:
+            await asyncio.gather(*all_tasks, return_exceptions=True)
 
     tasks.append(asyncio.create_task(_stop_watcher()))
 
@@ -2483,12 +2487,12 @@ async def main():
     try:
         if engine_task:
             # SPRINT 11.3: Cast de segurança no loop principal
-            await asyncio.gather(*cast(List[Any], [engine_task] + tasks), return_exceptions=False)
+            await asyncio.gather(*cast(List[Any], [engine_task] + tasks), return_exceptions=True)
+    except asyncio.CancelledError:
+        pass
     except Exception as e:
         logger.error("[CRITICAL] Erro detectado no loop principal: %s", e, exc_info=True)
         raise
-    except asyncio.CancelledError:
-        pass
     finally:
         logger.info("Encerrando bot…")
         if telegram:
