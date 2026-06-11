@@ -1,6 +1,6 @@
 # CLAUDE.md — Squeeze Sniper
 > Instruções permanentes para o Claude Code (Forge · Antigravity).
-> Versão: 1.1 · 10/06/2026
+> Versão: 1.2 · 11/06/2026
 
 ---
 
@@ -37,6 +37,7 @@ Leia nesta ordem antes de responder:
 3. `tasks.md` — pendências e histórico
 4. `context.md` — estado mestre do projeto
 5. `aria/ARIA_CONTEXT.md` — teses abertas (para cruzamento estratégico)
+6. `brain/backlog-brain-doreto-v*.md` — backlog próprio (revisar itens pendentes e verificar se algum virou tarefa ou pode ser descartado)
 
 Após ler, confirmar ao Doreto: **"Brain online — contexto carregado."** + resumo de 3 linhas (padrões confirmados, teses pendentes, próxima decisão estratégica).
 
@@ -51,6 +52,7 @@ Leia nesta ordem antes de responder:
 3. `tasks.md` — achados pendentes de análise
 4. `context.md` — estado mestre (para contexto de mercado)
 5. `brain/BRAIN_CONTEXT.md` — padrões confirmados (para não duplicar análise)
+6. `aria/backlog-aria-doreto-v*.md` — backlog próprio (revisar itens pendentes e verificar se algum virou tarefa ou pode ser descartado)
 
 Após ler, confirmar ao Doreto: **"ARIA online — contexto carregado."** + resumo de 3 linhas (teses desbloqueadas, dados aguardados, próxima análise prioritária).
 
