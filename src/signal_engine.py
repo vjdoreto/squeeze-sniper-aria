@@ -686,6 +686,40 @@ class SqueezeIgnition:
             )
             return None
 
+        # D3 — liq obrigatória sem cascade (Brain/ARIA/Forge · 11/06/2026)
+        # CVD sem liquidação real = demand ramp, não squeeze. 6/7 squeeze_failed tinham liq=0.
+        _liq_entry = d.get("liq_short_1m_stable") or 0.0
+        if not liq_cascade and _liq_entry <= 500:
+            self._maybe_log_refusal(
+                symbol,
+                "liq_required_no_cascade",
+                {"liq_short_1m": _liq_entry, "liq_cascade": liq_cascade},
+            )
+            return None
+
+        # D6 — overextension dupla (Brain/ARIA · 11/06/2026)
+        # ema4h=+6 AND ema1h=+6 → WR=0% n=3, todos squeeze_failed. Ativo overextended nos 2 TFs.
+        _ema_4h_oe = d.get("ema_trend:4h") or 0
+        _ema_1h_oe = d.get("ema_trend:1h") or 0
+        if _ema_4h_oe >= 6 and _ema_1h_oe >= 6:
+            self._maybe_log_refusal(
+                symbol,
+                "overextension_double",
+                {"ema_trend:4h": _ema_4h_oe, "ema_trend:1h": _ema_1h_oe},
+            )
+            return None
+
+        # D7 — LSR multiframe divergence (Brain/ARIA · 11/06/2026)
+        # lsr:5m > 0 AND lsr:1h > -0.5 = shorts entrando nos dois TFs = sem squeeze
+        _lsr_trend_1h = d.get("lsr_trend:1h") or 0.0
+        if lsr_trend is not None and lsr_trend > 0 and _lsr_trend_1h > -0.5:
+            self._maybe_log_refusal(
+                symbol,
+                "lsr_multiframe_divergence",
+                {"lsr_trend:5m": lsr_trend, "lsr_trend:1h": _lsr_trend_1h},
+            )
+            return None
+
         # --- Filtros P1: % de crescimento (delta percentual) ---
         # Métricas já inicializadas no topo da função para segurança de escopo.
 
