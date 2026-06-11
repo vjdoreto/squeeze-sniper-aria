@@ -60,6 +60,7 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **B-34-bypass** | VELVETUSDT $69k liq bloqueado pelo gate lsr_trend_positive antes do score | 10/06 |
 | **ema_trend:1h +5 pts bônus** | BEAT 4h=+6/1h=+6/5m=0 invisível ao score anterior — pullback em tendência | 10/06 |
 | **funding_rate no ghost signal dict** | Campo ausente do `_write_ghost_signal` — T-06 era inauditável nos logs históricos. Paridade com sinal real restaurada | 11/06 |
+| **ema_trend_1h no signal dict** | Campo ausente dos dois blocos de signal_engine.py — bônus +5 pts existia em market_view.py mas não era exportado. Brain pode agora auditar ema_trend_1h × MFE após 30+ trades | 11/06 |
 | **Caso AIOUSDT +29% — miss por design** | Demand ramp orgânica (CVD+OI+FR escalando por horas) ≠ squeeze de liquidação. DNA funcionou corretamente para o padrão que foi projetado. Demand ramp = backlog estratégico pós-50 trades | 11/06 |
 | **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
@@ -120,4 +121,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.3 · Forge é guardião · 11/06/2026 — T-09 concluído (funding_rate ghost), caso AIOUSDT documentado como miss by design, T-06/T-08 desbloqueados*
+*BRAIN_CONTEXT.md v1.4 · Forge é guardião · 11/06/2026 — B-score-ema1h concluído (ema_trend_1h exportado ghost+real); dashboard: near-miss table + badge 1h EMA nas posições*

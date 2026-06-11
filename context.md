@@ -963,6 +963,21 @@ Macro bearish: 79.1% dos 531 ativos com EMA:4h negativo. Apenas 28 ilhas de desa
 
 ---
 
+### 🔧 Sprint Forge — 11/06/2026 (B-score-ema1h + dashboard frontend)
+
+**feat(B-score-ema1h): ema_trend_1h no signal dict** · commit `90d3e3b`
+
+Campo ausente dos dois blocos de construção do signal dict em `signal_engine.py`. O bônus +5 pts em `market_view.py:102` (R-ARIA-03) já existia — gap era que `ema_trend_1h` não era exportado para `signals.jsonl` nem `ghost_signals.jsonl`. Fix: 1 linha adicionada em cada bloco (L257 ghost, L944 sinal real). Brain pode agora auditar `ema_trend_1h` × MFE após 30+ trades.
+
+**fix(F-01): saldo/margem live — estado ⏳** · commit `2c15bfd`
+
+`live.balance` chega como `{}` vazio nos primeiros broadcasts pós-boot. A condição anterior exibia `$0.00` falso. Fix: verificar `totalWalletBalance != null && > 0` antes de sobrescrever o display; mostrar `⏳` em cinza como estado intermediário honesto.
+
+**feat(dashboard): ghost near-miss table + badge ema_trend_1h** · commit `9db0525`
+
+- Painel Ghost Signals expandido com tabela dos últimos 10 near-misses (score ≥ 70), ordenados por hora. Colunas: símbolo / score / `ema_trend_1h` / `funding_rate` / motivo / hora. FR > 0.0015% em vermelho (catalisador T-06 visível em tempo real).
+- Badge `1h:+N` na coluna Símbolo das posições paper abertas — verde se `ema_trend_1h ≥ 2`, cinza caso contrário. Dado vem de `entry.signal.ema_trend_1h`.
+
 ### 🔧 Sprint Forge — 11/06/2026 (T-09 + análise AIOUSDT)
 
 **feat(ghost): `funding_rate` no ghost signal dict** · commit `4ffd73f`
@@ -1004,7 +1019,7 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 
 **min_score paper 85→80** · commit `a628a3b` · autorizado Brain/Doreto 11/06/2026. Cenário A+B confirmado (stream F-12 ok, volume baixo 01h UTC + 73% bearish → teto ~83 sem liq_cascade). Condição de reversão: WR<45% ou MAE>8% em 20+ trades score 80–84. Paper reset executado por Doreto no restart.
 
-*Versão: 4.11 · Última atualização: 11/06/2026*
+*Versão: 4.12 · Última atualização: 11/06/2026*
 
 ---
 
