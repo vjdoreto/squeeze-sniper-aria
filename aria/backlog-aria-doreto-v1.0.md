@@ -105,7 +105,7 @@ SPACEUSDT apareceu em Tier 2 no snapshot 06:10 de 11/06 com estrutura aparenteme
 ## TESES EM CONSTRUÇÃO
 
 ### TA-01 — FR × MFE: diferenciação por faixa de funding rate
-**Status:** Hipótese inicial · aguarda 30+ trades com funding_rate nos logs · 11/06/2026
+**Status:** 🟡 Escalado ao Brain · registrado tasks.md v2.6 · 11/06/2026 — acionamento automático: ARIA avisa Brain ao contar 30+ trades pós-commit 3616b1b com funding_rate nos logs
 **Conexão:** Tese T-06 do ARIA_CONTEXT.md
 
 Com `funding_rate` agora presente nos logs reais (commit 3616b1b, D1), ARIA pode começar a auditar a relação entre FR e MFE nos trades.
