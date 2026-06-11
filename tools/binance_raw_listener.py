@@ -104,7 +104,7 @@ async def main(symbols: list[str]):
     print(f"Ctrl+C para parar\n{'='*70}\n")
 
     client = await AsyncClient.create(API_KEY, API_SECRET)
-    bsm = BinanceSocketManager(client, queue_size=10000)
+    bsm = BinanceSocketManager(client, max_queue_size=10000)
 
     streams = []
     for s in symbols:
