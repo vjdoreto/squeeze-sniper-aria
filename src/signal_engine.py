@@ -258,6 +258,7 @@ class SqueezeIgnition:
                 "range_level": d.get("range_level:5m") or 0,
                 "volume_quality": round(cvd_change_pct / (trades_1m + 1), 4),
                 "last_4h_candle_age_minutes": int((time.time() % (4 * 3600)) / 60),
+                "funding_rate": d.get("funding_rate") or 0.0,
             }
             with self._ghost_log_path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")

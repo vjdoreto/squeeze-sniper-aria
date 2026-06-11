@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 10/06/2026 · v2.1_
+_Atualizado: 11/06/2026 · v2.2_
 
 ---
 
@@ -179,6 +179,30 @@ Opções:
 - Teto prático do score: **65-70** (sem cascade) vs threshold 85
 
 **Aguardando:** ~~decisão Brain sobre bypass B-34 e revisão do threshold liq_cascade~~ — **CONSENSO OBTIDO em 10/06/2026. Ver tasks B-34-bypass e B-liq-cascade-tiers abaixo.**
+
+---
+
+## ✅ Brain → Forge — Demanda T-09 (11/06/2026) · `signal_engine.py` L261 · `funding_rate` no ghost signal dict
+
+### B-funding-ghost — Adicionar `funding_rate` ao dict dos ghost signals
+
+**Autorizado por Doreto em 11/06/2026. Variante R-07 (≤ 10 linhas, escopo único). Implementado pelo Forge em 11/06/2026.**
+
+**Evidência (ARIA · 11/06/2026):** 119 ghost signals de AIOUSDT com `funding_rate` ausente do export. Campo existe em produção via `market_view.py:266` mas não foi incluído no bloco de ghost signals em `signal_engine.py`. Sem o campo exportado, T-06 (FR como catalisador de squeeze) é inauditável para sempre nos logs históricos.
+
+**Diff exato (variante R-07):**
+
+Em `src/signal_engine.py`, no bloco de construção do ghost signal dict (bloco equivalente ao do signal real), adicionar junto aos campos observacionais existentes (`ema_trend_4h`, `lsr_bypass_active`, etc.):
+
+```python
+"funding_rate": d.get("funding_rate") or 0.0,
+```
+
+- **1 linha**, **1 arquivo**
+- Não altera nenhum gate, não muda comportamento do bot
+- Campo puramente observacional para auditoria T-06
+
+**Critério de validação:** verificar em `ghost_signals.jsonl` que `funding_rate` aparece com valores reais (≠ 0 para ativos com FR ativo) após o próximo restart.
 
 ---
 
@@ -381,6 +405,8 @@ else:
 - [ ] **Gate de confirmação de momentum sub-minuto** ⚠️ VALIDADO EMPIRICAMENTE — Alpha Decay de 03-04/06/2026 mostrou que os 3 trades SQUEEZE_FAILED subiram após a saída: ZAMA +2.12%, JTO +4.17%, VIC +2.97%. O DNA identificou os ativos CERTOS mas entrou cedo demais (acumulação, não ignição). Squeeze veio DEPOIS do gate de 90s. Solução: entrar só quando preço já está subindo nos primeiros 10-30s — gate de 90s nunca dispararia com MFE > 0% desde o início. — O DNA atual detecta *condições* para squeeze (5m). Falta confirmar que o squeeze *já começou* (30-60s). Ring buffers de 10s/20s/30s no AggTrade WebSocket existente: `price_change:30s`, `cvd_delta:10s`, `trades_rate:20s`. Se nenhum confirmar momentum atual → não entra, independente do score. Elimina entradas em spike que desmoronam antes do trailing posicionar. Referência: `docs/FUTURE_STUDIES_BACKLOG.md` item 2.
 
 - [ ] **Contexto macro em tempo real — CoinMarketCap API** — Doreto tem chave CMC. Dados: `USDT.D`, `BTC.D`, `ETH.D` (dominâncias), `Fear & Greed Index`. Polling a cada 5min. Gate de entrada: se USDT.D subindo + BTC.D subindo = fuga de capital = bloquear sinais (`macro_capital_flight`). Modo standby: USDT.D sobe mas BTC.D estável = rotação interna entre alts = manter ativo. Doreto tem lógica de outro programa que já capturava esses dados via CMC. Referência: `docs/FUTURE_STUDIES_BACKLOG.md` item 3.
+
+- [ ] **Demand Ramp path (pós-validação SS clássico)** — padrão identificado no caso AIOUSDT 10/06: LSR cai lentamente por horas (nunca atinge -0.3), CVD acumula gradualmente, FR sobe para >0.02%, OI cresce prolongado. Física diferente do squeeze clássico — requer path B paralelo com critérios próprios. **Pré-requisito:** SS clássico validado com 50+ trades e KPIs GO/LIVE atingidos. Referência: análise Brain × ARIA × Forge · 11/06/2026.
 
 - [ ] **CVD cap — perda de discriminação** — CVD capeado em 999.9% frequentemente. Score não discrimina CVD 200% de CVD 1000%. Estudar escala logarítmica para CVD interno: `log10(cvd + 1) × fator`. Manter cap apenas no display do dashboard. Referência: `docs/FUTURE_STUDIES_BACKLOG.md` item 4.
 
