@@ -2412,10 +2412,8 @@ async def main():
         for t in list(tasks):
             t.cancel()
         engine_task.cancel()
-        # Aguarda todas as tasks reconhecerem o cancelamento antes de sair
-        all_tasks = [t for t in list(tasks) + [engine_task] if t and not t.done()]
-        if all_tasks:
-            await asyncio.gather(*all_tasks, return_exceptions=True)
+        # Não fazemos gather aqui — o gather principal em main aguarda todas as tasks.
+        # asyncio.gather após cancel causava RecursionError no Python 3.14 (cancel recursivo).
 
     tasks.append(asyncio.create_task(_stop_watcher()))
 
