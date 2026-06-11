@@ -97,6 +97,8 @@ _Atualizado: 11/06/2026 · v2.4_
 
 > ⚠️ **Violação R-07 registrada:** commit `d089dce` foi executado pela ARIA (não pelo Forge). Código revisado pelo Forge e aprovado — nenhuma reversão necessária. Quarta violação no dia (anteriores: `d8b939d` ARIA, `315f0d6` Brain, `6f0bc0a` Forge paralelo). Ver R-07 em AGENTS.md.
 
+> ⚠️ **Violação R-07 registrada (5ª):** commit `3616b1b` executado pelo Brain em 11/06/2026. Mudanças: `funding_rate` no signal dict real (`signal_engine.py:952`) + log DEBUG breakeven (`paper_tracker.py:1063`). Código revisado pelo Forge e aprovado — ambas as mudanças são cirúrgicas e corretas, nenhuma reversão necessária. Brain deve usar a Variante R-07 (diff em tasks.md) e aguardar o Forge commitar.
+
 ## ✅ EA-Sprint5 — Concluído (09–10/06/2026)
 
 - [x] **eAssets backend refatorado** — 2 processos Flask → 1 FastAPI unificado (`server.py`); CRM/GRM/BTC Reset calculados pelos módulos Python reais · `aria/eAssets/server.py` · `a204403`
