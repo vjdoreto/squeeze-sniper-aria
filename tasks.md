@@ -1,7 +1,113 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.7_
+_Atualizado: 11/06/2026 · v2.9_
 
 ---
+
+## ✅ Forge — D3 · Gate `liq_required_no_cascade` · `signal_engine.py:688` · `6d9554d`
+
+**Autorizado por Doreto em 11/06/2026. Deliberação Brain × ARIA × Forge — 21 trades.**
+
+**Evidência:** 7 squeeze_failed analisados — 6/7 tinham `liq_short_1m = 0`. Com `liq_cascade = False` e sem liquidação real, o bot está capturando demand ramp e CVD puro, não squeeze de liquidação institucional. Trades sem liq: WR=29%. Com liq>0: WR=50%.
+
+**Casos diretos bloqueados por D3 (6/7 squeeze_failed):**
+- SPACEUSDT (06:24) liq=0 → squeeze_failed
+- AIGENSYNUSDT (07:11) liq=0 → squeeze_failed
+- HOLOUSDT (07:49) liq=0 → squeeze_failed
+- PROMUSDT (09:02) liq=0 → squeeze_failed
+- CCUSDT (10:43) liq=0 → squeeze_failed
+- BANKUSDT (11:35) liq=0 → squeeze_failed
+
+**Implementação (Forge):**
+Em `src/signal_engine.py`, no bloco de gates de entrada, adicionar antes do cálculo de score:
+```python
+# D3 — liq obrigatória quando sem cascade (Brain/ARIA/Forge · 11/06/2026)
+if not liq_cascade and liq_short_1m <= 500:
+    return _refusal("liq_required_no_cascade", d)
+```
+
+**Posição no fluxo:** após gate `cvd_not_confirming`, antes do score. Não interfere com B-34-bypass (que opera no gate `lsr_trend_positive`, upstream).
+
+**Critério de validação:** `liq_required_no_cascade` aparece em `signal_refusals.jsonl`. Monitorar: se WR dos trades restantes subir para ≥ 45% em 20+ trades → D3 funcionando.
+
+---
+
+## ✅ Forge — D4 · Bônus `ema_trend_1h` removido · `market_view.py:102` · `6d9554d`
+
+**Autorizado por Doreto em 11/06/2026. Deliberação Brain × ARIA — 21 trades.**
+
+**Evidência:** bônus `+5 pts quando ema_trend_1h ≥ 2` implementado em `d089dce` (10/06). Com 21 trades: ema_trend_1h=+6 → WR=0% (n=8), ema_trend_1h=0 → WR=44% (n=9). O bônus promove ativos overextended em 1h que não têm espaço para mover no horizonte do trade (90–180s). ARIA confirmou via eAssets: os candidatos com ema1h=+6 eram exatamente os que estavam overextended no snapshot.
+
+**Nota:** SQDUSDT (único win com ema1h=+6) tinha score=100 mesmo sem o bônus. Nenhum winner é afetado pela remoção.
+
+**Implementação (Forge):**
+Em `src/market_view.py`, função `calculate_fit_score()`, remover o bloco:
+```python
+# ema_trend:1h bônus (autorizado Brain/Doreto 10/06/2026)
+ema_1h = d.get("ema_trend:1h") or 0
+if ema_1h >= 2:
+    score += 5
+```
+
+**Campo `ema_trend_1h` no signal dict permanece** — apenas o bônus de score é removido. Auditoria futura não é afetada.
+
+**Critério de validação:** após 30+ trades, Brain reanalisa ema_trend_1h × MFE. Se surgir correlação positiva real, bônus pode ser reintroduzido com evidência.
+
+---
+
+## ✅ Forge — D6 · Gate `overextension_double` · `signal_engine.py:699` · `6d9554d`
+
+**Autorizado por Doreto em 11/06/2026. Deliberação Brain × ARIA — 21 trades.**
+
+**Evidência:** combinação `ema_trend_4h = +6 AND ema_trend_1h = +6` → WR=0% em todos os casos (n=3, todos squeeze_failed). ARIA confirmou via eAssets: essa combinação indica ativo completamente overextended — squeeze violento não ocorre quando o ativo já subiu nos dois TFs relevantes. Zero winners tinham essa combinação.
+
+**Casos bloqueados:**
+- BANKUSDT (08:15): ema4h=+6, ema1h=+6 → squeeze_failed
+- CCUSDT (10:43): ema4h=+6, ema1h=+6 → squeeze_failed
+- BANKUSDT (11:35): ema4h=+6, ema1h=+6 → squeeze_failed
+
+**Implementação (Forge):**
+Em `src/signal_engine.py`, nos gates de entrada, adicionar:
+```python
+# D6 — overextension dupla (Brain/ARIA · 11/06/2026)
+if ema_trend_4h >= 6 and ema_trend_1h >= 6:
+    return _refusal("overextension_double", d)
+```
+
+**Critério de validação:** `overextension_double` aparece em `signal_refusals.jsonl`. Gate é bloqueante — monitorar se algum winner legítimo é bloqueado nas próximas sessões.
+
+---
+
+## ✅ Forge — D7 · Gate `lsr_multiframe_divergence` · `signal_engine.py:707` · `6d9554d` *(lsr_trend:1h confirmado disponível em metric_engine.py:63)*
+
+**Autorizado por Doreto em 11/06/2026. Condicional: só implementar se `lsr_trend:1h` já existir no MetricStore.**
+
+**Evidência (ARIA · snapshots eAssets × logs):**
+
+| Padrão LSR | n | WR | Casos |
+|-----------|---|----|-------|
+| lsr:5m subindo + lsr:1h subindo | 4 | **0%** | BANKUSDT×2, HOLOUSDT, AIGENSYNUSDT |
+| lsr:5m subindo + lsr:1h caindo | 2 | **100%** | CATIUSDT×2 |
+| lsr:5m caindo + lsr:1h caindo | 5 | **60%** | FIDAUSDT, COAIUSDT, SQDUSDT... |
+
+Separação perfeita nos 6 casos com dados válidos. Quando `lsr_trend:5m > 0` mas `lsr_trend:1h` está colapsando, os shorts do 5m são ruído — a tendência de 1h é real e o squeeze acontece. Quando ambos sobem, shorts estão entrando em múltiplos TFs = sem squeeze.
+
+**Implementação (Forge — somente após confirmar disponibilidade):**
+
+**Passo 1 — Forge verifica:** `lsr_trend:1h` existe no MetricStore? (`metric_engine.py` — verificar se `lsr_trend` é calculado para TF 1h além do 5m). Se sim → implementar. Se não → adiar para próximo sprint sem nova infraestrutura.
+
+**Passo 2 — Se disponível:** em `src/signal_engine.py`, adicionar ao signal dict o campo `lsr_trend_1h` (observacional), e gate:
+```python
+# D7 — LSR multiframe divergence (Brain/ARIA · 11/06/2026)
+lsr_trend_1h = d.get("lsr_trend:1h") or 0
+if lsr_trend_1h > -0.5 and lsr_trend_5m > 0:
+    return _refusal("lsr_multiframe_divergence", d)
+```
+
+**Critério de validação:** após 20+ trades com o gate ativo, Brain audita se CATIUSDT-type (5m subindo, 1h caindo) continua passando corretamente.
+
+---
+
+
 
 ## ✅ Forge — fix(B-34-bypass): 5 gates LSR sem bypass · `signal_engine.py:717,728,761,891,901` · `a2d1410`
 

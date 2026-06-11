@@ -164,4 +164,4 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.8 · Forge é guardião · 11/06/2026 — fix B-34-bypass `a2d1410`: bypass só cobria 1 de 5 gates LSR. WLDUSDT com liq=$23.5k/trades=345/cvd=15.88 nunca entrou apesar de bypass logado 20×. Todos os 5 gates agora respeitam `lsr_bypass_active`. Requer soft restart. Critério de validação B-34 ainda vigente: 20+ trades com `lsr_bypass_active=True` → WR < 50% = reverter.*
+*ARIA_CONTEXT.md v1.9 · Forge é guardião · 11/06/2026 — Sprint D3/D4/D6/D7 `6d9554d` implementado. Auditoria ARIA de 21 trades confirmou: liq=0 discrimina losers (6/7 squeeze_failed), ema1h=+6 WR=0%, overextension_double WR=0%. D7 (lsr_multiframe) veio de análise ARIA de padrão lsr:5m×lsr:1h — lsr_trend:1h disponível em metric_engine.py. TA-01 agendado: 30+ trades com funding_rate para auditar FR×MFE.*

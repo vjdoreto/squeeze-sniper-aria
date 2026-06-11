@@ -1042,7 +1042,7 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.15 · Última atualização: 11/06/2026*
+*Versão: 4.16 · Última atualização: 11/06/2026*
 
 ---
 
@@ -1084,7 +1084,11 @@ Conclusão: esses ativos estão em demand ramp orgânica (CVD forte sem liquida�
 | **D1 — funding_rate no signal dict real** | `3616b1b` | 1 linha em `signal_engine.py:954` — habilita T-06 auditável em trades reais. Validado: SQDUSDT primeiro signal pós-restart com `funding_rate=0.00005` ✅ |
 | **D2 — log diagnóstico breakeven partial TP** | `3616b1b` | log DEBUG em `paper_tracker.py:1063` — 3 trades com MFE > 3.4% (CATIUSDT x2, PORTALUSDT) tiveram `breakeven_partial_closed=False` sem motivo visível. Causa raiz aguarda logs do próximo lote |
 | **F-19 — reconstrução `_post_trade_pending` no boot** | `e451f19` | `_rebuild_post_trade_pending()` em `paper_tracker.py`. Validado: 15 trades reinseridos no boot atual ✅ |
-| **fix(B-34-bypass) — 5 gates LSR sem bypass** | `a2d1410` | Bug: `lsr_bypass_active=True` só ignorava o gate `lsr_trend_positive` (L531). Outros 4 gates downstream (`lsr_change_not_negative` L717, `lsr_change_above_max` L728, `lsr_trend_not_negative` L761, `lsr_trend_too_weak` L891, `lsr_change_too_weak` L901) nunca checavam o bypass. Evidência: WLDUSDT liq=$23.5k trades=345 cvd=15.88 — bypass logado 20+ vezes mas nunca entrou. **Requer soft restart.** |
+| **fix(B-34-bypass) — 5 gates LSR sem bypass** | `a2d1410` | Bug: `lsr_bypass_active=True` só ignorava o gate `lsr_trend_positive` (L531). Outros 4 gates downstream nunca checavam o bypass. Evidência: WLDUSDT liq=$23.5k trades=345 cvd=15.88 — bypass logado 20+ vezes mas nunca entrou. |
+| **D3 `liq_required_no_cascade`** | `6d9554d` | liq_cascade=False AND liq≤$500 → recusa. 6/7 squeeze_failed tinham liq=0, WR=0%. CVD sem liq = demand ramp. `signal_engine.py:688` |
+| **D4 bônus ema_trend_1h removido** | `6d9554d` | ema1h≥2 dava +5pts. ema1h=+6 WR=0% n=8. Campo preservado no signal dict. `market_view.py:102` |
+| **D6 `overextension_double`** | `6d9554d` | ema4h≥6 AND ema1h≥6 → recusa. n=3 WR=0%, todos squeeze_failed. `signal_engine.py:699` |
+| **D7 `lsr_multiframe_divergence`** | `6d9554d` | lsr:5m>0 AND lsr:1h>-0.5 → recusa. Shorts em 2 TFs = sem squeeze. `signal_engine.py:707` |
 
 ### Violação R-07 #5
 

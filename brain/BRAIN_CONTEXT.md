@@ -62,7 +62,11 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **funding_rate no ghost signal dict** | Campo ausente do `_write_ghost_signal` — T-06 era inauditável nos logs históricos. Paridade com sinal real restaurada | 11/06 |
 | **ema_trend_1h no signal dict** | Campo ausente dos dois blocos de signal_engine.py — bônus +5 pts existia em market_view.py mas não era exportado. Brain pode agora auditar ema_trend_1h × MFE após 30+ trades | 11/06 |
 | **Caso AIOUSDT +29% — miss por design** | Demand ramp orgânica (CVD+OI+FR escalando por horas) ≠ squeeze de liquidação. DNA funcionou corretamente para o padrão que foi projetado. Demand ramp = backlog estratégico pós-50 trades | 11/06 |
-| **fix(B-34-bypass) — 5 gates LSR não checavam bypass** | `lsr_bypass_active=True` ignorava só o gate `lsr_trend_positive`. Quatro gates downstream bloqueavam de qualquer forma. Evidência: WLDUSDT liq=$23.5k/trades=345/cvd=15.88 — bypass logado 20× mas sem entrada. `a2d1410` corrige todos os 5 gates. Requer restart. | 11/06 |
+| **fix(B-34-bypass) — 5 gates LSR não checavam bypass** | `lsr_bypass_active=True` ignorava só o gate `lsr_trend_positive`. Quatro gates downstream bloqueavam de qualquer forma. Evidência: WLDUSDT liq=$23.5k/trades=345/cvd=15.88 — bypass logado 20× mas sem entrada. `a2d1410`. | 11/06 |
+| **D3 `liq_required_no_cascade`** | Gate: sem cascade E liq≤$500 → recusa. 6/7 squeeze_failed tinham liq=0. CVD puro = demand ramp. `signal_engine.py:688` · `6d9554d` | 11/06 |
+| **D4 bônus ema_trend_1h removido** | ema1h≥2 dava +5pts. ema1h=+6 WR=0% n=8. Campo no signal dict preservado. `market_view.py:102` · `6d9554d` | 11/06 |
+| **D6 `overextension_double`** | Gate: ema4h≥6 AND ema1h≥6 → recusa. n=3 WR=0%. `signal_engine.py:699` · `6d9554d` | 11/06 |
+| **D7 `lsr_multiframe_divergence`** | Gate: lsr:5m>0 AND lsr:1h>-0.5 → recusa. lsr_trend:1h confirmado em metric_engine.py:63. `signal_engine.py:707` · `6d9554d` | 11/06 |
 | **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
 | **D1: funding_rate no signal dict real** | Campo ausente de `signals.jsonl` e `paper_closed.jsonl` — T-06 inauditável nos trades reais. **Validado:** SQDUSDT `funding_rate=0.00005` no primeiro signal pós-restart | 11/06 |
@@ -124,4 +128,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.6 · Forge é guardião · 11/06/2026 — D1 validado; F-19 ativo (15 trades reinseridos no boot); fix B-34-bypass `a2d1410` (5 gates LSR agora cobertos — requer restart); WLDUSDT foi o caso de evidência do bug*
+*BRAIN_CONTEXT.md v1.7 · Forge é guardião · 11/06/2026 — Sprint D3/D4/D6/D7 `6d9554d`: gates anti-demand-ramp e anti-overextension implementados. Auditoria 21 trades: WR=33%, squeeze_failed=dreno principal (liq=0). Requer restart + 20+ trades novos para validar melhora.*
