@@ -401,7 +401,7 @@ class DataEngine:
                     streams.append(f"{s.lower()}@kline_1h")
                     streams.append(f"{s.lower()}@kline_4h")  # F-18
                 try:
-                    async with bsm.multiplex_socket(streams) as stream:
+                    async with bsm.futures_multiplex_socket(streams) as stream:
                         attempt = 0
                         logger.info("Kline WS Lote Conectado (%s streams).", len(streams))
                         while self.running:
@@ -508,7 +508,7 @@ class DataEngine:
         attempt = 0
         while self.running:
             try:
-                async with bsm.multiplex_socket(streams) as stream:
+                async with bsm.futures_multiplex_socket(streams) as stream:
                     attempt = 0
                     while self.running:
                         msg = await stream.recv()
