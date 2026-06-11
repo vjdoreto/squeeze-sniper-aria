@@ -1,4 +1,5 @@
 import asyncio
+import threading
 import time
 import logging
 import math
@@ -858,7 +859,7 @@ class DataEngine:
                 asyncio.create_task(log_coro)
 
                 if time.time() - last_save > 60:
-                    asyncio.create_task(asyncio.to_thread(store.save_state))
+                    threading.Thread(target=store.save_state, daemon=True).start()
                     last_save = time.time()
                 await asyncio.sleep(10)
         except asyncio.CancelledError:
