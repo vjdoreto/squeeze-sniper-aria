@@ -59,6 +59,8 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **B-liq-cascade-tiers** | 0.02×OI → floor $100k p/ OI $5M → cascade impossível. Tiers por OI desbloqueiam | 10/06 |
 | **B-34-bypass** | VELVETUSDT $69k liq bloqueado pelo gate lsr_trend_positive antes do score | 10/06 |
 | **ema_trend:1h +5 pts bônus** | BEAT 4h=+6/1h=+6/5m=0 invisível ao score anterior — pullback em tendência | 10/06 |
+| **funding_rate no ghost signal dict** | Campo ausente do `_write_ghost_signal` — T-06 era inauditável nos logs históricos. Paridade com sinal real restaurada | 11/06 |
+| **Caso AIOUSDT +29% — miss por design** | Demand ramp orgânica (CVD+OI+FR escalando por horas) ≠ squeeze de liquidação. DNA funcionou corretamente para o padrão que foi projetado. Demand ramp = backlog estratégico pós-50 trades | 11/06 |
 | **Bug simétrico F-12: klines + CVD vinham do Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot) — bug idêntico ao F-12. CVD e RSI de todos os trades anteriores ao restart são inválidos | 10/06 |
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
 
@@ -87,6 +89,8 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 - [ ] Gate `ema_4h_bearish` disparando de fato em losers (auditar via `signal_refusals.jsonl` — aguarda 50+ trades)
 - [ ] `liq_cascade` (boolean) gerando entradas de qualidade — aguarda amostras com liq_short_1m ativo
 - [ ] **B-34-bypass WR** — após 20+ trades com `lsr_bypass_active=True`, Brain audita WR. WR < 50% → reverter bypass (`519b56d`)
+- [ ] **T-06 FR × MFE** — `funding_rate` agora presente nos ghost signals (T-09 · `4ffd73f`). Auditar após 30+ trades: FR > +0.0015 + EMA:4h≥0 + OI crescendo → MFE médio mais alto?
+- [ ] **T-08 ema4h bypass virada** — logging enriquecido ativo (`4332d36`). Aguardando ~50 eventos `ema_4h_bearish` pós-restart para auditar falso positivo rate → go/no-go Passo 2
 - [ ] **T-05 range_level × MFE** — backlog pós-50 trades. Hipótese: range_level:1h ≥ 3 + entrada = MFE médio 1.5× maior
 - [ ] **T-06 FR × MFE** — FR > +0.001 em ativo com ema_trend:4h ≥ 0 + OI crescendo = squeeze iminente. Validar em 30+ trades com `funding_rate` nos logs
 
@@ -116,4 +120,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.2 · Forge é guardião · 10/06/2026 — bug simétrico F-12 corrigido (CVD/klines Spot→Futuros), queue overflow corrigido, listener raw criado*
+*BRAIN_CONTEXT.md v1.3 · Forge é guardião · 11/06/2026 — T-09 concluído (funding_rate ghost), caso AIOUSDT documentado como miss by design, T-06/T-08 desbloqueados*

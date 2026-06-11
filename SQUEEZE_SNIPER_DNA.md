@@ -2,7 +2,7 @@
 > **Guardião:** Forge (Antigravity) — atualiza a cada sprint quando o DNA sofrer mutação.  
 > **Brain:** consulta, não edita.  
 > **Mutações:** requerem autorização expressa de Bob Doreto.  
-> **Versão:** 1.3 · 09/06/2026
+> **Versão:** 1.4 · 11/06/2026
 
 ---
 
@@ -98,6 +98,10 @@ Persistido em `signals.jsonl` e `paper_closed.jsonl → entry.signal`.
 | `timestamp` | float | unix epoch | `time.time()` |
 | `volume_quality` | float | cvd_chg_pct / (trades_1m+1) | calculado inline |
 | `exp_btc_norm_1h` | float | Z-score rolling window=14 | `d["exp_btc_norm_1h"]` |
+| `ema_trend_1h` | int | -6 a +6 | `d["ema_trend:1h"]` |
+| `lsr_bypass_active` | bool | — | lógica B-34 inline |
+| `last_4h_candle_age_minutes` | int | 0–240 min | calculado inline |
+| `funding_rate` | float | ratio | `d["funding_rate"]` |
 
 > Campo adicional adicionado na abertura do trade: `kelly_risk_applied` (float) · `paper_tracker.py:793`.
 
@@ -214,6 +218,9 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 10/06/2026 | **min_score 90→85** | Score máximo atingido=88; 25.307 rejeições; zero trades em 6h. KATUSDT 17× a 88pts bloqueado | `470a658` |
 | 10/06/2026 | **ema_trend:1h +5 pts bônus no score** | Discrimina pullback em tendência maior (4h/1h fortes, 5m fraco) de bear pleno. BEATUSDT 4h=+6/1h=+6/5m=0 invisível ao score anterior. Não-bloqueante | `d089dce` |
 | 10/06/2026 | **cvd_abs_negative gate** | CVD < -100k sem liq_cascade bloqueia entrada | `3a4...` (ver tasks.md) |
+| 10/06/2026 | **Bug simétrico F-12: klines + CVD eram Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot). CVD e RSI de todos os trades anteriores ao restart invalidados | `fde21af` |
+| 10/06/2026 | **queue_size=10000 + max_queue_size** | Overflow silencioso do WebSocket em spikes de volume | `d44e89d`+`cd7c5b3` |
+| 11/06/2026 | **funding_rate no ghost signal dict** — T-09 | Campo ausente do bloco `_write_ghost_signal`; paridade com sinal real restaurada. Habilita auditoria T-06 (FR catalisador de squeeze) | `4ffd73f` |
 
 ---
 

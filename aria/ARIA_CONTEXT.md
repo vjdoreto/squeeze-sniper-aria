@@ -98,9 +98,9 @@ Todos os trades coletados **antes do restart pós-`fde21af`** têm CVD e klines 
 
 ### T-06: Funding Rate como catalisador de squeeze (nova · 10/06/2026)
 **Hipótese:** FR > +0.001 em ativo com `ema_trend:4h ≥ 0` + OI crescendo = curto-circuito de short squeeze iminente (shorts pagando para manter posição → pressão crescente para fechar).
-**Status:** 🟢 DESBLOQUEADA — `funding_rate` já está no signal dict via `market_view.py:266`. ARIA pode auditar imediatamente.
-**Evidência eAssets 10/06:** BEATUSDT FR=+0.0029 (shorts pagando 0.29%/8h = 2.9%/período em 10×) com estrutura 4h/1h fortíssima. STGUSDT FR=-0.001 (shorts pagando mesmo com ativo subindo).
-**Próximo passo:** nos primeiros 30+ trades, cruzar `funding_rate` × `MFE` × `exit_reason`. Regra empírica: FR > +0.0015 + EMA:4h=+6 + OI crescendo → MFE médio mais alto.
+**Status:** 🟢 DESBLOQUEADA COMPLETA — `funding_rate` agora presente nos **ghost signals** também (T-09 · `4ffd73f` · 11/06/2026). Campo estava ausente do `_write_ghost_signal`, agora tem paridade com o sinal real. ARIA pode auditar histórico completo de near-misses.
+**Evidência eAssets 10/06:** BEATUSDT FR=+0.0029, STGUSDT FR=-0.001, AIOUSDT FR=+0.0547 (extremo — subiu +29%).
+**Próximo passo:** nos primeiros 30+ trades/ghost, cruzar `funding_rate` × `MFE` × `exit_reason`. Regra empírica: FR > +0.0015 + EMA:4h=+6 + OI crescendo → MFE médio mais alto.
 
 ---
 
@@ -164,4 +164,4 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.4 · Forge é guardião · 10/06/2026 — nota crítica validade dados: CVD/klines Spot→Futuros corrigido em fde21af; teses T-01 a T-04 só válidas com trades pós-fix*
+*ARIA_CONTEXT.md v1.5 · Forge é guardião · 11/06/2026 — T-06 desbloqueada completa (funding_rate nos ghost signals via T-09); caso AIOUSDT +29% analisado — demand ramp ≠ squeeze clássico*

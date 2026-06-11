@@ -961,7 +961,19 @@ Macro bearish: 79.1% dos 531 ativos com EMA:4h negativo. Apenas 28 ilhas de desa
 - Warmup concluído às 20:28:41 — bot ativo
 - MDs todos atualizados, commits prontos para push
 
-*Versão: 4.7 · Última atualização: 10/06/2026*
+---
+
+### 🔧 Sprint Forge — 11/06/2026 (T-09 + análise AIOUSDT)
+
+**feat(ghost): `funding_rate` no ghost signal dict** · commit `4ffd73f`
+
+Campo ausente do bloco `_write_ghost_signal` em `signal_engine.py:261`. Já existia no sinal real (L998) — bug de paridade silencioso. Corrigido: 1 linha adicionada. Habilita auditoria da tese T-06 (FR como catalisador de squeeze) nos `ghost_signals.jsonl` históricos. Sem impacto em gates ou comportamento do bot.
+
+**Análise de caso — AIOUSDT +29% (imagens TradingView + CoinGlass · 10/06 23:56 UTC)**
+
+AIOUSDT subiu +29% e o SS não entrou. Diagnóstico Forge: **miss por design correto**. O movimento foi uma **demand ramp orgânica** — CVD acumulando por horas, OI crescendo gradualmente, FR escalando até 0.0547% (extremo). Padrão diferente do squeeze de liquidação que o SS foi projetado para capturar. O DNA funcionou como esperado. Imagens salvas em `Estudo Imagens (TV e Coinglass)/`. Demand ramp documentado como backlog estratégico em `tasks.md` — Brain decide pós 50+ trades se vale um path separado.
+
+*Versão: 4.8 · Última atualização: 11/06/2026*
 
 ---
 
