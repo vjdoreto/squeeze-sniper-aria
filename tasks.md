@@ -3,7 +3,9 @@ _Atualizado: 11/06/2026 · v2.6_
 
 ---
 
-## 🟠 Forge → Brain — F-19 (11/06/2026) · Reconstrução `_post_trade_pending` no boot · `paper_tracker.py`
+## ✅ Forge → Brain — F-19 (11/06/2026) · Reconstrução `_post_trade_pending` no boot · `paper_tracker.py` · `e451f19`
+
+> ⚠️ **Violação R-07 registrada (7ª):** commit `e451f19` executado pelo Brain. Escopo: 38 linhas — **acima do limite da Variante R-07 (≤10 linhas)**. Código revisado pelo Forge e aprovado. Requer soft restart para entrar em efeito.
 
 **Origem:** diagnóstico Forge · demanda registrada pelo Brain · autorização Doreto pendente**
 
