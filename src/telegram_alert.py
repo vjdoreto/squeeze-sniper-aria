@@ -142,7 +142,7 @@ class TelegramAlert:
         )
         await self._send(text)
 
-    async def bot_startup(self, mode: str, capital: float, min_score: int, warmup_sec: int) -> None:
+    async def bot_startup(self, mode: str, capital: float, min_score: float, warmup_sec: int) -> None:
         """Notifica que o bot inicializou e entrou em warmup."""
         mode_str = "PAPER 📄" if mode == "paper" else "🚀 LIVE"
         text = (
