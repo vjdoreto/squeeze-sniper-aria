@@ -71,6 +71,8 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **queue_size=10000 + max_queue_size** | Overflow silencioso em spikes de volume — parâmetro correto da biblioteca | 10/06 |
 | **D1: funding_rate no signal dict real** | Campo ausente de `signals.jsonl` e `paper_closed.jsonl` — T-06 inauditável nos trades reais. **Validado:** SQDUSDT `funding_rate=0.00005` no primeiro signal pós-restart | 11/06 |
 | **F-19: _post_trade_pending reconstruído no boot** | Alpha decay 4h/12h/24h perdido a cada restart. `_rebuild_post_trade_pending()` reinsere trades das últimas 24h com snapshots incompletos | 11/06 |
+| **Telegram: paper_reset + hard_reset + mode_change alerts** | Alertas ausentes para eventos críticos de controle. `telegram_alert.py` + `main.py` · `665244c` + `dfe080d` · 11/06 |
+| **Squeezometer warming cooldown 900s → 300s** | Warming (70–85) agora com mesmo cooldown do panic (5min). Evita spam em mercado oscilante. `main.py:436` · `665244c` · 11/06 |
 
 ---
 
@@ -128,4 +130,4 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.7 · Forge é guardião · 11/06/2026 — Sprint D3/D4/D6/D7 `6d9554d`: gates anti-demand-ramp e anti-overextension implementados. Auditoria 21 trades: WR=33%, squeeze_failed=dreno principal (liq=0). Requer restart + 20+ trades novos para validar melhora.*
+*BRAIN_CONTEXT.md v1.8 · Forge é guardião · 11/06/2026 — Sprint Telegram: paper_reset + hard_reset + mode_change alerts adicionados (`665244c`, `dfe080d`). Squeezometer warming cooldown 900s→300s. Bot rodando com D3/D4/D6/D7 ativos — aguardando 20+ trades para auditoria Brain.*
