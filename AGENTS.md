@@ -129,13 +129,18 @@ squeeze-sniper/
 ├── assets/                      ← logo.png, imagens — não executáveis
 ├── brain/
 │   ├── BRAIN_CONTEXT.md         ← contexto estratégico do Brain
-│   └── backlog-brain-doreto-v*.md  ← backlog (Brain coloca manualmente)
+│   └── backlog-brain-doreto-v*.md  ← backlog estratégico (Brain coloca manualmente)
 ├── aria/
 │   ├── ARIA_CONTEXT.md          ← contexto e teses da ARIA
+│   ├── backlog-aria-doreto-v*.md   ← backlog analítico (ARIA coloca manualmente)
 │   └── scripts/                 ← scripts de análise ARIA (não produção)
 └── src/                         ← código (Forge only)
 ```
 
+### Backlogs como fonte de demanda
+
+Tanto o `backlog-brain-doreto-v*.md` quanto o `backlog-aria-doreto-v*.md` são fontes válidas e equivalentes de demandas futuras. Ambos alimentam `tasks.md` — Brain e ARIA escrevem em seus backlogs, decidem em conjunto com Doreto o que priorizar, e o item entra em `tasks.md` apenas quando autorizado. O Forge não implementa diretamente de backlog — sempre via `tasks.md`.
+
 ---
 
-*AGENTS.md v1.4 · Forge é guardião · 10/06/2026 — Variante R-07 adicionada: patch pronto por Brain/ARIA, commit sempre pelo Forge*
+*AGENTS.md v1.5 · Forge é guardião · 11/06/2026 — Backlog ARIA formalizado como fonte válida equivalente ao Brain*
