@@ -264,6 +264,12 @@ class PaperTradeTracker:
             self.risk_pct_per_trade = raw.get(
                 "risk_pct_per_trade", self.config.risk_pct_per_trade
             )
+
+            # F-19: Reconstruir _post_trade_pending a partir do JSONL para trades
+            # que saíram nas últimas 24h com snapshots de alpha decay incompletos.
+            # Sem isso, snapshots 4h/12h/24h são perdidos a cada restart.
+            self._rebuild_post_trade_pending()
+
         except (OSError, json.JSONDecodeError) as e:
             # Se o arquivo JSON principal falhar, tentar carregar apenas os trades fechados do JSONL
             # para garantir que o histórico de PnL não seja perdido.
@@ -277,6 +283,38 @@ class PaperTradeTracker:
             except (OSError, json.JSONDecodeError) as e_jsonl:
                 logger.error("Falha ao carregar trades fechados do JSONL: %s", e_jsonl)
             logger.warning("Não foi possível carregar paper state: %s", e)
+
+    def _rebuild_post_trade_pending(self) -> None:
+        """F-19: Reinsere em _post_trade_pending os trades fechados nas últimas 24h
+        cujos snapshots de alpha decay estão incompletos (faltando 4h/12h/24h).
+        Chamado no boot após _load_disk_state para sobreviver a restarts."""
+        if not self.config.closed_jsonl.exists():
+            return
+        cutoff = time.time() - 86400  # últimas 24h
+        REQUIRED = {"4h", "12h", "24h"}
+        rebuilt = 0
+        try:
+            with self.config.closed_jsonl.open("r", encoding="utf-8") as f:
+                for line in f:
+                    try:
+                        trade = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    exit_time = (trade.get("exit") or {}).get("time", 0)
+                    if exit_time < cutoff:
+                        continue
+                    trade_id = trade.get("id")
+                    if not trade_id or trade_id in self._post_trade_pending:
+                        continue
+                    snapshots = (trade.get("post_trade") or {}).get("snapshots", {})
+                    if REQUIRED.issubset(snapshots.keys()):
+                        continue  # já completo
+                    self._post_trade_pending[trade_id] = trade
+                    rebuilt += 1
+        except OSError as e:
+            logger.warning("F-19: falha ao reconstruir post_trade_pending: %s", e)
+        if rebuilt:
+            logger.info("F-19: %d trade(s) reinseridos no post_trade_pending para alpha decay", rebuilt)
 
     def _append_debug(self, record: Dict[str, Any]) -> None:
         """Registra motivos/inputs relevantes quando o paper aborta open_long()."""

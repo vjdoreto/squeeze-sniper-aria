@@ -1,5 +1,46 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.5_
+_Atualizado: 11/06/2026 · v2.6_
+
+---
+
+## 🟠 Forge → Brain — F-19 (11/06/2026) · Reconstrução `_post_trade_pending` no boot · `paper_tracker.py`
+
+**Origem:** diagnóstico Forge · demanda registrada pelo Brain · autorização Doreto pendente**
+
+**Problema confirmado (Forge · R-01):** `_post_trade_pending` é 100% in-memory — não é persistido em disco. `_load_disk_state()` carrega apenas `open` e `closed` do JSON. Ao reiniciar, todos os trades aguardando snapshots de 4h/12h/24h são perdidos silenciosamente. Snapshots 5m/15m/30m/60m às vezes chegam (bot fica ativo > 1h), mas 4h/12h/24h quase nunca. Post-Trade Impact (alpha decay) está sistematicamente incompleto.
+
+**Solução proposta (Forge):** reconstruir `_post_trade_pending` no boot dentro de `_load_disk_state()` — iterar trades em `paper_closed.jsonl` com `post_trade.snapshots` incompletos (faltando `4h`/`12h`/`24h`) e `exit.time` nas últimas 24h. Reinsere esses trades na fila de monitoramento. Sem nova infraestrutura, sem mudança de schema.
+
+**Escopo:** ~20–30 linhas em `paper_tracker.py` — acima do limite Variante R-07. Forge implementa após autorização de Doreto.
+
+**Impacto:** auditoria de alpha decay completa (Brain + ARIA poderão cruzar post_trade 4h/12h/24h com MFE/exit_reason). Sem impacto em gates ou comportamento do bot.
+
+**Aguardando:** autorização de Doreto para Forge implementar.
+
+---
+
+## 🔬 ARIA → Brain — TA-01 (11/06/2026) · Auditoria FR × MFE · agendada pós 30+ trades
+
+**Origem:** backlog ARIA · entrega formal 11/06/2026  
+**Sem implementação de código — análise de log pura. Forge não envolvido.**
+
+**Contexto:** `funding_rate` agora presente no signal dict real desde commit `3616b1b` (D1). Dados sendo coletados a partir do primeiro signal pós-restart. Antes disso o campo existia só em ghost signals e refusal logs — T-06 era inauditável nos trades reais.
+
+**Hipótese ARIA (refinamento de T-06):**
+- `FR < -0.001` → longs têm incentivo de ficar → squeeze mais sustentado quando desencadeia
+- `FR neutro (-0.001 a +0.001)` → baseline
+- `FR +0.001 a +0.003` → catalisador clássico T-06 (shorts forçados a fechar)
+- `FR > +0.003` → paradoxo: catalisador SE `OI crescendo`; armadilha SE `OI caindo` (longs pagando caro = overextension)
+
+**Evidência do snapshot 06:10 UTC · 11/06:** STGUSDT FR=-0.00477 (shorts pagando), BEATUSDT FR=+0.000993, ESPORTSUSDT FR=+0.00439 com `range_level:1h=4` — três perfis distintos já visíveis no universo candidato.
+
+**Auditoria agendada (ARIA executa, Brain decide):**
+Após 30+ trades pós-`3616b1b` em `paper_closed.jsonl`, ARIA cruza:
+- FR por faixa (4 buckets acima) × MFE médio × exit_reason
+- Se FR > +0.003 + OI crescendo → MFE médio maior que FR neutro? → go/no-go gate ou peso no score
+- Se paradoxo confirmado → Brain decide: gate bloqueante, bônus no score, ou só observacional
+
+**Critério de acionamento:** ARIA avisa Brain quando `paper_closed.jsonl` tiver 30+ trades com `funding_rate` presente (pós-`3616b1b`). Brain então agenda sessão de análise.
 
 ---
 
