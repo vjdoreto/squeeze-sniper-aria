@@ -973,7 +973,24 @@ Campo ausente do bloco `_write_ghost_signal` em `signal_engine.py:261`. Já exis
 
 AIOUSDT subiu +29% e o SS não entrou. Diagnóstico Forge: **miss por design correto**. O movimento foi uma **demand ramp orgânica** — CVD acumulando por horas, OI crescendo gradualmente, FR escalando até 0.0547% (extremo). Padrão diferente do squeeze de liquidação que o SS foi projetado para capturar. O DNA funcionou como esperado. Imagens salvas em `Estudo Imagens (TV e Coinglass)/`. Demand ramp documentado como backlog estratégico em `tasks.md` — Brain decide pós 50+ trades se vale um path separado.
 
-*Versão: 4.8 · Última atualização: 11/06/2026*
+### 🔧 Sprint Forge — 11/06/2026 (Telegram + paper_tracker)
+
+**feat(telegram):** alertas de ciclo de vida completo · commit `5534599`
+
+Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horário ruins, sem aviso de circuit breaker ou warmup. Implementado:
+
+| Alerta | Quando dispara |
+|--------|---------------|
+| `bot_startup` | Após `state.restart_warmup()` — modo, capital, min_score, warmup iniciando |
+| `warmup_complete` | Após 300s de warmup — gatilho liberado |
+| `drawdown_circuit_breaker` | Quando DrawdownManager pausa trading (DD ≥ 15%) |
+| `bot_shutdown` | No `finally` do main — motivo + resumo W/L/WR/uptime |
+| `send_hourly_report` (reescrito) | Stats cumulativos da sessão + lista de trades da última hora (max 10) |
+| `send_daily_report` (reescrito) | Profit Factor, MFE/MAE médio, melhor/pior trade, uptime |
+
+**paper_tracker:** adicionados ao `_stats()`: `gross_profit`, `gross_loss`, `avg_mfe_pct`, `avg_mae_pct`, `max_drawdown_pct`. Adicionados ao `snapshot()`: `peak_capital`, `best_trade`, `worst_trade`.
+
+*Versão: 4.9 · Última atualização: 11/06/2026*
 
 ---
 
