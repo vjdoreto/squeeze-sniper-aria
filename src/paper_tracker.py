@@ -1060,6 +1060,11 @@ class PaperTradeTracker:
             breakeven_reached = pnl_pct >= breakeven_threshold_pct
             breakeven_sl = self._round_price(entry_price * 1.001, tick_size, up=True)
             
+            logger.debug(
+                "⚙️ [PAPER-BREAKEVEN-DIAG] %s tick: pnl=%.4f%% threshold=%.4f%% reached=%s sl_moved=%s current_sl=%.8f breakeven_sl=%.8f",
+                symbol, pnl_pct, breakeven_threshold_pct, breakeven_reached,
+                trade.get("breakeven_sl_moved", False), current_sl, breakeven_sl,
+            )
             if breakeven_reached and not trade.get("breakeven_sl_moved", False) and current_sl < breakeven_sl:
                 # Fechamento parcial no breakeven (se configurado e ainda não feito)
                 if self.config.partial_tp_breakeven_pct > 0 and not trade.get("breakeven_partial_closed", False):

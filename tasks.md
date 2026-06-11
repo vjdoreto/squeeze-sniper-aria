@@ -1,5 +1,35 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.3_
+_Atualizado: 11/06/2026 · v2.4_
+
+---
+
+## ✅ Brain → Forge — D1 (11/06/2026) · `funding_rate` no signal dict real · `signal_engine.py` L954
+
+**Autorizado por Doreto em 11/06/2026. Variante R-07 (1 linha, escopo único). Implementado pelo Forge.**
+
+**Evidência (ARIA · 11/06/2026):** `funding_rate` calculado em `signal_engine.py:695` não estava incluído no dicionário retornado por `analyze()` (bloco L930–954). Presente nos ghost signals (fix T-09 · `4ffd73f`) e nos refusal logs (L1009), mas ausente em `signals.jsonl` e `paper_closed.jsonl`. Tese T-06 (FR como catalisador de squeeze) inauditável nos trades reais. Nota incorreta em tasks.md anterior ("já estava no signal dict real") — L1009 é bloco de refusal, não retorno do signal.
+
+**Diff (variante R-07):**
+```python
+# signal_engine.py — bloco do signal dict (~L953), após lsr_bypass_active
+"funding_rate": d.get("funding_rate") or 0.0,
+```
+
+**Critério de validação:** `funding_rate` com valores ≠ 0 em `signals.jsonl` após próximo restart.
+
+---
+
+## 🟠 Brain → Forge — D2 (11/06/2026) · Diagnóstico partial TP breakeven · `paper_tracker.py` ~L1063
+
+**Autorizado por Doreto em 11/06/2026. Diagnóstico antes de qualquer fix na lógica.**
+
+**Evidência (ARIA · 11/06/2026):** 3 trades com MFE > 3.4% (threshold = `tp_pct × 100 × 0.85 = 4.0 × 0.85 = 3.4%`) tiveram `breakeven_partial_closed = False`: CATIUSDT (MFE 4.64%), CATIUSDT (MFE 4.08%), PORTALUSDT (MFE 3.94%). `paper_debug.jsonl` confirma zero eventos `partial_breakeven_triggered`. A condição `breakeven_reached and not breakeven_sl_moved and current_sl < breakeven_sl` deveria ter disparado mas não disparou. Causa raiz não identificável só pelo código.
+
+**Implementação (Forge):** Adicionar log `DEBUG` antes do bloco `if breakeven_reached` capturando por tick: `pnl_pct`, `breakeven_threshold_pct`, `breakeven_reached`, `breakeven_sl_moved`, `current_sl`, `breakeven_sl`.
+
+**Critério de go/no-go:** após próximo lote de trades com MFE > 3.4%, ler logs e identificar qual condição falha → fix cirúrgico na lógica ou no cálculo do threshold.
+
+---
 
 ---
 

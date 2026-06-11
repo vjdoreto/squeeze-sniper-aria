@@ -951,6 +951,7 @@ class SqueezeIgnition:
                     "exp_btc_norm_1h": d.get("exp_btc_norm_1h") or 0.0,
                     "lsr_bypass_active": lsr_bypass_active,
                     "last_4h_candle_age_minutes": int((time.time() % (4 * 3600)) / 60),
+                    "funding_rate": d.get("funding_rate") or 0.0,
                 }
             lsr_val = d.get("lsr")
             
