@@ -71,7 +71,8 @@ def setup_logging():
     logging.getLogger("MetricStore").setLevel(logging.INFO)
     logging.getLogger("WebDashboard").setLevel(logging.INFO)
     logging.getLogger("SignalEngine").setLevel(logging.INFO)
-    
+    logging.getLogger("PaperTracker").setLevel(logging.DEBUG)  # D2: diagnóstico breakeven partial TP
+
     # Log de erro em arquivo para facilitar debug de "Offline"
     file_handler = RotatingFileHandler("logs/error.log", maxBytes=1024*1024, backupCount=3, encoding="utf-8")
     file_handler.setLevel(logging.ERROR)
