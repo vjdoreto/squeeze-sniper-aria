@@ -779,7 +779,14 @@ class SqueezeIgnition:
             self._maybe_log_refusal(
                 symbol,
                 "ema_4h_bearish",
-                {"ema_trend:4h": _ema_4h},
+                {
+                    "ema_trend:4h": _ema_4h,
+                    "ema_trend:15m": d.get("ema_trend:15m"),
+                    "ema_trend:1h": d.get("ema_trend:1h"),
+                    "lsr_trend": d.get("lsr_trend:5m"),
+                    "lsr": d.get("lsr"),
+                    "exp_btc:1h": d.get("exp_btc:1h"),
+                },
             )
             self._write_ghost_signal(symbol, "ema_4h_bearish", d, _eff_score)
             return None
