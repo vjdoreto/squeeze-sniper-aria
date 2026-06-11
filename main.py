@@ -798,19 +798,19 @@ async def paper_daily_report_loop(
     state: BotState,
     interval_seconds: int = 86400,
 ) -> None:
-    """Relatório diário (Paper-only) — envia às 20:50 UTC-3."""
+    """Relatório diário (Paper-only) — envia às 21:01 BRT (após virada de candle diário)."""
     logger.info("📅 Relatório diário do Paper iniciado (intervalo: %ss).", interval_seconds)
     while True:
         try:
-            # Calcula tempo até 20:50 UTC-3
+            # 21:01 BRT = candle diário já fechado, funding reset concluído
             from datetime import datetime, timezone, timedelta
             now = datetime.now(timezone(timedelta(hours=-3)))
-            target = now.replace(hour=20, minute=50, second=0, microsecond=0)
+            target = now.replace(hour=21, minute=1, second=0, microsecond=0)
             if now >= target:
                 target = target + timedelta(days=1)
             wait_seconds = (target - now).total_seconds()
-            
-            logger.info("📅 Próximo relatório diário em %.1f horas (às 20:50)", wait_seconds / 3600)
+
+            logger.info("📅 Próximo relatório diário em %.1f horas (às 21:01 BRT)", wait_seconds / 3600)
             await asyncio.sleep(wait_seconds)
             
             if state.trading_mode != "paper":
@@ -858,18 +858,18 @@ async def live_daily_report_loop(
     state: BotState,
     interval_seconds: int = 86400,
 ) -> None:
-    """Relatório diário (LIVE-only) — envia às 20:50 UTC-3 usando LiveTracker."""
+    """Relatório diário (LIVE-only) — envia às 21:01 BRT (após virada de candle diário)."""
     logger.info("📅 Relatório diário do LIVE iniciado (intervalo: %ss).", interval_seconds)
     while True:
         try:
             from datetime import datetime, timezone, timedelta
             now = datetime.now(timezone(timedelta(hours=-3)))
-            target = now.replace(hour=20, minute=50, second=0, microsecond=0)
+            target = now.replace(hour=21, minute=1, second=0, microsecond=0)
             if now >= target:
                 target = target + timedelta(days=1)
             wait_seconds = (target - now).total_seconds()
 
-            logger.info("📅 Próximo relatório diário LIVE em %.1f horas (às 20:50)", wait_seconds / 3600)
+            logger.info("📅 Próximo relatório diário LIVE em %.1f horas (às 21:01 BRT)", wait_seconds / 3600)
             await asyncio.sleep(wait_seconds)
 
             if state.trading_mode != "live":

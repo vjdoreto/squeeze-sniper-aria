@@ -305,6 +305,15 @@ class SqueezeIgnition:
         if not d.get("price"):
             return None
 
+        # B-28: Janela de silêncio 20:50–21:05 BRT (virada de candle diário + funding reset)
+        # Só bloqueia novas entradas — trades abertos não são afetados.
+        from datetime import datetime, timezone, timedelta
+        _brt = datetime.now(timezone(timedelta(hours=-3)))
+        _h, _m = _brt.hour, _brt.minute
+        if (_h == 20 and _m >= 50) or (_h == 21 and _m < 5):
+            self._maybe_log_refusal(symbol, "silence_window_2100", {"brt_time": f"{_h:02d}:{_m:02d}"})
+            return None
+
         # Verifica throttler para prevenir race condition
         if not self._trade_throttler.can_trade(symbol):
             self._maybe_log_refusal(
