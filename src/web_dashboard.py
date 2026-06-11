@@ -1770,12 +1770,26 @@ _DASHBOARD_HTML = """<!DOCTYPE html>
         if (apiText) apiText.textContent = apiOk ? 'API ONLINE' : 'API OFFLINE';
 
         const balVal = document.getElementById('live-balance-val');
-        if (balVal && live.balance) {
-            balVal.textContent = `$${fmt(live.balance.totalWalletBalance || 0, 2)}`;
+        if (balVal) {
+            const walBal = live.balance && live.balance.totalWalletBalance;
+            if (walBal != null && walBal > 0) {
+                balVal.textContent = `$${fmt(walBal, 2)}`;
+                balVal.style.color = 'var(--green)';
+            } else if (balVal.textContent === '$—') {
+                balVal.textContent = '⏳';
+                balVal.style.color = '#888';
+            }
         }
         const marginVal = document.getElementById('live-margin-val');
-        if (marginVal && live.balance) {
-            marginVal.textContent = `$${fmt(live.balance.totalMarginBalance || 0, 2)}`;
+        if (marginVal) {
+            const marBal = live.balance && live.balance.totalMarginBalance;
+            if (marBal != null && marBal > 0) {
+                marginVal.textContent = `$${fmt(marBal, 2)}`;
+                marginVal.style.color = 'var(--yellow)';
+            } else if (marginVal.textContent === '$—') {
+                marginVal.textContent = '⏳';
+                marginVal.style.color = '#888';
+            }
         }
         // Atualiza o input de capital com o saldo real da Binance
         const capitalInput = document.getElementById('liveInitialCapitalInput');
