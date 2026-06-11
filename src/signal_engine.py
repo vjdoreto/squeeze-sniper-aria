@@ -714,7 +714,8 @@ class SqueezeIgnition:
             return None
 
         # DNA: a variação do LSR precisa ser negativa (caindo).
-        if lsr_change_pct is not None:
+        # B-34-bypass: demanda confirmada por liq+trades+cvd — todos os gates LSR ignorados
+        if not lsr_bypass_active and lsr_change_pct is not None:
             if lsr_change_pct >= 0:
                 self._maybe_log_refusal(
                     symbol,
@@ -723,7 +724,7 @@ class SqueezeIgnition:
                 )
                 if debug_mode: logger.debug("Refutado %s: LSR Change % não é negativo (%s)", symbol, lsr_change_pct)
                 return None
-            
+
             # Se não for High Quality, aplica o filtro restrito do usuário
             if not is_high_quality and lsr_change_pct > self.max_lsr_change_pct:
                 self._maybe_log_refusal(
@@ -758,7 +759,8 @@ class SqueezeIgnition:
             self._write_ghost_signal(symbol, "oi_trend_too_weak", d, _eff_score)
             return None
         # lsr_trend_not_negative: shorts não estão capitulando
-        if lsr_trend is not None and lsr_trend > -0.3:
+        # B-34-bypass: se bypass ativo, lsr_trend_positive já foi ignorado — ignorar este também
+        if not lsr_bypass_active and lsr_trend is not None and lsr_trend > -0.3:
             self._maybe_log_refusal(
                 symbol,
                 "lsr_trend_not_negative",
@@ -887,7 +889,8 @@ class SqueezeIgnition:
             return None
         
         # Rejeitar LSR_trend muito fraco (< -0.01 = shorts não estão realmente caindo)
-        if (lsr_trend or 0.0) > -0.01 and not is_high_quality:
+        # B-34-bypass: demanda confirmada por liq+trades+cvd — ignorar
+        if not lsr_bypass_active and (lsr_trend or 0.0) > -0.01 and not is_high_quality:
             self._maybe_log_refusal(
                 symbol,
                 "lsr_trend_too_weak",
@@ -895,9 +898,10 @@ class SqueezeIgnition:
             )
             if debug_mode: logger.debug("Refutado %s: LSR trend muito fraco (%s)", symbol, lsr_trend)
             return None
-        
+
         # Rejeitar LSR_change muito fraco (> -0.05 = mudança insignificante)
-        if lsr_change_pct is not None and lsr_change_pct > -0.05 and not is_high_quality:
+        # B-34-bypass: demanda confirmada por liq+trades+cvd — ignorar
+        if not lsr_bypass_active and lsr_change_pct is not None and lsr_change_pct > -0.05 and not is_high_quality:
             self._maybe_log_refusal(
                 symbol,
                 "lsr_change_too_weak",
