@@ -858,7 +858,7 @@ class DataEngine:
                 asyncio.create_task(log_coro)
 
                 if time.time() - last_save > 60:
-                    store.save_state()
+                    asyncio.create_task(asyncio.to_thread(store.save_state))
                     last_save = time.time()
                 await asyncio.sleep(10)
         except asyncio.CancelledError:
