@@ -170,6 +170,95 @@ CVD com gestão de memória robusta, cleanup 48h, deque com hard cap. O Sniper t
 
 ## IDEIAS DO BRAIN — aguardando dados para confirmar
 
+### B-16 — Session Window Filter: horários de alta/baixa probabilidade × CRM/GRM
+**Status:** Hipótese Brain · documentada 11/06/2026 · aguarda cruzamento com 50+ trades  
+**Origem:** Observação empírica de Doreto + análise Brain sobre estrutura de mercado 24/7
+
+#### A tese central
+O mercado de futuros Binance USDM é global mas os participantes têm fusos. A distribuição de liquidações reais (`liq_short_1m > 0`) não é uniforme ao longo do dia — ela concentra nos horários em que os grandes players estão ativos e alavancados. O SS hoje opera com o mesmo threshold 24/7 sem nenhum ajuste de contexto temporal.
+
+#### Janelas identificadas por Doreto (observação empírica validada)
+
+**Alta probabilidade — squeezes reais com liq_short_1m > 0:**
+
+| Janela | BRT | UTC | Por quê |
+|--------|-----|-----|---------|
+| Abertura asiática | 01h–04h | 04h–07h | China/Japão/Coreia ativos, fluxo institucional asiático em altcoins |
+| Abertura americana | 10h–13h | 13h–16h | NYSE abre, correlação macro sobe, desalavancagem forçada |
+| Noite americana | 20h–23h | 23h–02h | Maior volume do dia, overlapping EUA + Ásia início |
+| Virada diária (21h BRT) | 21h | 00h | Candle diário fecha + funding rate cobrado — rebalanceamento institucional |
+| Domingo 21h BRT | 21h dom | 00h seg | Candle SEMANAL fecha + abertura iminente Ásia segunda |
+| 1h BRT | 01h | 04h | Confirmação fluxo asiático — Doreto observou squeezes recorrentes |
+
+**Baixa probabilidade — regime liq_short_1m ≈ 0 (confirmado hoje 17h BRT):**
+
+| Janela | BRT | UTC | Por quê |
+|--------|-----|-----|---------|
+| Tarde BRT | 15h–19h | 18h–22h | Transição EUA dormindo/acordando — volume raso |
+| Madrugada BRT | 04h–08h | 07h–11h | Ásia encerrando, EUA ainda dormindo |
+| Fim de semana manhã | 08h–14h sáb/dom | 11h–17h | Sem fluxo institucional, só varejo |
+
+**Padrão de fim de semana (observação Doreto):**
+
+- **Sexta à noite:** traders fecham posições antes do fim de semana → liquidações mas em direções imprevisíveis (noise alto)
+- **Sábado final de tarde (17h–20h BRT):** varejo americano acorda no sábado, abre plataforma → volume de varejo sobe em mercado com liquidez institucional reduzida → movimentos amplificados
+- **Domingo final de tarde + 21h BRT:** mesmo padrão + antecipação do fechamento semanal
+
+#### Por que isso importa para o SS
+
+Hoje (11/06, 17h BRT) o diagnóstico foi exato: score máximo 78, liq_short_1m = 0, zero signals desde restart às 16:55h. Isso não é bug — é o regime de baixa probabilidade da tarde. O SS está correto em não entrar. A questão é se devemos tornar isso explícito no DNA.
+
+#### Integração estratégica com CRM e GRM
+
+O dashboard eAssets (`doreto-squeeze-sniper.html`) já tem CRM e GRM **implementados e funcionando** — sem Yahoo Finance, sem CoinMarketCap, calculados a partir dos dados do próprio painel:
+
+**CRM (Crypto Risk Meter)** — mede risco interno cripto:
+- `USDT.D variação` (peso alto — fuga para stablecoins = medo)
+- `BTC.D variação` (alta no BTC.D drena altcoins)
+- `ETH.D variação` (alts sangrando vs altseason)
+- `Fear & Greed Index`
+- `BTC 24h change`
+- `Funding rate médio` (positivo alto = euforia = risco)
+
+**GRM (Global Risk Meter)** — mede risco macro global:
+- `VIX` (nível + variação)
+- `DXY` (nível + variação — dólar forte = saída de risco)
+- `S&P 500 variação`
+- `Nasdaq variação`
+- `Gold variação`
+
+O CRM já influencia o score de entrada no dashboard: `crmVal >= 76 → -10 pts` e `crmVal >= 56 → -5 pts`. Mas isso é só no dashboard — o SS não consulta CRM nem GRM na hora de decidir entrar.
+
+#### Hipótese de integração (a validar com dados)
+
+Combinação Session Window + CRM/GRM poderia criar um contexto de 3 camadas para o SS:
+
+```
+VERDE (janela boa + CRM baixo + GRM baixo):
+  → min_score atual, D3 padrão, todos os gates normais
+
+AMARELO (janela ruim OU CRM/GRM elevado):
+  → exigir liq_cascade = True obrigatório (sem bypass D3)
+  → ou min_score + 3 pts temporariamente
+
+VERMELHO (janela ruim + CRM crítico + GRM alto):
+  → standby automático, não entra independente do score
+```
+
+Isso explicaria e formalizaria o que já está acontecendo empiricamente: o SS é mais eficiente nas janelas corretas. Em vez de o Doreto ter que parar o bot manualmente, o DNA reconhece o regime.
+
+#### Pré-requisito para implementar
+
+**Não implementar agora.** Precisamos de:
+1. 50+ trades com timestamp para mapear horário × WR × liq_short_1m
+2. Cruzamento: trades nas janelas de alta probabilidade têm WR sistematicamente maior?
+3. Cruzamento: CRM alto no momento da entrada correlaciona com losers?
+4. Se ambos confirmados → Brain propõe gate + Forge implementa com evidência
+
+**Próximo passo:** quando tivermos 50+ trades, ARIA extrai `entry.time` × `exit_reason` × `mfe` × `liq_short_1m` e Brain mapeia a distribuição por horário. Essa análise vai confirmar ou rejeitar a hipótese empírica do Doreto.
+
+---
+
 ### B-11 — Saída inteligente por esgotamento do squeeze
 **Status:** Hipótese Brain · aguarda 50+ trades  
 **Origem:** Brain — análise do Post-Trade Impact (ZBT e MEME continuaram subindo após saída)
