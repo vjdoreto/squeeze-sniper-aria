@@ -1,5 +1,24 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.4_
+_Atualizado: 11/06/2026 · v2.5_
+
+---
+
+## 📌 Nota de Protocolo — Restart e Reset Paper (Doreto · 11/06/2026)
+
+> **Para Brain e ARIA — ler antes de qualquer recomendação de restart:**
+
+**Soft Restart** (padrão recomendado — usar na grande maioria dos casos):
+- `Ctrl+C` → `python main.py`
+- **Não deletar nenhum arquivo de logs**
+- `metric_state.json` preservado → klines 4h carregam quente, sem 2.5h de cegueira
+- Trades em `paper_closed.jsonl` permanecem válidos para análise
+
+**Hard Reset Paper** (só quando há corrupção de estado ou início de fase de calibração nova):
+- Deletar: `risk_state.json` · `paper_opportunities.json` · `throttle_state.json`
+- **NÃO deletar:** `metric_state.json` · `paper_closed.jsonl` · `signals.jsonl`
+- Justificativa obrigatória antes de recomendar ao Doreto
+
+**Regra:** Brain e ARIA não recomendam Hard Reset sem evidência de corrupção de estado ou autorização explícita de Doreto. Soft Restart resolve 95% dos casos.
 
 ---
 
