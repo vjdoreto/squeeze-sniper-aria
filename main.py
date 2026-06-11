@@ -2034,7 +2034,7 @@ async def main():
                     return {"ok": False, "error": "LIVE validation failed (check logs)"}
             
             # SPRINT 12.85: Usa a função unificada para aplicar o modo
-            return _apply_runtime_mode(
+            result = _apply_runtime_mode(
                 cast(ModeName, mode),
                 persist=True,
                 prefs_path=prefs_path,
@@ -2044,6 +2044,9 @@ async def main():
                 cfg=cfg,
                 paper_tracker=paper_tracker,
             )
+            if telegram and result.get("ok"):
+                asyncio.run_coroutine_threadsafe(telegram.mode_change(mode), loop)
+            return result
         except Exception as e:
             logger.exception("❌ set-mode handler error: %s", e)
             return {"ok": False, "error": str(e)}

@@ -304,6 +304,23 @@ class TelegramAlert:
         text += f"\n━━━━━━━━━━━━━━━━━━━━\n⏱️ <b>Uptime:</b> {uptime_h}h"
         await self._send(text)
 
+    async def mode_change(self, new_mode: str) -> None:
+        """Notifica troca de modo paper ↔ live via Dashboard."""
+        if new_mode == "live":
+            text = (
+                f"🚀 <b>MODO ALTERADO → LIVE</b>\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"⚠️ Bot operando com capital real.\n"
+                f"<i>Ordens serão executadas na Binance.</i>"
+            )
+        else:
+            text = (
+                f"📄 <b>MODO ALTERADO → PAPER</b>\n"
+                f"━━━━━━━━━━━━━━━━━━━━\n"
+                f"Simulação ativa — sem ordens reais."
+            )
+        await self._send(text)
+
     async def paper_reset(self, snap: Optional[Dict[str, Any]] = None) -> None:
         """Notifica que o paper reset foi executado via Dashboard."""
         stats = (snap or {}).get("stats", {}) or {}
