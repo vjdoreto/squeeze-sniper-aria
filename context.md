@@ -1042,7 +1042,35 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.17 · Última atualização: 11/06/2026*
+*Versão: 4.18 · Última atualização: 11/06/2026*
+
+---
+
+## 🔧 Sprint Forge — 11/06/2026 (infraestrutura Python 3.14 + freeze metric_state)
+
+### Diagnóstico de freeze — metric_state.json 12MB bloqueando event loop
+
+**Causa raiz:** `store.save_state()` em `data_engine.py:861` era chamado a cada 60s **diretamente no event loop** — serializar e gravar 12MB de JSON bloqueava o loop inteiro por vários segundos. Com 527 símbolos monitorados o arquivo cresceu indefinidamente até o bot parar de responder.
+
+**Fix:** `store.save_state()` → `threading.Thread(target=store.save_state, daemon=True).start()` · commit `8fc133d`
+
+### fix(shutdown): RecursionError Python 3.14 no _stop_watcher · commit `c104337`
+
+**Causa raiz:** Python 3.14 mudou `Task.cancel()` para propagar recursivamente para tasks filhas (novo mecanismo de eager task groups). O `_stop_watcher` cancelava todas as tasks e depois fazia `asyncio.gather(*all_tasks)` nelas — o gather chamava cancel de novo → recursão de 990 níveis → `RecursionError`.
+
+**Fix:** removido o `asyncio.gather` de dentro do `_stop_watcher`. O gather principal em `main.py:2490` já aguarda todas as tasks — o gather duplicado era desnecessário.
+
+**Nota:** o bot continuava rodando após o RecursionError (main gather absorvia com `return_exceptions=True`) — mas o shutdown nunca completava corretamente.
+
+### fix(vscode): interpreter path com # na pasta · `.vscode/settings.json`
+
+Caminho absoluto `C:/Apps/#5 SqueezeSniper-V4/.venv/...` rejeitado pelo VS Code (interpreta `#` como fragmento de URL). Alterado para caminho relativo `.venv/Scripts/python.exe`.
+
+### Estado ao encerrar sessão
+
+- Bot rodando em paper mode com logs limpos (metric_state.json preservado, restante zerado)
+- Todos os fixes de 11/06 ativos (D3/D4/D6/D7/F-19/B-34-fix/shutdown gracioso)
+- Meta: 50+ trades para validação estatística T-01 a T-04
 
 ---
 
