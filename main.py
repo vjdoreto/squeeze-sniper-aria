@@ -1920,7 +1920,7 @@ async def main():
     if telegram:
         asyncio.create_task(telegram.bot_startup(
             mode=cfg.trading_mode,
-            capital=cfg.paper_initial_capital if cfg.trading_mode == "paper" else cfg.usdt_amount,
+            capital=cfg.initial_capital if cfg.trading_mode == "paper" else cfg.usdt_amount,
             min_score=cfg.fit_score_min,
             warmup_sec=int(warmup_sec),
         ))
