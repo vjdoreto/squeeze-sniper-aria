@@ -1325,12 +1325,20 @@ class PaperTradeTracker:
         wins = sum(1 for t in closed if (t.get("exit") or {}).get("pnl_pct", 0) > 0)
         total = len(closed)
         avg_pnl = sum((t.get("exit") or {}).get("pnl_pct", 0) for t in closed) / total if total else 0.0
-        
+
         # SPRINT 12.195: Métrica de Eficiência de Captura (DNA Audit)
         avg_mfe = sum((t.get("quality") or {}).get("mfe_pct", 0) for t in closed) / total if total else 1.0
+        avg_mae = sum((t.get("quality") or {}).get("mae_pct", 0) for t in closed) / total if total else 0.0
         capture_ratio = (avg_pnl / avg_mfe * 100) if avg_mfe > 0 else 0.0
 
         open_pnl = sum(t["live"].get("pnl_usdt", 0) for t in self._open.values())
+
+        # Profit Factor
+        gross_profit = sum((t.get("exit") or {}).get("pnl_pct", 0) for t in closed if (t.get("exit") or {}).get("pnl_pct", 0) > 0)
+        gross_loss = sum(abs((t.get("exit") or {}).get("pnl_pct", 0)) for t in closed if (t.get("exit") or {}).get("pnl_pct", 0) < 0)
+
+        # Drawdown atual (pico → current)
+        max_dd = (self.peak_capital - self.current_capital) / self.peak_capital if self.peak_capital > 0 else 0.0
 
         # SPRINT 6.23: Cálculo de Win Rate por Símbolo para o gráfico no Dashboard
         win_rate_by_symbol = {}
@@ -1341,7 +1349,7 @@ class PaperTradeTracker:
             sym_totals[s] = sym_totals.get(s, 0) + 1
             if (t.get("exit") or {}).get("pnl_pct", 0) > 0:
                 sym_wins[s] = sym_wins.get(s, 0) + 1
-        
+
         for s in sym_totals:
             win_rate_by_symbol[s] = round((sym_wins.get(s, 0) / sym_totals[s]) * 100, 1)
 
@@ -1355,6 +1363,11 @@ class PaperTradeTracker:
             "capture_efficiency_pct": round(capture_ratio, 2),
             "unrealized_pnl_usdt": round(open_pnl, 4),
             "win_rate_by_symbol": win_rate_by_symbol,
+            "gross_profit": round(gross_profit, 4),
+            "gross_loss": round(gross_loss, 4),
+            "avg_mfe_pct": round(avg_mfe, 4),
+            "avg_mae_pct": round(avg_mae, 4),
+            "max_drawdown_pct": round(max_dd * 100, 2),
         }
 
     def set_initial_capital(self, value: float) -> None:
@@ -1395,16 +1408,22 @@ class PaperTradeTracker:
         return self.current_capital
 
     def snapshot(self) -> Dict[str, Any]:
+        closed = self._closed
+        best = max(closed, key=lambda t: (t.get("exit") or {}).get("pnl_pct", -999), default=None) if closed else None
+        worst = min(closed, key=lambda t: (t.get("exit") or {}).get("pnl_pct", 999), default=None) if closed else None
         return {
             "updated_at": _utc_iso(),
             "current_capital": self.current_capital,
             "initial_capital": self.initial_capital,
+            "peak_capital": self.peak_capital,
             "risk_pct_per_trade": self.risk_pct_per_trade,
             "max_open_positions": self.config.max_open_positions,
             "stats": self._stats(),
             "capital_history": self._capital_history,
             "open": list(self._open.values()),
             "closed_recent": list(reversed(self._closed[-20:])),
+            "best_trade": best,
+            "worst_trade": worst,
         }
 
     def _persist(self) -> None:

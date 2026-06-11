@@ -142,55 +142,174 @@ class TelegramAlert:
         )
         await self._send(text)
 
+    async def bot_startup(self, mode: str, capital: float, min_score: int, warmup_sec: int) -> None:
+        """Notifica que o bot inicializou e entrou em warmup."""
+        mode_str = "PAPER 📄" if mode == "paper" else "🚀 LIVE"
+        text = (
+            f"🟡 <b>SQUEEZE SNIPER — ONLINE</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"⚙️ <b>Modo:</b> {mode_str}\n"
+            f"🏦 <b>Capital:</b> ${capital:.2f} USDT\n"
+            f"🎯 <b>Score mínimo:</b> {min_score}/100\n"
+            f"⏳ <b>Warmup:</b> {warmup_sec}s em andamento...\n"
+            f"<i>Gatilho bloqueado até aquecimento completo.</i>"
+        )
+        await self._send(text)
+
+    async def warmup_complete(self) -> None:
+        """Notifica que o warmup de 300s foi concluído e o gatilho está liberado."""
+        text = (
+            f"✅ <b>GATILHO LIBERADO</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"Warmup de 300s concluído.\n"
+            f"Bot operacional — aguardando squeeze."
+        )
+        await self._send(text)
+
+    async def bot_shutdown(self, reason: str, snap: Optional[Dict[str, Any]] = None) -> None:
+        """Notifica encerramento do bot com resumo da sessão."""
+        text = f"🔴 <b>SQUEEZE SNIPER — OFFLINE</b>\n━━━━━━━━━━━━━━━━━━━━\n⚠️ <b>Motivo:</b> {reason}"
+        if snap:
+            stats = snap.get("stats", {})
+            wins = stats.get("wins", 0) or 0
+            losses = stats.get("losses", 0) or 0
+            total = wins + losses
+            wr = stats.get("win_rate_pct", 0) or 0
+            capital = snap.get("current_capital", 0) or 0
+            uptime_h = (snap.get("uptime_sec", 0) or 0) // 3600
+            uptime_m = ((snap.get("uptime_sec", 0) or 0) % 3600) // 60
+            if total > 0:
+                text += (
+                    f"\n━━━━━━━━━━━━━━━━━━━━\n"
+                    f"📊 <b>Sessão:</b> {wins}W / {losses}L ({wr}% WR)\n"
+                    f"🏦 <b>Equity final:</b> ${capital:.2f}\n"
+                    f"⏱️ <b>Uptime:</b> {uptime_h}h {uptime_m}m"
+                )
+            else:
+                text += f"\n<i>Sem trades nesta sessão. Uptime: {uptime_h}h {uptime_m}m</i>"
+        await self._send(text)
+
+    async def drawdown_circuit_breaker(self, dd_pct: float, capital: float) -> None:
+        """Alerta crítico: DrawdownManager pausou o trading."""
+        text = (
+            f"🚨 <b>CIRCUIT BREAKER ATIVADO</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"📉 <b>Drawdown:</b> {dd_pct:.1f}% (limite: 15%)\n"
+            f"🏦 <b>Capital atual:</b> ${capital:.2f}\n"
+            f"⛔ <b>Trading pausado.</b> Requer reset manual."
+        )
+        await self._send(text)
+
     async def send_hourly_report(self, snap: Dict[str, Any]) -> None:
-        """Relatório consolidado de saúde da banca e sentimento do mercado."""
+        """Relatório horário: stats cumulativos da sessão + trades da última hora."""
         stats = snap.get("stats", {})
+        wins = stats.get("wins", 0) or 0
+        losses = stats.get("losses", 0) or 0
+        total = wins + losses
+        wr = stats.get("win_rate_pct", 0) or 0
+        capital = snap.get("current_capital", 0) or 0
+        peak = snap.get("peak_capital", 0) or 0
+        dd = stats.get("max_drawdown_pct", 0) or 0
+        squeeze = snap.get("market_squeeze_level", 0) or 0
+
+        pnl_session = capital - (snap.get("initial_capital", capital) or capital)
+        pnl_sign = "+" if pnl_session >= 0 else ""
+
         text = (
             f"📊 <b>RELATÓRIO HORÁRIO</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"🏦 <b>Equity:</b> ${snap.get('current_capital', 0):.2f} USDT\n"
-            f"📈 <b>Win Rate:</b> {stats.get('win_rate_pct', 0)}%\n"
-            f"🔄 <b>Trades:</b> {stats.get('wins')}W | {stats.get('losses')}L\n"
-            f"🌡️ <b>Squeezometer:</b> {snap.get('market_squeeze_level', 0):.0f}/100"
+            f"🏦 <b>Equity:</b> ${capital:.2f} · Peak: ${peak:.2f}\n"
+            f"💰 <b>PnL sessão:</b> {pnl_sign}{pnl_session:.2f} USDT\n"
+            f"📉 <b>Drawdown:</b> {dd:.2f}%\n"
+            f"🔄 <b>Trades (total sessão):</b> {wins}W / {losses}L"
         )
+        if total > 0:
+            text += f" · {wr}% WR"
+        text += f"\n🌡️ <b>Squeezometer:</b> {squeeze:.0f}/100"
+
         trades_1h = snap.get("trades_1h") or []
         if trades_1h:
-            text += "\n━━━━━━━━━━━━━━━━━━━━\n📋 <b>Trades na hora:</b>"
-            for t in trades_1h:
+            text += f"\n━━━━━━━━━━━━━━━━━━━━\n📋 <b>Última hora ({len(trades_1h)} trade{'s' if len(trades_1h) != 1 else ''}):</b>"
+            def _fmt(p: float) -> str:
+                if p == 0:
+                    return "—"
+                return f"{p:.8f}".rstrip("0").rstrip(".")
+            for t in trades_1h[-10:]:  # máx 10 para não estourar o limite do Telegram
                 entry = t.get("entry", {})
                 exit_ = t.get("exit", {})
                 symbol = t.get("symbol", "?").replace("USDT", "")
-                p_in  = entry.get("price", 0)
-                p_out = exit_.get("price", 0)
-                pnl   = exit_.get("pnl_pct", 0) or 0
-                mark  = "✅" if pnl >= 0 else "❌"
-                # Formata preços sem zeros desnecessários
-                def _fmt(p: float) -> str:
-                    if p == 0:
-                        return "—"
-                    s = f"{p:.8f}".rstrip("0").rstrip(".")
-                    return s
-                text += f"\n{mark} <code>{symbol:<8} {_fmt(p_in)}→{_fmt(p_out)}  {pnl:+.2f}%</code>"
+                pnl = exit_.get("pnl_pct", 0) or 0
+                reason = exit_.get("reason", "?")
+                mark = "✅" if pnl >= 0 else "❌"
+                text += f"\n{mark} <code>{symbol:<8} {pnl:+.2f}%  [{reason}]</code>"
+        else:
+            text += "\n<i>Sem trades na última hora.</i>"
         await self._send(text)
 
     async def send_daily_report(self, snap: Dict[str, Any]) -> None:
-        """Relatório diário consolidado com métricas de performance e sentimento."""
+        """Relatório diário completo: performance + qualidade + destaques."""
         stats = snap.get("stats", {})
+        wins = stats.get("wins", 0) or 0
+        losses = stats.get("losses", 0) or 0
+        total = wins + losses
+        wr = stats.get("win_rate_pct", 0) or 0
+        capital = snap.get("current_capital", 0) or 0
+        peak = snap.get("peak_capital", 0) or 0
+        dd = stats.get("max_drawdown_pct", 0) or 0
+        uptime_h = (snap.get("uptime_sec", 0) or 0) // 3600
+        pnl_session = capital - (snap.get("initial_capital", capital) or capital)
+        pnl_sign = "+" if pnl_session >= 0 else ""
+
+        # Profit Factor
+        gross_win = stats.get("gross_profit", 0) or 0
+        gross_loss = abs(stats.get("gross_loss", 0) or 0)
+        pf_str = f"{gross_win / gross_loss:.2f}" if gross_loss > 0 else "∞" if gross_win > 0 else "—"
+
+        # Avg MFE / MAE
+        avg_mfe = stats.get("avg_mfe_pct", 0) or 0
+        avg_mae = stats.get("avg_mae_pct", 0) or 0
+
         text = (
-            f"📊 <b>RELATÓRIO DIÁRIO</b>\n"
+            f"📅 <b>RELATÓRIO DIÁRIO</b>\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"🏦 <b>Equity:</b> ${snap.get('current_capital', 0):.2f} USDT\n"
-            f"📈 <b>Win Rate:</b> {stats.get('win_rate_pct', 0)}%\n"
-            f"🔄 <b>Trades:</b> {stats.get('wins')}W | {stats.get('losses')}L\n"
-            f"🌡️ <b>Squeezometer:</b> {snap.get('market_squeeze_level', 0):.0f}/100\n"
+            f"🏦 <b>Equity:</b> ${capital:.2f} · Peak: ${peak:.2f}\n"
+            f"💰 <b>PnL sessão:</b> {pnl_sign}{pnl_session:.2f} USDT\n"
+            f"📉 <b>Max Drawdown:</b> {dd:.2f}%\n"
             f"━━━━━━━━━━━━━━━━━━━━\n"
-            f"📊 <b>Peak Equity:</b> ${snap.get('peak_capital', 0):.2f} USDT\n"
-            f"📉 <b>Drawdown:</b> {stats.get('max_drawdown_pct', 0):.2f}%\n"
-            f"⏱️ <b>Uptime:</b> {snap.get('uptime_sec', 0) // 3600}h"
+            f"🔄 <b>Trades:</b> {wins}W / {losses}L ({total} total)"
         )
+        if total > 0:
+            text += (
+                f"\n📈 <b>Win Rate:</b> {wr}%\n"
+                f"⚖️ <b>Profit Factor:</b> {pf_str}\n"
+                f"🔥 <b>MFE médio:</b> {avg_mfe:.2f}% · 🧊 <b>MAE médio:</b> {avg_mae:.2f}%"
+            )
+        else:
+            text += "\n<i>Sem trades nesta sessão.</i>"
+
+        # Melhor e pior trade
+        best = snap.get("best_trade")
+        worst = snap.get("worst_trade")
+        if best or worst:
+            text += "\n━━━━━━━━━━━━━━━━━━━━"
+            if best:
+                b_sym = best.get("symbol", "?").replace("USDT", "")
+                b_pnl = (best.get("exit") or {}).get("pnl_pct", 0) or 0
+                text += f"\n🏆 <b>Melhor:</b> {b_sym} <code>{b_pnl:+.2f}%</code>"
+            if worst:
+                w_sym = worst.get("symbol", "?").replace("USDT", "")
+                w_pnl = (worst.get("exit") or {}).get("pnl_pct", 0) or 0
+                text += f"\n💀 <b>Pior:</b> {w_sym} <code>{w_pnl:+.2f}%</code>"
+
+        text += f"\n━━━━━━━━━━━━━━━━━━━━\n⏱️ <b>Uptime:</b> {uptime_h}h"
         await self._send(text)
 
     async def panic_warning(self, level: float) -> None:
-        """Alerta crítico de ignição institucional global."""
-        text = f"🚨 <b>ALERTA DE VOLATILIDADE</b>\nSqueezometer em {level:.0f}/100! Atividade institucional extrema detectada."
+        """Alerta: Squeezometer acima de 80 — atividade institucional extrema."""
+        text = (
+            f"🚨 <b>SQUEEZOMETER CRÍTICO</b>\n"
+            f"━━━━━━━━━━━━━━━━━━━━\n"
+            f"🌡️ Nível: <b>{level:.0f}/100</b>\n"
+            f"Atividade institucional extrema detectada."
+        )
         await self._send(text)

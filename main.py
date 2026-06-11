@@ -460,9 +460,15 @@ async def trading_loop(
                         history = getattr(tracker, "_closed", [])
                         last_trade = history[-1] if history else {}
                         is_win = (last_trade.get("exit") or {}).get("pnl_pct", 0) > 0
+                        was_trading = risk_manager.can_trade()
                         risk_manager.update(tracker.current_capital, tracker.peak_capital, is_win)
                         last_processed_closed_count = current_closed
-                        
+
+                        # Circuit breaker: notifica se acabou de pausar
+                        if was_trading and not risk_manager.can_trade() and telegram:
+                            dd = (1 - tracker.current_capital / tracker.peak_capital) * 100 if tracker.peak_capital > 0 else 0
+                            asyncio.create_task(telegram.drawdown_circuit_breaker(dd, tracker.current_capital))
+
                         # SPRINT 12.156: Atualiza o multiplicador no sniper
                         sniper.risk_multiplier = risk_manager.risk_multiplier
 
@@ -484,6 +490,8 @@ async def trading_loop(
                 if not warmup_announced and warmup_remaining <= 0.0:
                     logger.info("🎯 SNIPER STATUS: Warmup de 300s concluído. Gatilho LIBERADO.")
                     warmup_announced = True
+                    if telegram:
+                        asyncio.create_task(telegram.warmup_complete())
 
                 if symbol not in engine.data:
                     continue
@@ -1909,6 +1917,14 @@ async def main():
     warmup_sec = 300.0
     state.restart_warmup(warmup_sec)
 
+    if telegram:
+        asyncio.create_task(telegram.bot_startup(
+            mode=cfg.trading_mode,
+            capital=cfg.paper_initial_capital if cfg.trading_mode == "paper" else cfg.usdt_amount,
+            min_score=cfg.fit_score_min,
+            warmup_sec=int(warmup_sec),
+        ))
+
     if paper_tracker:
         state.bind_paper_tracker(paper_tracker)
 
@@ -2456,6 +2472,14 @@ async def main():
         pass
     finally:
         logger.info("Encerrando bot…")
+        if telegram:
+            try:
+                snap = paper_tracker.snapshot() if paper_tracker else None
+                if snap:
+                    snap["uptime_sec"] = int(time.time() - state.boot_started_at)
+                await telegram.bot_shutdown(reason="Encerramento normal (Ctrl+C / shutdown)", snap=snap)
+            except Exception:
+                pass
         await _shutdown(engine, engine_task, tasks)
         _release_instance_lock()
         try:
