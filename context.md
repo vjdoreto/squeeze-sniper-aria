@@ -1019,7 +1019,55 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 
 **min_score paper 85→80** · commit `a628a3b` · autorizado Brain/Doreto 11/06/2026. Cenário A+B confirmado (stream F-12 ok, volume baixo 01h UTC + 73% bearish → teto ~83 sem liq_cascade). Condição de reversão: WR<45% ou MAE>8% em 20+ trades score 80–84. Paper reset executado por Doreto no restart.
 
-*Versão: 4.12 · Última atualização: 11/06/2026*
+*Versão: 4.13 · Última atualização: 11/06/2026*
+
+---
+
+## 🔧 Sprint Brain × ARIA × Forge — 11/06/2026 (análise 12 trades + D1/D2)
+
+### Auditoria dos 12 trades pós-restart (Brain + ARIA)
+
+| KPI | Valor | Meta GO/LIVE |
+|-----|-------|---|
+| WR | 4/12 = 33.3% | ≥ 60% |
+| PnL total | -$10.75 USDT | positivo |
+| PnL sem SPACEUSDT | -$2.70 USDT | — |
+| MFE médio | +2.41% | — |
+| MAE médio | -8.00% | — |
+
+**Exit reasons:**
+- `trailing_stop`: 4/6 (67% WR) — funciona quando o squeeze acontece
+- `squeeze_failed`: 0/4 (0% WR) — principal dreno, entradas sem confirmação de momentum
+- `stop_loss`: 0/1 — SPACEUSDT -38.9% por slippage simulado em micro-cap (preço caiu 3.94% vs SL 2.5% — gap de tick em paper trading, não bug de código)
+- `max_hold`: 0/1 — AIGENSYNUSDT, mae_guard_late bloqueado por MFE=4.21% > threshold
+
+**Fee pressure identificada (ARIA):** 2/6 trailing_stops fecharam abaixo do breakeven após fees ($0.16/trade = 0.8% de margem). HOLOUSDT e BASEDUSDT saíram com PnL negativo. Trailing disparando perto do entry + fees = loss sistemático. A monitorar com mais amostras.
+
+**ARIA corrigiu erro próprio:** reportou WR 50% e PnL -$7.40 inicialmente por usar `live.pnl_usdt` em vez de `exit.pnl_usdt`. Brain corrigiu com evidência via `quality.win`. ARIA aceitou.
+
+### B-34 bypass — análise de por que não dispara (Forge)
+
+SXTUSDT (score 100), OPGUSDT (score 95), AIOUSDT (score 100) bloqueados por `lsr_trend_positive`. Diagnóstico via `signal_refusals.jsonl`:
+
+- `trades_1m` e `cvd_pct`: todas as condições passam facilmente
+- `liq_short_1m`: **único gargalo** — SXTUSDT $119, OPGUSDT $0, AIOUSDT $13.175 máx — todos abaixo do threshold de $20k
+
+Conclusão: esses ativos estão em demand ramp orgânica (CVD forte sem liquidação sustentada), não squeeze de liquidação. Threshold $20k está correto para o padrão que o DNA cobre. `liq_short_1m_stable` reflete acúmulo por janela completa de 1m — picos pontuais não contam.
+
+### Fixes implementados nesta sessão
+
+| Fix | Commit | Descrição |
+|-----|--------|-----------|
+| **D1 — funding_rate no signal dict real** | `3616b1b` | 1 linha em `signal_engine.py:954` — habilita T-06 auditável em trades reais. Validação pendente: primeiro signal pós-warmup deve mostrar `funding_rate ≠ 0` |
+| **D2 — log diagnóstico breakeven partial TP** | `3616b1b` | log DEBUG em `paper_tracker.py:1063` — 3 trades com MFE > 3.4% (CATIUSDT x2, PORTALUSDT) tiveram `breakeven_partial_closed=False` sem motivo visível. Causa raiz aguarda logs do próximo lote |
+
+### Violação R-07 #5
+
+Brain implementou e commitou D1+D2 diretamente (commit `3616b1b`). Forge revisou e aprovou — código correto. Violação registrada em `tasks.md` e em memória persistente. Regra: Brain para no diff em `tasks.md`, commit é sempre do Forge.
+
+### Regra de restart adicionada a tasks.md (Doreto · commit `594b76f`)
+
+Soft Restart é o padrão. Hard Reset Paper só com justificativa ou autorização explícita de Doreto. Regra no topo de `tasks.md` — primeiro item visível para todos os agentes.
 
 ---
 
