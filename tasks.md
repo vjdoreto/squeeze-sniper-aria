@@ -306,9 +306,11 @@ bypass = (
 
 ## ✅ Brain → Forge — Demandas autorizadas por Doreto (10/06/2026)
 
-### B-score-ema1h — ema_trend:1h como bônus de score (+5 pts)
+### ✅ B-score-ema1h — ema_trend:1h no signal dict (ghost + sinal real) · `signal_engine.py` L257/L944 · `90d3e3b`
 
-**Autorizado por Doreto em 10/06/2026.**
+**Autorizado por Doreto em 10/06/2026. Implementado pelo Forge em 11/06/2026.**
+
+> Bônus +5 pts em `market_view.py:102` (commit `d089dce`) já existia. Gap era no signal dict: campo não exportado para `signals.jsonl` nem `ghost_signals.jsonl`. Fix: 1 linha adicionada em cada bloco de construção do dict. Brain pode agora auditar `ema_trend_1h` × MFE após 30+ trades.
 
 **Evidência (snapshot ARIA 23:12 UTC):** o SS não distingue entre ativo com 4h=+6/1h=+6/5m=0 (pullback em tendência forte) e ativo genuinamente bearish em todos os TFs. O 1h é o timeframe que mais discrimina esses dois regimes. Dados disponíveis no MetricStore desde F-10 (klines 1h no boot). Não é gate — não bloqueia entrada. É bônus que eleva ativos com momentum de médio prazo confirmado.
 
