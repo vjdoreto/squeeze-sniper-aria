@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.2_
+_Atualizado: 11/06/2026 · v2.3_
 
 ---
 
@@ -76,6 +76,22 @@ _Atualizado: 11/06/2026 · v2.2_
 - [x] **Análise eAssets 10/06 01:48 UTC** — top setups: JCTUSDT (EXP1h=74, LSR=-12), ZBTUSDT, AGTUSDT, BEATUSDT; BTWUSDT +20% já havia subido (LSR=+18, tarde demais)
 - [x] **gitignore brain repo corrigido** — `!aria/**` deixava passar .py/.html; novo padrão `!*/` + `!*.md` (apenas markdowns) · `abfd81d`
 - [x] **eAssets dashboard** — pausado; debug macro HTML pendente (baixa prioridade, DevTools necessário)
+
+## ✅ Sprint Forge — 11/06/2026 · Sessão Telegram + Governança
+
+- [x] **Telegram bot_startup / warmup_complete / bot_shutdown / drawdown_circuit_breaker** — ciclo de vida completo notificado · `src/telegram_alert.py` · `5534599`
+- [x] **send_hourly_report reescrito** — stats cumulativos da sessão + lista de trades última hora (max 10) · `5534599`
+- [x] **send_daily_report reescrito** — Profit Factor, MFE/MAE médio, melhor/pior trade · `5534599`
+- [x] **paper_tracker._stats()** — adicionados `gross_profit`, `gross_loss`, `avg_mfe_pct`, `avg_mae_pct`, `max_drawdown_pct` · `5534599`
+- [x] **paper_tracker.snapshot()** — adicionados `peak_capital`, `best_trade`, `worst_trade` · `5534599`
+- [x] **Squeezometer 85=crítico / 70=aquecendo** — cooldown 5min/15min; sieve intocado · `576b5d7`
+- [x] **F-01 Paper persistence** — endpoint `/api/paper-config` + `loadPaperConfig()` no boot · `1772fd9`
+- [x] **B-28 Janela de silêncio 20:50–21:05 BRT** — gate `silence_window_2100` em `signal_engine.py:analyze()` + relatório diário → 21:01 BRT · `a0f0b57`
+- [x] **B-47 oi_trend VIP criterion** — `oi_trend > 0.015` como critério de priorização de ciclo; acumulação silenciosa agora detectada · `data_engine.py` · `92483e3`
+- [x] **T-08 diagnóstico** — sem bug no logging; 0 eventos `ema_4h_bearish` porque 79% mercado bearish bloqueia em `score_below_threshold` antes do gate F-18. Aguarda macro virar.
+- [x] **B-43 diagnóstico** — `exaustao_15m_pct` já estava em `preferences.json`. Backlog desatualizado — nada a implementar.
+
+---
 
 ## 🚨 BLOQUEIO CRÍTICO — Consenso Brain × ARIA × Forge (10/06/2026)
 
@@ -214,7 +230,7 @@ Em `src/signal_engine.py`, no bloco de construção do ghost signal dict (bloco 
 
 > ✅ **Passo 1 concluído:** logging enriquecido para refusals `ema_4h_bearish` · `signal_engine.py` · `4332d36` · push origin ✅ · aria ✅
 > Cada refusal agora loga: `ema_trend:4h`, `ema_trend:15m`, `ema_trend:1h`, `lsr_trend`, `lsr`, `exp_btc:1h`.
-> **Aguardando:** ~50 eventos pós-restart → Brain audita falso positivo rate → go/no-go para Passo 2.
+> **Bloqueio de mercado (11/06/2026):** 79% dos ativos com EMA:4h bearish → score_below_threshold (3.177 eventos) engole tudo antes de chegar ao gate F-18. `ema_4h_bearish` só aparece quando ativos passam o score mínimo com EMA:4h ≤ -4 — raro no regime atual. **Passo 2 aguarda macro virar** (mais ilhas EMA:4h ≥ 0).
 
 **Evidência (ARIA 00:58 UTC · 11/06):** 13 ativos com ema_trend:4h=-6 subiram >3% na janela 00:00–01:00 UTC (21h–22h BRT). Caso mais forte: ASTRUSDT +15.8% — ema_1h=0, ema_15m=+6, lsr_trend=-46.63, oi_trend=+109.49 — bloqueado pelo candle 4h anterior bearish, que não capturou o movimento atual. O gate está usando foto de 4h atrás para bloquear movimento em curso.
 
@@ -357,8 +373,9 @@ else:
 
 ## 🔴 Sprint 5 — Em andamento (objetivo: 50+ trades válidos)
 
-### Prioridade 1 — F-01 Persistência cockpit Live (bug UX · pendente desde Sprint 3)
-- [ ] **Capital/Risco%/Alav/MaxPos/Compound não persistem** após restart → verificar `loadLiveAdvancedConfig` lê `preferences.json["live"]` no boot · `src/web_dashboard.py`
+### Prioridade 1 — F-01 Persistência cockpit (bug UX · pendente desde Sprint 3)
+- [x] **Live — endpoint + JS já implementados** — `/api/live-advanced-config` retorna campos, JS preenche no boot · Forge confirmou 11/06/2026
+- [x] **Paper — endpoint `/api/paper-config` implementado** — preenche capital/risco/leverage/maxPos no boot · `src/web_dashboard.py` · `1772fd9`
 - [ ] **Saldo e Margem não atualizam em tempo real** após boot → verificar snapshot LiveTracker nos broadcasts WS · `src/web_dashboard.py` + `main.py`
 
 ### Prioridade 2 — Validação estatística
@@ -370,6 +387,12 @@ else:
 
 ### KPIs GO/LIVE
 - [ ] WR ≥ 60%, PF ≥ 1.5, MaxDD ≤ 12%, MFE ≥ 50%, nenhum loss > 8%
+
+---
+
+## ✅ B-28 — Janela de silêncio 21:00 BRT · `a0f0b57` · `31c2fcf`
+
+Gate `silence_window_2100` bloqueia novas entradas 20:50–21:05 BRT. Relatório diário movido para 21:01 BRT — captura candle fechado. Trades abertos na virada não afetados.
 
 ---
 

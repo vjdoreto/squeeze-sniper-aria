@@ -221,6 +221,9 @@ Primeiro gate que falha retorna `None` e registra em `signal_refusals.jsonl`.
 | 10/06/2026 | **Bug simétrico F-12: klines + CVD eram Spot** | `_listen_klines` e `_listen_agg_trades` usavam `multiplex_socket` (Spot). CVD e RSI de todos os trades anteriores ao restart invalidados | `fde21af` |
 | 10/06/2026 | **queue_size=10000 + max_queue_size** | Overflow silencioso do WebSocket em spikes de volume | `d44e89d`+`cd7c5b3` |
 | 11/06/2026 | **funding_rate no ghost signal dict** — T-09 | Campo ausente do bloco `_write_ghost_signal`; paridade com sinal real restaurada. Habilita auditoria T-06 (FR catalisador de squeeze) | `4ffd73f` |
+| 11/06/2026 | **Squeezometer crítico 80→85 + nível aquecendo ≥70** | Alinhado com min_score=85. Sieve thresholds (80/60) intocados | `576b5d7` |
+| 11/06/2026 | **B-28 gate silence_window_2100** | Bloqueia novas entradas 20:50–21:05 BRT (virada candle diário + funding reset). Relatório diário → 21:01 BRT | `a0f0b57` |
+| 11/06/2026 | **B-47 oi_trend > 0.015 como critério VIP** | Acumulação silenciosa agora eleva ativo a prioridade de processamento. Threshold = min_oi_trend para consistência semântica | `92483e3` |
 
 ---
 

@@ -973,6 +973,18 @@ Campo ausente do bloco `_write_ghost_signal` em `signal_engine.py:261`. Já exis
 
 AIOUSDT subiu +29% e o SS não entrou. Diagnóstico Forge: **miss por design correto**. O movimento foi uma **demand ramp orgânica** — CVD acumulando por horas, OI crescendo gradualmente, FR escalando até 0.0547% (extremo). Padrão diferente do squeeze de liquidação que o SS foi projetado para capturar. O DNA funcionou como esperado. Imagens salvas em `Estudo Imagens (TV e Coinglass)/`. Demand ramp documentado como backlog estratégico em `tasks.md` — Brain decide pós 50+ trades se vale um path separado.
 
+### 🔧 Sprint Forge — 11/06/2026 (Governança + B-28 + B-47)
+
+**F-01 Paper persistence** · commit `1772fd9` — Endpoint `/api/paper-config` lê `preferences.json["paper"]` e preenche `initialCapitalInput`, `riskPctInput`, `leverageInput`, `maxPosInput` no boot do cockpit.
+
+**Squeezometer 85/70** · commit `576b5d7` — 85=crítico (5min cooldown), 70=aquecendo (15min cooldown). Sieve thresholds intocados. Alinhado com min_score=85.
+
+**B-28 Janela de silêncio** · commits `a0f0b57`/`31c2fcf` — Gate `silence_window_2100` em `signal_engine.py:analyze()` bloqueia novas entradas 20:50–21:05 BRT. Relatório diário movido de 20:50 para 21:01 BRT (candle já fechado). Trades abertos na virada não afetados.
+
+**B-47 OI como critério VIP** · commit `92483e3` — `oi_trend > 0.015` adicionado ao critério VIP de priorização em `data_engine.py`. Resolve o paradoxo estrutural onde ativos em acumulação silenciosa (caso AIOUSDT-type) ficavam no lote rotativo com latência. Threshold = `min_oi_trend` de preferences — consistência semântica.
+
+**T-08 / B-43 diagnósticos** — T-08: sem bug; 0 eventos `ema_4h_bearish` porque mercado 79% bearish engole tudo antes do gate F-18 via `score_below_threshold`. Aguarda macro virar. B-43: já estava implementado em preferences.json — backlog desatualizado.
+
 ### 🔧 Sprint Forge — 11/06/2026 (Telegram + paper_tracker)
 
 **feat(telegram):** alertas de ciclo de vida completo · commit `5534599`
@@ -990,7 +1002,7 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 
 **paper_tracker:** adicionados ao `_stats()`: `gross_profit`, `gross_loss`, `avg_mfe_pct`, `avg_mae_pct`, `max_drawdown_pct`. Adicionados ao `snapshot()`: `peak_capital`, `best_trade`, `worst_trade`.
 
-*Versão: 4.9 · Última atualização: 11/06/2026*
+*Versão: 4.10 · Última atualização: 11/06/2026*
 
 ---
 
