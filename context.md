@@ -1042,7 +1042,40 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.18 · Última atualização: 11/06/2026*
+*Versão: 4.19 · Última atualização: 11/06/2026*
+
+---
+
+## 🔧 Sprint Forge — 11/06/2026 (sessão tarde · reset limpo + B-49)
+
+### Estado ao iniciar sessão
+
+Hard reset manual executado por Doreto antes do boot: todos os arquivos de `logs/` deletados manualmente exceto `metric_state.json` (12MB). Boot quente confirmado — `🔥 Cache carregado (idade: 46s)`, klines intactos, zero cegueira.
+
+**Confirmações no boot:**
+- F-12 pipeline funcional imediatamente: HUSDT $22.5k, VELVETUSDT $4.5k em liquidações
+- Warmup 300s concluído às 20:31 BRT — gatilho liberado
+- Todos os gates D3/D4/D6/D7 ativos (commit `6d9554d`)
+- DNA BLOCKER top: `score_below_threshold` dominante, `liq_required_no_cascade` (D3) operando
+
+### Esclarecimento comportamento reset diário 21h BRT
+
+Confirmado como **comportamento esperado** (não bug): `reset_daily_history()` em `metric_engine.py:39` zera os derivados de slope (`price_change_24h`, `exp:5m`, `oi_trend:5m`, `lsr_trend:5m`, etc.) mas preserva o campo `price` atual. O percentual de variação fica zero por ~5min até o ring buffer reconstruir. Gate `silence_window_2100` + `restart_warmup(300s)` cobrem a janela — zero trades afetados.
+
+**Divergência com eAssets:** eAssets faz transição suave sem zeros visíveis na virada. Investigação futura registrada como **B-49** em `brain/backlog-brain-doreto-v1.0.md` · commit `c7aaea9`.
+
+### B-49 — Janela cega 21:05–21:30 BRT (Brain backlog)
+
+Tese: `silence_window` cobre 20:50–21:05 BRT (15 min) mas slopes levam ~30 min para reconstruir após o reset. Bot opera com dados incompletos na janela 21:05–21:30 BRT. Coincide com ciclo de funding rate Binance (00:00 UTC) — janela de maior pressão de fechamento de shorts. Critério para task: 3+ casos confirmados nos logs. Opção preferida: usar `price_at_reset` (já salvo) como baseline do novo dia — transição suave sem zeros, alinhado com eAssets.
+
+### Procedimento de reset documentado
+
+Esclarecido com Doreto os 3 níveis:
+- **Soft Restart:** `Ctrl+C → python main.py` — zero deletions, boot quente
+- **Reset Paper:** botão dashboard — limpa trades/estado, preserva `metric_state.json` e logs históricos
+- **Hard Reset:** botão dashboard — zera estado institucional em memória + reinicia warmup, **não deleta `metric_state.json`** (confirmado no código `main.py:2217`)
+
+Deleção manual de `logs/` exceto `metric_state.json` = Hard Reset + deep_clean manual. Equivalente ao botão Hard Reset com deep_clean=True.
 
 ---
 
