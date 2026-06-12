@@ -3,6 +3,14 @@ _Atualizado: 12/06/2026 · v3.1_
 
 ---
 
+## ✅ Forge — fix(reset-paper): metric_state.json preservado · `main.py` · `d419aba`
+
+**Problema:** botão Reset Paper deletava `metric_state.json` (warm cache de klines 12MB) desde sempre. Toda chamada ao Reset Paper custava 2.5h de cegueira no boot seguinte — klines precisavam ser reconstruídos do zero.
+
+**Fix:** Reset Paper agora limpa apenas trades/estado paper. `metric_state.json` intocado. Boot após Reset Paper mantém cache quente + só os 300s de warmup de slopes.
+
+---
+
 ## ✅ Forge — E1 · Bypass `oi_trend_too_weak` quando `liq_cascade=True` · `signal_engine.py:787` · `aa5d2ee`
 
 **Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha, escopo único).**

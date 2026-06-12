@@ -1042,7 +1042,17 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.20 · Última atualização: 12/06/2026*
+*Versão: 4.21 · Última atualização: 12/06/2026*
+
+---
+
+## 🔧 Sprint Forge — 12/06/2026 (fix Reset Paper + metric_state · `d419aba`)
+
+**Problema:** botão Reset Paper deletava `metric_state.json` (warm cache de klines 12MB) desde sempre. Cada clique em Reset Paper custava 2.5h de cegueira no boot seguinte — klines de 527 símbolos reconstruídos do zero.
+
+**Fix:** `main.py` — Reset Paper agora limpa apenas trades/estado paper. `metric_state.json` intocado. Confirmado em produção: log de `23:43:28` sem linha `metric_state.json resetado` após Reset Paper.
+
+**Impacto:** Reset Paper agora é operação segura. Boot pós-reset mantém cache quente + apenas 300s de warmup de slopes.
 
 ---
 

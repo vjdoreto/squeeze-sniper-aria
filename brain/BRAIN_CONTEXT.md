@@ -130,4 +130,8 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 ---
 
-*BRAIN_CONTEXT.md v1.8 · Forge é guardião · 11/06/2026 — Sprint Telegram: paper_reset + hard_reset + mode_change alerts adicionados (`665244c`, `dfe080d`). Squeezometer warming cooldown 900s→300s. Bot rodando com D3/D4/D6/D7 ativos — aguardando 20+ trades para auditoria Brain.*
+| **E1 — bypass `oi_trend_too_weak` para liq_cascade** | 46 ghosts HUSDT/ESPORTSUSDT (score 92–100) bloqueados com cascade real ativa — OI cai durante liquidação por design | 12/06 |
+| **E2 — bypass `lsr_trend_not_negative` para liq_cascade** | 10 ghosts HUSDT (score 96) com liq=$17-18k bloqueados por lsr fraco — cascade é evidência mais forte que lsr_trend | 12/06 |
+| **E3 — min_score paper 80 → 78** | Teto empírico = 78 em 3.757 refusals score_below_threshold — threshold 80 matematicamente inatingível | 12/06 |
+
+*BRAIN_CONTEXT.md v1.9 · Forge é guardião · 12/06/2026 — E1/E2/E3 implementados (`aa5d2ee`, `b6730c7`). Gates oi_trend_too_weak e lsr_trend_not_negative agora bypassam liq_cascade=True. min_score 80→78. Soft restart necessário.*
