@@ -8,6 +8,28 @@ _Criado: 04/06/2026 · Versão: 1.0_
 
 ## LÓGICA DO BOT / ESTRATÉGIA
 
+### B-49 — Janela cega pós-reset 21h BRT (25 min descobertos)
+**Status:** Tese com evidência inicial · aguarda coleta de trades para confirmar padrão  
+**Origem:** Observação Doreto + análise Brain · 11/06/2026
+
+**Problema observado:** O `reset_daily_history()` às 21:00 BRT (00:00 UTC) zera o ring buffer `_history` de todos os 527 símbolos. Os slopes derivados — `exp:5m`, `oi_trend:5m`, `lsr_trend:5m`, `cvd_change_pct:5m` — levam ~30 minutos para reconstruir com novos candles. O gate `silence_window_2100` cobre apenas 20:50–21:05 BRT (15 min). Resultado: há uma **janela descoberta de ~25 minutos** (21:05–21:30 BRT) onde o bot opera com slopes incompletos — podendo perder squeezes reais ou entrar com dados corrompidos.
+
+**Evidência inicial (11/06/2026):** SOPHUSDT subiu ~10% na janela 21:00–21:30 BRT. Bot não capturou. Doreto confirmou que o `price_change_24h` retornou ao normal apenas ~30 minutos após a virada — consistent com o tempo de reconstrução do buffer.
+
+**Por que a janela é especialmente crítica:** 00:00 UTC é horário de funding rate da Binance (ciclo 8h). Shorts com FR positivo pagam para manter posição — pressão de fechamento aumenta exatamente nessa janela. O SS está parcialmente cego no momento de maior probabilidade de squeeze do dia.
+
+**Opções de fix (para avaliar quando tivermos mais dados):**
+
+- **Opção A — Fix imediato:** ampliar `silence_window_2100` de 21:05 para 21:30 BRT em `signal_engine.py`. Simples, cirúrgico. Custo: perde 25 minutos de janela operacional por dia. Não resolve o custo — só protege contra entrada ruim. SOPH-type ainda seria perdido.
+
+- **Opção B — Fix estrutural:** usar `price_at_reset` (já salvo em `reset_daily_history`) como baseline do novo dia em vez de zerar os slopes. Transição suave — slopes continuam válidos imediatamente após a virada. Zero janela perdida. Alinhado com o comportamento do eAssets (que já faz transição suave). Mais complexo — Forge precisa investigar `metric_engine.py`.
+
+**Critério para virar task:** identificar 3+ casos (trades perdidos ou entradas com dados corrompidos) na janela 21:00–21:30 BRT nos próximos logs. Um caso não é padrão. Três casos são evidência.
+
+**Próximo passo:** ao analisar o próximo lote de trades, Brain filtra `entry.timestamp` entre 21:00–21:30 BRT e cruza com `exp:5m` / `oi_trend:5m` no momento da entrada. Se esses campos estiverem baixos enquanto o ativo estava em movimento real → confirma tese → escala para tasks.md com Opção A+B.
+
+---
+
 ### B-01 — Reset do BTC e capitulação por múltiplos TF
 **Status:** Hipótese estratégica · aguarda volume de trades  
 **Origem:** Experiência do Doreto com mercado crypto
