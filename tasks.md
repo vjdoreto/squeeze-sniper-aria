@@ -1,5 +1,42 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.1_
+_Atualizado: 12/06/2026 · v3.3_
+
+---
+
+## 🔬 Forge — Investigar 2 `final_gate_fail` residuais pós-fix E1/E2 (12/06/2026)
+
+**Origem:** observação Doreto · pós-restart com Fix A + E1/E2 gate final ativos
+
+**Contexto:** antes dos fixes, `final_gate_fail` era 68 casos (CATIUSDT×50 + LABUSDT×18). Após Fix A (`min_oi_accel` -0.05) + E1/E2 propagados ao gate final, caiu para **2 casos residuais** nos primeiros 15min. Esses 2 não têm cascade (passariam E1/E2) — são bloqueios legítimos por algum threshold do gate final.
+
+**Task:** em sessão futura, identificar quais símbolos e qual condição falha nesses 2 casos. Se for ruído legítimo → fechar. Se for threshold mal calibrado → propor ajuste com evidência ao Brain.
+
+**Prioridade:** baixa — não impacta operação atual. Investigar quando houver ciclo livre.
+
+---
+
+## ✅ Forge — Fix A · `min_oi_accel` 0.0 → -0.05 · `preferences.json` · `817785c`
+
+**Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha × 2, escopo único).**
+
+**Evidência (Brain + diagnóstico Doreto · 12/06/2026):**
+- 50 ghost signals CATIUSDT bloqueados por `final_gate_fail` com `oi_accel = -0.0142` vs `min_oi_accel = 0.0`
+- Score=100, CVD=19.76%, cvd_streak=7 — DNA clássico do SS
+- `oi_accel = -0.014` é ruído (OI flat/neutro), não desaceleração institucional real
+- Threshold `0.0` foi projetado para exigir aceleração positiva — está descartando ativos em compressão lateral antes do breakout
+
+**Diff exato (Variante R-07):**
+```
+preferences.json:
+  paper.signal.min_oi_accel: 0.0 → -0.05
+  live.signal.min_oi_accel:  0.0 → -0.05
+```
+
+**Critério de validação:** CATIUSDT-type deixa de aparecer em ghost signals com reason `final_gate_fail`. Monitorar: se WR < 45% em 20+ trades que passaram via oi_accel=-0.05 a 0.0 → reverter.
+
+**Condição de reversão:** `preferences.json` → reverter ambos para `0.0` + soft restart. Forge executa com 1 linha cada.
+
+**Fix B (F-18 bypass cascade) — aguardando:** depende de WR dos trades com Fix A ativo. Brain decide após 20+ trades.
 
 ---
 

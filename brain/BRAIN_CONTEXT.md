@@ -135,5 +135,7 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 | **E1 — bypass `oi_trend_too_weak` para liq_cascade** | 46 ghosts HUSDT/ESPORTSUSDT (score 92–100) bloqueados com cascade real ativa — OI cai durante liquidação por design | 12/06 |
 | **E2 — bypass `lsr_trend_not_negative` para liq_cascade** | 10 ghosts HUSDT (score 96) com liq=$17-18k bloqueados por lsr fraco — cascade é evidência mais forte que lsr_trend | 12/06 |
 | **E3 — min_score paper 80 → 78** | Teto empírico = 78 em 3.757 refusals score_below_threshold — threshold 80 matematicamente inatingível | 12/06 |
+| **Fix A — `min_oi_accel` 0.0 → -0.05** | 50 ghost signals CATIUSDT (score=100, CVD=19.76%, cvd_streak=7) bloqueados por `oi_accel=-0.014` vs threshold `0.0`. Ruído de OI flat derrubava DNA clássico do SS. `817785c` | 12/06 |
+| **E1/E2 gate final — bypass propagado para L947** | E1/E2 bypassavam gates individuais (L787/L797) mas não o gate final (L947). LABUSDT cascade=True, liq=$10k, score=93, 142t/m bloqueado por oi_trend=0.004 < 0.015 apesar de E1 ativo. Fix: `liq_cascade or (oi_trend >= threshold)` em L949-950. `d0ea407` | 12/06 |
 
-*BRAIN_CONTEXT.md v1.9 · Forge é guardião · 12/06/2026 — E1/E2/E3 implementados (`aa5d2ee`, `b6730c7`). Gates oi_trend_too_weak e lsr_trend_not_negative agora bypassam liq_cascade=True. min_score 80→78. Soft restart necessário.*
+*BRAIN_CONTEXT.md v2.0 · Forge é guardião · 12/06/2026 — Fix A + E1/E2 gate final completos. final_gate_fail 68→2. Bot ativo pós-warmup 00:41 BRT, zero trades (mercado bearish). F-18 cascade pendente — aguarda dados.*

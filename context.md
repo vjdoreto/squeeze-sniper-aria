@@ -1042,7 +1042,32 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.22 · Última atualização: 12/06/2026*
+---
+
+### 🔧 Sprint Forge — 12/06/2026 (Fix A + E1/E2 gate final + investigação final_gate_fail)
+
+**Diagnóstico: `final_gate_fail` bloqueava 50+ sinais válidos**
+
+Doreto reportou 50 casos de `final_gate_fail` nos ghost signals — todos CATIUSDT score=100, ema4h=+4, lsr=-1.14, CVD=19.76%. Forge investigou e identificou dois problemas distintos:
+
+**Fix A — `min_oi_accel` 0.0 → -0.05** · commit `817785c` · `preferences.json` (paper + live)
+
+`min_oi_accel=0.0` exigia OI acelerando. CATIUSDT com oi_accel=-0.0142 (ruído, essencialmente flat) bloqueava score=100. Threshold -0.05 libera desaceleração mínima, mantém proteção para desaceleração real.
+
+**Fix E1/E2 gate final — bypass propagado para L947** · commit `d0ea407` · `signal_engine.py:949-950`
+
+E1/E2 bypassavam `oi_trend_too_weak` e `lsr_trend_not_negative` nos gates individuais (L787/L797) mas não propagavam para o gate final (L947). LABUSDT: cascade=True, liq=$10k, score=93, 142t/m — morria em L949 por oi_trend=0.004 < 0.015 apesar de E1 ativo. Fix: `liq_cascade or (oi_trend >= final_min_oi_trend)` e `liq_cascade or (lsr_trend <= max_lsr_trend)`. E1/E2 agora completos end-to-end.
+
+**Resultado pós-fix:** `final_gate_fail` caiu de 68 para 2 casos nos primeiros 15min pós-restart. Os 2 residuais são sem cascade — bloqueios legítimos. Registrado em tasks.md para investigação futura (baixa prioridade).
+
+**Estado ao encerrar sessão (12/06/2026 · ~00:45 BRT):**
+- Bot rodando em paper, gatilho liberado às 00:41:17 BRT
+- Zero trades ainda — mercado bearish, score_below_threshold dominante
+- Candidatos com cascade ativo: STGUSDT, ESPORTSUSDT, PLAYUSDT — aguardando score >= 78
+- Todos os fixes ativos: E1/E2/E3 (`aa5d2ee`), Fix A (`817785c`), E1/E2 gate final (`d0ea407`)
+- F-18 bypass cascade: decisão pendente — aguarda dados reais com os fixes ativos
+
+*Versão: 4.23 · Última atualização: 12/06/2026*
 
 ---
 
