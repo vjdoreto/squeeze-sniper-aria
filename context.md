@@ -1042,7 +1042,23 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.19 · Última atualização: 11/06/2026*
+*Versão: 4.20 · Última atualização: 12/06/2026*
+
+---
+
+## 🔧 Sprint Brain × Forge — 12/06/2026 (E1 · E2 · E3 · bypass liq_cascade)
+
+### Gates desbloqueados para liq_cascade=True
+
+Brain analisou logs pós-boot e identificou 46 ghost signals de ativos com `liq_cascade=True` bloqueados por gates projetados para ativos sem pressão institucional.
+
+| Task | Commit | Mudança |
+|------|--------|---------|
+| **E1** | `aa5d2ee` | `signal_engine.py:787` — bypass `oi_trend_too_weak` quando `liq_cascade=True`. HUSDT bloqueado 37× por `oi_trend=0.00799` vs threshold `0.008` (diferença 0.00001). Durante cascade, OI fraco é sinal correto — longs liquidados reduzem OI por definição. |
+| **E2** | `aa5d2ee` | `signal_engine.py:797` — bypass `lsr_trend_not_negative` quando `liq_cascade=True`. HUSDT bloqueado 10× com liq=$17k–$18k. `liq_cascade` é evidência mais forte que `lsr_bypass_active` — recebia tratamento inferior ao B-34. |
+| **E3** | `b6730c7` | `preferences.json` — `min_score` paper 80 → 78. Score máximo observado em 3.757 refusals = 78. Teto empírico 2pts abaixo do threshold — bot nunca entrava. Reversão se WR < 45% ou MAE > 8% em 20+ trades score 78–79. |
+
+Soft restart executado por Doreto após commits. Warmup 300s concluído — gatilho ativo com E1/E2/E3 em efeito.
 
 ---
 

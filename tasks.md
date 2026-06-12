@@ -1,5 +1,66 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v3.0_
+_Atualizado: 12/06/2026 · v3.1_
+
+---
+
+## ✅ Forge — E1 · Bypass `oi_trend_too_weak` quando `liq_cascade=True` · `signal_engine.py:787` · `aa5d2ee`
+
+**Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha, escopo único).**
+
+**Evidência (Brain · análise logs 12/06/2026):**
+- HUSDT: score=100, liq=$15k–$24k, liq_cascade=True — bloqueado 37× por `oi_trend=0.00799` vs threshold `0.008` (diferença de 0.00001)
+- ESPORTSUSDT: score=92, liq=$15k–$28k, liq_cascade=True, CVD=57%, ema4h=+4 — bloqueado 9× por `oi_trend=-0.00453`
+- Total: 46 ghost signals de squeeze com cascade real bloqueados por este gate
+
+**Lógica:** em `liq_cascade=True`, longs estão sendo liquidados — posições fechadas **reduzem o OI** por definição. O gate foi projetado para ativos sem pressão institucional. Durante cascade, OI fraco/negativo é o sinal correto, não um problema.
+
+**Diff exato:**
+```python
+# signal_engine.py linha 787
+# ANTES
+if oi_trend is not None and oi_trend < 0.008:
+
+# DEPOIS
+if oi_trend is not None and oi_trend < 0.008 and not liq_cascade:
+```
+
+**Critério de validação:** ghost signals de HUSDT/ESPORTSUSDT-type com liq_cascade=True deixam de aparecer com reason `oi_trend_too_weak`.
+
+---
+
+## ✅ Forge — E2 · Bypass `lsr_trend_not_negative` quando `liq_cascade=True` · `signal_engine.py:797` · `aa5d2ee`
+
+**Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha, escopo único).**
+
+**Evidência (Brain · análise logs 12/06/2026):**
+- HUSDT: score=96, liq=$17k–$18k, liq_cascade=True — bloqueado 10× por `lsr_trend=-0.00368` (vs threshold -0.3)
+- Gate já tem bypass para `lsr_bypass_active` (B-34) mas não para `liq_cascade` — que é evidência ainda mais forte de squeeze real
+
+**Diff exato:**
+```python
+# signal_engine.py linha 797
+# ANTES
+if not lsr_bypass_active and lsr_trend is not None and lsr_trend > -0.3:
+
+# DEPOIS
+if not lsr_bypass_active and not liq_cascade and lsr_trend is not None and lsr_trend > -0.3:
+```
+
+**Critério de validação:** HUSDT-type com liq_cascade=True e lsr_trend fraco passa os gates e chega ao score.
+
+---
+
+## ✅ Forge — E3 · `min_score` paper 80 → 78 · `preferences.json` · `b6730c7`
+
+**Autorizado por Doreto em 12/06/2026.**
+
+**Evidência (Brain · análise logs 12/06/2026):** score máximo observado nos últimos 3.757 refusals por `score_below_threshold` = **78**. Threshold atual = 80. Teto empírico está 2 pontos abaixo do threshold — o bot nunca entra sem ajuste.
+
+**Diff:** `preferences.json` → `paper.signal.min_score`: `80` → `78`
+
+**Condição de reversão (Brain monitora):** WR < 45% ou MAE médio > 8% em 20+ trades com score 78–79 → reverter para 80.
+
+**Para reverter:** `preferences.json` → `paper.signal.min_score`: `78` → `80` + soft restart. Forge executa com 1 linha, sem evidência adicional necessária — decisão de Doreto.
 
 ---
 
