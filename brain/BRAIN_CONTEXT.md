@@ -3,6 +3,8 @@
 > Forge é guardião deste arquivo — atualiza a cada sprint.
 > Versão: 1.1 · 10/06/2026
 
+> ⚠️ **AVISO R-07 — 11/06/2026:** Brain executou `git commit acf986c` diretamente ("commit de governança"). Isso é violação R-07 independente do tipo de arquivo. Não existe categoria de commit que autorize Brain a executar `git commit`. O fluxo é sempre: escrever conteúdo em `tasks.md` → Forge lê e commita. Próxima violação será escalada para Doreto com pedido de revisão do protocolo de boot do agente.
+
 ---
 
 ## 1. O Projeto em Uma Frase

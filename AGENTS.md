@@ -82,7 +82,7 @@ Se Brain ou ARIA identificarem um fix urgente: escrevem em `tasks.md` com evidê
 
 **O código estar correto não justifica o processo errado.** Revisão pós-fato não é equivalente a execução consciente. Uma mudança incorreta que passa pela revisão do Forge é melhor do que uma mudança correta que não passou.
 
-> Histórico de quebras em 10/06/2026: commits `d8b939d` (ARIA), `315f0d6` (Brain), `6f0bc0a` (Forge paralelo), `d089dce` (ARIA) — todos aprovados após revisão, mas o protocolo foi violado. R-07 criado para prevenir recorrência.
+> Histórico de quebras: 10/06/2026 — `d8b939d` (ARIA), `315f0d6` (Brain), `6f0bc0a` (Forge paralelo), `d089dce` (ARIA). 11/06/2026 — `acf986c` (Brain, "commit de governança"). Total: 5 violações confirmadas. Não existe categoria de commit que autorize Brain ou ARIA a executar `git commit`. "Só .md", "só 1 linha", "commit de governança" — nenhum desses justifica. O processo é sempre: escrever em `tasks.md` → Forge commita.
 
 #### Variante R-07 — Patch Pronto (autorizado por Doreto em 10/06/2026)
 
