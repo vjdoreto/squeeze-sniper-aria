@@ -784,7 +784,7 @@ class SqueezeIgnition:
             self._write_ghost_signal(symbol, "trades_1m_too_low", d, _eff_score)
             return None
         # oi_trend_too_weak: OI não está crescendo o suficiente para squeeze institucional
-        if oi_trend is not None and oi_trend < 0.008:
+        if oi_trend is not None and oi_trend < 0.008 and not liq_cascade:
             self._maybe_log_refusal(
                 symbol,
                 "oi_trend_too_weak",
@@ -794,7 +794,7 @@ class SqueezeIgnition:
             return None
         # lsr_trend_not_negative: shorts não estão capitulando
         # B-34-bypass: se bypass ativo, lsr_trend_positive já foi ignorado — ignorar este também
-        if not lsr_bypass_active and lsr_trend is not None and lsr_trend > -0.3:
+        if not lsr_bypass_active and not liq_cascade and lsr_trend is not None and lsr_trend > -0.3:
             self._maybe_log_refusal(
                 symbol,
                 "lsr_trend_not_negative",
