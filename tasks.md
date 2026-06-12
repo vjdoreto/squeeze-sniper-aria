@@ -1,5 +1,25 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 11/06/2026 · v2.9_
+_Atualizado: 11/06/2026 · v3.0_
+
+---
+
+## 🔬 Brain — Investigação Futura · Reset Diário 21h BRT vs eAssets (11/06/2026)
+
+**Origem:** observação Doreto · comportamento esperado confirmado pelo Forge · sem urgência
+
+**Comportamento atual do SS (por design):**
+Às 00:00 UTC (21:00 BRT), `reset_daily_history()` em `metric_engine.py:39` zera todos os derivados de slope: `exp:5m`, `oi_trend:5m`, `lsr_trend:5m`, `cvd_change_pct:5m`, `price_change:5m/15m/1h`, `price_change_24h`, etc. O campo `price` (preço atual) **permanece correto** — o que zera é a variação percentual (o "24%" exibido no dashboard). O ring buffer `_history` de todos os 527 símbolos é limpo. Dashboard mostra zeros por ~5min. Gate `silence_window_2100` (20:50–21:05 BRT) + `restart_warmup(300s)` cobrem a janela — zero trades afetados.
+
+**Motivação original:** evitar que slope do dia anterior contamine cálculos do dia novo (ex: ativo +20% no dia teria `exp:5m` inflado às 21:01 BRT).
+
+**O que o eAssets faz:** transição suave — os dados continuam fluindo sem zero visível na virada. Provavelmente usa referência de preço rolante (não fixa em 00:00 UTC) para calcular `price_change`.
+
+**Questão para Brain:** vale alinhar o SS com o eAssets? Opções:
+- A) Manter atual — zero por 5min é aceitável, gate cobre
+- B) Usar `price_at_reset` (já salvo em `reset_daily_history`) como referência rolante em vez de zerar — transição suave sem dados falsos
+- C) Investigar como eAssets calcula `price_change` na virada e replicar
+
+**Critério de priorização:** baixa urgência — gate cobre a janela. Investigar pós 50+ trades quando Brain tiver ciclo livre.
 
 ---
 
