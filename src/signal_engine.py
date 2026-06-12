@@ -686,6 +686,19 @@ class SqueezeIgnition:
             )
             return None
 
+        # D-MEDIUM-2 — CVD saturado = dado inútil (Brain/Forge 12/06/2026)
+        # TIA cvd=999.9 e RIF cvd=826.9 → squeeze_failed imediato, MFE=0. Dado saturado não discrimina momentum.
+        if cvd_change_pct >= 950.0:
+            self._maybe_log_refusal(symbol, "cvd_data_saturated", {"cvd_change_pct": cvd_change_pct})
+            return None
+
+        # D-HIGH-1 — CVD floor mínimo mesmo com cascade (Brain/Forge 12/06/2026)
+        # ENJ 12:52: cascade=True + cvd=-0.56% → -34%. ENJ 13:59: cascade=True + cvd=+29% → +31%.
+        # cascade não pode ser passe livre para CVD estruturalmente negativo.
+        if liq_cascade and cvd_change_pct < -10.0:
+            self._maybe_log_refusal(symbol, "cvd_negative_cascade_entry", {"cvd_change_pct": cvd_change_pct})
+            return None
+
         # D3 — liq obrigatória sem cascade (Brain/ARIA/Forge · 11/06/2026)
         # CVD sem liquidação real = demand ramp, não squeeze. 6/7 squeeze_failed tinham liq=0.
         _liq_entry = d.get("liq_short_1m_stable") or 0.0
