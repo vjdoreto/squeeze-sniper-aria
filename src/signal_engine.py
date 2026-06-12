@@ -260,6 +260,7 @@ class SqueezeIgnition:
                 "volume_quality": round(cvd_change_pct / (trades_1m + 1), 4),
                 "last_4h_candle_age_minutes": int((time.time() % (4 * 3600)) / 60),
                 "funding_rate": d.get("funding_rate") or 0.0,
+                "cvd_streak": self._cvd_streak.get(symbol, 0),
             }
             with self._ghost_log_path.open("a", encoding="utf-8") as f:
                 f.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -963,7 +964,7 @@ class SqueezeIgnition:
             and (liq_cascade or (lsr_trend or 0.0) <= self.max_lsr_trend)
             and (trades_1m >= self.min_trades_1m or is_high_quality)
             and cvd_streak >= final_cvd_streak
-            and (oi_accel is None or oi_accel >= self.min_oi_accel)
+            and (oi_accel is None or liq_cascade or oi_accel >= self.min_oi_accel)  # E3-gate-final: cascade bypassa oi_accel (Brain/Forge 12/06/2026)
         ):
             self._last_signal[symbol] = time.time()
             exp_btc_val = d.get("exp_btc:5m") or 0.0
