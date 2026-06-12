@@ -3,11 +3,15 @@ _Atualizado: 12/06/2026 · v3.6_
 
 ---
 
-## [ ] Forge — Fechar sessão Brain (12/06 — 2ª sessão)
-    Commitar e push nos dois repos:
-    - brain/BRAIN_CONTEXT.md (v2.1 — linha adicionada: diagnóstico score teto + decisão manter 78)
-    - tasks.md (este item + ✅ threshold decision)
-    Mensagem sugerida: "docs(context): sprint 12/06 — diagnóstico score teto 77, manter min_score=78 (v2.1)"
+## ✅ Forge — Sprint 12/06 · 4 fixes (análise profunda Brain) · DONE
+
+    D-URGENTE-1: fix(paper) SL fill no sl_price target · paper_tracker.py · 7ebc3b8
+    D-HIGH-1 + D-MEDIUM-2: fix(signal) CVD floor cascade -10% + saturado >=950 · signal_engine.py · d256018
+    D-HIGH-2: fix(throttle) cooldown 4h após stop_loss hit · risk_manager.py + main.py · d2eac09
+    Push origin ✅ · aria ✅
+
+## ✅ Forge — Fechar sessão Brain (12/06 — 2ª sessão) + documentação · DONE
+    brain/BRAIN_CONTEXT.md v2.2 — 4 fixes documentados + cvd_negative_quarantine explicado + large caps = correto por design
 
 ---
 

@@ -1,7 +1,7 @@
 # BRAIN_CONTEXT.md — Squeeze Sniper
 > Contexto estratégico para o agente Brain retomar no Claude Code (Antigravity).
 > Forge é guardião deste arquivo — atualiza a cada sprint.
-> Versão: 2.1 · 12/06/2026
+> Versão: 2.2 · 12/06/2026
 
 > ⚠️ **AVISO R-07 — 11/06/2026:** Brain executou `git commit acf986c` diretamente ("commit de governança"). Isso é violação R-07 independente do tipo de arquivo. Não existe categoria de commit que autorize Brain a executar `git commit`. O fluxo é sempre: escrever conteúdo em `tasks.md` → Forge lê e commita. Próxima violação será escalada para Doreto com pedido de revisão do protocolo de boot do agente.
 
@@ -75,6 +75,12 @@ Bot de trading algorítmico LONG ONLY em Binance Futures USDM que captura **long
 | **F-19: _post_trade_pending reconstruído no boot** | Alpha decay 4h/12h/24h perdido a cada restart. `_rebuild_post_trade_pending()` reinsere trades das últimas 24h com snapshots incompletos | 11/06 |
 | **Telegram: paper_reset + hard_reset + mode_change alerts** | Alertas ausentes para eventos críticos de controle. `telegram_alert.py` + `main.py` · `665244c` + `dfe080d` · 11/06 |
 | **Squeezometer warming cooldown 900s → 300s** | Warming (70–85) agora com mesmo cooldown do panic (5min). Evita spam em mercado oscilante. `main.py:436` · `665244c` · 11/06 |
+| **D-URGENTE-1: SL fill no sl_price, não no tick** | 2-confirmações causava fill no 2º tick (já mais baixo). Slippage artificial 1-1.3% = 10-13% PnL extra perdido/SL. ESPORTS -43% (esperado -30%), ENJ -34% (esperado -30%). `paper_tracker.py` · `7ebc3b8` · 12/06 |
+| **D-HIGH-1: CVD floor -10% mesmo com cascade** | cascade=True não pode ser passe livre para CVD negativo. ENJ 12:52 cvd=-0.56%+cascade→-34%; ENJ 13:59 cvd=+29%+cascade→+31%. Gate cvd_negative_cascade_entry. `signal_engine.py` · `d256018` · 12/06 |
+| **D-MEDIUM-2: CVD saturado ≥950 bloqueia** | CVD=999.9 (TIA) e 826.9 (RIF) → squeeze_failed imediato, MFE=0. Dado saturado não discrimina. Gate cvd_data_saturated. `signal_engine.py` · `d256018` · 12/06 |
+| **D-HIGH-2: Throttle 4h após stop_loss hit** | ESPORTS -43% voltou a entrar 108min depois (cooldown 1h insuficiente). extend_cooldown() no SymbolThrottler define 4h bloqueio. `risk_manager.py` + `main.py` · `d2eac09` · 12/06 |
+| **cvd_negative_quarantine (documentação)** | Gate Sprint 3 renomeado. Ativa quando cvd_delta_1m<0 AND NOT compensação AND is_high_quality=False. is_high_quality=True quando liq_cascade=True — por isso cascade bypassa. `signal_engine.py:452-480`. 5.916 bloqueios/dia = 2º maior gate. Brain deve monitorar distribuição. |
+| **large caps bloqueadas em final_gate_fail com cascade=True — CORRETO** | BTC/ETH/DOGE: exp < final_min_exp mesmo com cascade. SUI $14.4k liq e XRP $168k liq hoje = zero movimento (large caps absorvem liq). EXP gate é proteção estrutural. SS não opera em large caps por design. | 
 
 ---
 
@@ -139,5 +145,6 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 | **E1/E2 propagados ao gate final** | Bypass de cascade não cobria o gate final (`signal_engine.py:947`). LABUSDT-type com cascade continuava bloqueado. `d0ea407` | 12/06 |
 | **Fix B (F-18 cascade bypass) — PENDENTE** | XLMUSDT score=93, liq=$10k, cascade=True bloqueado por ema_4h=-4. Decisão adiada para após WR de 20+ trades com Fix A + E1/E2 propagados. | 12/06 |
 | **E1/E2 gate final — bypass propagado para L947** | E1/E2 bypassavam gates individuais (L787/L797) mas não o gate final (L947). LABUSDT cascade=True, liq=$10k, score=93, 142t/m bloqueado por oi_trend=0.004 < 0.015 apesar de E1 ativo. Fix: `liq_cascade or (oi_trend >= threshold)` em L949-950. `d0ea407` | 12/06 |
+| **Diagnóstico score teto 77 — manter min_score=78** | 1.040 refusals score 75-77: 89% com liq=0 via cascade bypass (evento dissipado), 60% dos 60 com liq real têm LSR positivo (demand breakout). Zero candidatos com LSR < -0.3. Baixar threshold capturaria ruído. Premissa Brain (D3 garantia liq>$500) incorreta — cascade bypassa D3. | 12/06 |
 
-*BRAIN_CONTEXT.md v2.0 · Forge é guardião · 12/06/2026 — Fix A + E1/E2 gate final completos. final_gate_fail 68→2. Bot ativo pós-warmup 00:41 BRT, zero trades (mercado bearish). F-18 cascade pendente — aguarda dados.*
+*BRAIN_CONTEXT.md v2.1 · Forge é guardião · 12/06/2026 — Diagnóstico score teto: manter 78. Fix B (F-18) aguarda 20+ trades com Fix A+E1/E2.*
