@@ -127,6 +127,14 @@ class SymbolThrottler:
         self.symbol_history[symbol].append(now)
         self._save_state()
 
+    def extend_cooldown(self, symbol: str, total_seconds: int = 14400) -> None:
+        """D-HIGH-2: Cooldown estendido após SL hit (padrão 4h).
+        Coloca timestamp futuro tal que o símbolo fica bloqueado por total_seconds a partir de agora.
+        """
+        future_ts = time.time() + total_seconds - self.window_seconds
+        self.symbol_history[symbol] = [future_ts]
+        self._save_state()
+
     def reset(self) -> None:
         self.symbol_history = {}
         try:
