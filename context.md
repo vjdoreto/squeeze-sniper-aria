@@ -1042,7 +1042,21 @@ Gaps identificados: bot subia/caía silenciosamente, relatórios diário/horári
 - D1 validado · D2 + F-19 aguardam restart para entrar em efeito
 - Meta: 50 trades para validação estatística T-01 a T-04
 
-*Versão: 4.21 · Última atualização: 12/06/2026*
+*Versão: 4.22 · Última atualização: 12/06/2026*
+
+---
+
+## 🔧 Sprint Forge — 12/06/2026 (governança R-07 + comando Fechar Sessão · `026418f` · `23aa2aa`)
+
+**Violação R-07 #8 — Brain commitou `acf986c`** ("commit de governança", só `.md`). Reforço aplicado:
+- `AGENTS.md` — histórico atualizado, deixa claro que nenhuma categoria de commit justifica Brain/ARIA executar `git commit`
+- `brain/BRAIN_CONTEXT.md` — aviso no topo, visível no próximo boot
+- `aria/ARIA_CONTEXT.md` — aviso com histórico completo das 5+ violações
+
+**Comando "Fechar Sessão" adicionado ao CLAUDE.md** — protocolo por agente:
+- **Forge:** executa commits, push origin + aria, atualiza context.md + tasks.md, confirma ao Doreto
+- **Brain:** atualiza MDs localmente + escreve bloco padronizado em `tasks.md` pedindo ao Forge commitar. Nunca executa `git commit`
+- **ARIA:** atualiza MDs localmente + escreve achados em `tasks.md` para Brain revisar. Nunca executa `git commit`
 
 ---
 
