@@ -1,5 +1,29 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.3_
+_Atualizado: 12/06/2026 · v3.5_
+
+---
+
+## ✅ Forge — Fechar sessão Brain (12/06) — DONE
+    Commitado: brain/BRAIN_CONTEXT.md (v2.1) + tasks.md + context.md (v4.24)
+
+---
+
+## [ ] Brain — Decisão min_score threshold (12/06)
+    Diagnóstico Forge: score ceiling empírico = 77, threshold = 78 (1pt acima do máximo real).
+    Em 14.056 refusals: score_below_threshold dominante. avg score = 67.6.
+    Opção A: baixar min_score paper 78 → 76 (libera 258 candidatos na faixa 75-77).
+    Opção B: aguardar regime de mercado (fim do bearish macro, EMA:4h negativo 79%).
+    Opção C: investigar quais componentes do score estão travando em 77.
+    → Brain decide. Se A: Forge implementa preferences.json com autorização Doreto.
+
+---
+
+## [ ] Doreto — Autorizar F-19: _post_trade_pending reconstruction (12/06)
+    Trade CUSDT perdeu estado entre restarts (paper_opportunities.json zerado).
+    Fix: _rebuild_post_trade_pending() reinsere trades das últimas 24h no boot.
+    ~38 linhas em paper_tracker.py. Estimativa: 30min Forge.
+    Risco: baixo — só lê paper_closed.jsonl e recria estado em memória.
+    → Doreto autoriza → Brain escreve diff em tasks.md → Forge implementa.
 
 ---
 

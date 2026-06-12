@@ -1,7 +1,7 @@
 # BRAIN_CONTEXT.md — Squeeze Sniper
 > Contexto estratégico para o agente Brain retomar no Claude Code (Antigravity).
 > Forge é guardião deste arquivo — atualiza a cada sprint.
-> Versão: 1.1 · 10/06/2026
+> Versão: 2.1 · 12/06/2026
 
 > ⚠️ **AVISO R-07 — 11/06/2026:** Brain executou `git commit acf986c` diretamente ("commit de governança"). Isso é violação R-07 independente do tipo de arquivo. Não existe categoria de commit que autorize Brain a executar `git commit`. O fluxo é sempre: escrever conteúdo em `tasks.md` → Forge lê e commita. Próxima violação será escalada para Doreto com pedido de revisão do protocolo de boot do agente.
 
@@ -136,6 +136,8 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 | **E2 — bypass `lsr_trend_not_negative` para liq_cascade** | 10 ghosts HUSDT (score 96) com liq=$17-18k bloqueados por lsr fraco — cascade é evidência mais forte que lsr_trend | 12/06 |
 | **E3 — min_score paper 80 → 78** | Teto empírico = 78 em 3.757 refusals score_below_threshold — threshold 80 matematicamente inatingível | 12/06 |
 | **Fix A — `min_oi_accel` 0.0 → -0.05** | 50 ghost signals CATIUSDT (score=100, CVD=19.76%, cvd_streak=7) bloqueados por `oi_accel=-0.014` vs threshold `0.0`. Ruído de OI flat derrubava DNA clássico do SS. `817785c` | 12/06 |
+| **E1/E2 propagados ao gate final** | Bypass de cascade não cobria o gate final (`signal_engine.py:947`). LABUSDT-type com cascade continuava bloqueado. `d0ea407` | 12/06 |
+| **Fix B (F-18 cascade bypass) — PENDENTE** | XLMUSDT score=93, liq=$10k, cascade=True bloqueado por ema_4h=-4. Decisão adiada para após WR de 20+ trades com Fix A + E1/E2 propagados. | 12/06 |
 | **E1/E2 gate final — bypass propagado para L947** | E1/E2 bypassavam gates individuais (L787/L797) mas não o gate final (L947). LABUSDT cascade=True, liq=$10k, score=93, 142t/m bloqueado por oi_trend=0.004 < 0.015 apesar de E1 ativo. Fix: `liq_cascade or (oi_trend >= threshold)` em L949-950. `d0ea407` | 12/06 |
 
 *BRAIN_CONTEXT.md v2.0 · Forge é guardião · 12/06/2026 — Fix A + E1/E2 gate final completos. final_gate_fail 68→2. Bot ativo pós-warmup 00:41 BRT, zero trades (mercado bearish). F-18 cascade pendente — aguarda dados.*

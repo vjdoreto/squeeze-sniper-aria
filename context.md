@@ -1067,7 +1067,16 @@ E1/E2 bypassavam `oi_trend_too_weak` e `lsr_trend_not_negative` nos gates indivi
 - Todos os fixes ativos: E1/E2/E3 (`aa5d2ee`), Fix A (`817785c`), E1/E2 gate final (`d0ea407`)
 - F-18 bypass cascade: decisão pendente — aguarda dados reais com os fixes ativos
 
-*Versão: 4.23 · Última atualização: 12/06/2026*
+**Diagnóstico sessão Forge 12/06 (investigação zero trades):**
+- 1 trade real capturado: CUSDT 22:20:43 BRT, score=100, lsr_trend=-0.4345 — pipeline funcionou. Estado perdido por restart (sem persistência).
+- Score ceiling empírico = 77 (1.388 refusals score_below_threshold em 14.056 entradas, avg=67.6). Threshold=78 está 1pt acima do máximo empírico.
+- Macro bearish (79% EMA:4h negativo) impede liq_cascade (+20pts) e liq_short_1m (+15pts) de acumular — causa raiz é regime de mercado, não bug de código.
+- LABUSDT 18 final_gate_fail em 00:24-00:25 BRT: eram pre-fix (d0ea407 commitado às 00:34:59 BRT). Fix correto e ativo desde restart 00:36:17.
+- XPLUSDT score=96 bloqueado por lsr_trend_not_negative com liq=0: funciona por design.
+- Pendente Brain: decidir se baixa min_score 78→76 (258 candidatos em faixa 75-77) ou aguarda regime.
+- Pendente Doreto: autorizar F-19 (_post_trade_pending reconstruction) para trade persistence entre restarts.
+
+*Versão: 4.24 · Última atualização: 12/06/2026*
 
 ---
 
