@@ -8,13 +8,14 @@ _Atualizado: 12/06/2026 · v3.5_
 
 ---
 
-## [ ] Brain — Decisão min_score threshold (12/06)
-    Diagnóstico Forge: score ceiling empírico = 77, threshold = 78 (1pt acima do máximo real).
-    Em 14.056 refusals: score_below_threshold dominante. avg score = 67.6.
-    Opção A: baixar min_score paper 78 → 76 (libera 258 candidatos na faixa 75-77).
-    Opção B: aguardar regime de mercado (fim do bearish macro, EMA:4h negativo 79%).
-    Opção C: investigar quais componentes do score estão travando em 77.
-    → Brain decide. Se A: Forge implementa preferences.json com autorização Doreto.
+## ✅ Brain — Decisão min_score threshold (12/06) — MANTER 78
+
+    Forge extraiu análise de 1.040 refusals score 75-77:
+    - 89% (928) com liq=0: chegam ao score via liq_cascade=True bypassing D3 (cascade dissipado).
+      Perfil análogo ao volume_quality_spike — evento já passou, entrar é timing errado.
+    - 60 com liq>500: 60% LSR positivo (demand breakout), 0% LSR < -0.3 (squeeze clássico).
+    Brain confirmou: manter 78. Baixar capturaria ruído, não sinal.
+    6 restarts manuais confirmados por Doreto — sem causa raiz.
 
 ---
 

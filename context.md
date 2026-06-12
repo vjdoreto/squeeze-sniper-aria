@@ -1076,7 +1076,49 @@ E1/E2 bypassavam `oi_trend_too_weak` e `lsr_trend_not_negative` nos gates indivi
 - Pendente Brain: decidir se baixa min_score 78→76 (258 candidatos em faixa 75-77) ou aguarda regime.
 - Pendente Doreto: autorizar F-19 (_post_trade_pending reconstruction) para trade persistence entre restarts.
 
-*Versão: 4.24 · Última atualização: 12/06/2026*
+---
+
+## 🔧 Sprint Forge + Brain — 12/06/2026 (análise score 75-77 · decisão min_score)
+
+### Análise Forge — distribuição candidatos score 75-77
+
+Brain solicitou investigação dos candidatos score 75-77 (reason=score_below_threshold) para decidir se baixa min_score 78→76.
+
+**n=1.040 refusals score 75-77 hoje (não 258 como estimado inicialmente):**
+
+| Score | n |
+|-------|---|
+| 75 | 1.010 |
+| 76 | 150 |
+| 77 | 10 |
+
+**Distribuição liq_short_1m:**
+- liq=0: **928 (89%)** — chegaram ao score via liq_cascade=True bypassing D3
+- liq $500–$2k: 32 (3.1%)
+- liq $2k–$10k: 20 (1.9%)
+- liq > $10k: 16 (1.5%)
+
+**Premissa Brain corrigida:** os 928 com liq=0 não "passaram D3 com liq>$500". D3 funciona corretamente (623 bloqueios `liq_required_no_cascade` confirmados hoje). Chegaram ao score porque `liq_cascade=True` bypassa D3 — cascade ativo mas liq_short_1m=0 no tick (evento já dissipado, +20pts de cascade fantasma no score).
+
+**Dos 60 candidatos com liq>$500:**
+- LSR trend < -0.3 (squeeze clássico): **0 de 60 (0%)**
+- LSR trend positivo (demand breakout): 36 (60%)
+- OI trend >= 0.015 (forte): 19 (32%)
+- Símbolos: XMRUSDT $40k, HUSDT $13k, XPLUSDT $17k — todos com lsr_trend neutro/positivo
+
+**Hipóteses Brain:**
+- H1 (liq baixa por margem mínima): **confirmada** — mecanismo diferente do esperado, mas perfil de risco idêntico
+- H3 (bug de dado frio): descartada
+
+### Decisão Brain — manter min_score = 78
+
+Baixar para 76 capturaria: (89%) cascades dissipados com liq=0 no tick — mesmo padrão do `volume_quality_spike` já bloqueado; (11%) demand breakouts com LSR positivo sem confirmação de squeeze. Nenhum candidato com perfil de squeeze clássico (LSR < -0.3) na faixa 75-77. Decisão correta e suportada pelos dados.
+
+### Outros achados da sessão
+- 6 restarts entre 19h e 00:36h: **confirmados como manuais** por Doreto (ciclo de deploy). Sem causa raiz a investigar.
+- CUSDT: trade perdido por restart — estado in-memory não persistido. F-19 (reconstrução `_post_trade_pending`) aguarda autorização Doreto para cobrir esse cenário futuro.
+
+*Versão: 4.25 · Última atualização: 12/06/2026*
 
 ---
 
