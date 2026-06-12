@@ -946,8 +946,8 @@ class SqueezeIgnition:
 
         if (
             exp >= final_min_exp
-            and (oi_trend or 0.0) >= final_min_oi_trend
-            and (lsr_trend or 0.0) <= self.max_lsr_trend
+            and (liq_cascade or (oi_trend or 0.0) >= final_min_oi_trend)
+            and (liq_cascade or (lsr_trend or 0.0) <= self.max_lsr_trend)
             and (trades_1m >= self.min_trades_1m or is_high_quality)
             and cvd_streak >= final_cvd_streak
             and (oi_accel is None or oi_accel >= self.min_oi_accel)
