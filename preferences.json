@@ -45,7 +45,7 @@
             "mtf_1h_crash_threshold": -0.05,
             "max_bid_ask_spread": 0.2,
             "min_oi_accel": 0.0,
-            "min_score": 80,
+            "min_score": 78,
             "signal_mode": "aggressive",
             "cooldown_seconds": 180,
             "exaustao_15m_pct": 3.0
