@@ -161,14 +161,6 @@ class PaperTradeTracker:
         except OSError as e:
             logger.error("Falha ao resetar logs de history: %s", e)
 
-        # Zera o estado das métricas para evitar dados antigos contaminando a nova coleta
-        try:
-            metric_state_path = Path("logs/metric_state.json")
-            if metric_state_path.exists():
-                metric_state_path.unlink()
-                logger.info("Estado das métricas (metric_state.json) resetado com sucesso.")
-        except OSError as e:
-            logger.error("Falha ao resetar metric_state.json: %s", e)
 
     def close_manual(self, symbol: str, market_data: Dict[str, Dict]) -> Optional[Dict[str, Any]]:
         """Fecha manualmente um trade em aberto."""
