@@ -1,9 +1,17 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.5_
+_Atualizado: 12/06/2026 · v3.6_
 
 ---
 
-## ✅ Forge — Fechar sessão Brain (12/06) — DONE
+## [ ] Forge — Fechar sessão Brain (12/06 — 2ª sessão)
+    Commitar e push nos dois repos:
+    - brain/BRAIN_CONTEXT.md (v2.1 — linha adicionada: diagnóstico score teto + decisão manter 78)
+    - tasks.md (este item + ✅ threshold decision)
+    Mensagem sugerida: "docs(context): sprint 12/06 — diagnóstico score teto 77, manter min_score=78 (v2.1)"
+
+---
+
+## ✅ Forge — Fechar sessão Brain (12/06 — 1ª sessão) — DONE
     Commitado: brain/BRAIN_CONTEXT.md (v2.1) + tasks.md + context.md (v4.24)
 
 ---
