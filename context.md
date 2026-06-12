@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v3.7 · 05/06/2026
+- Versão atual: v4.25 · 12/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -449,6 +449,40 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 - Nenhum trade com loss > 8%
 
 **Próximo passo imediato:** coletar 20+ trades com regime atual (mae_guard, sizing $20, liq_cascade $500) → trazer logs ao Brain para análise → se padrões confirmados → Sprint 2.
+
+---
+
+## 🔧 Sprint 12/06/2026 — Análise Profunda + 8 Fixes (v4.25)
+
+### Origem
+Brain realizou análise profunda dos 27 trades do dia (WR 33%, PnL -25.15 USDT). Dois eventos catastróficos (ESPORTS -43%, ENJ -34%) distorceram o P&L. Brain identificou 4 bugs/gaps críticos + 4 melhorias.
+
+### Fixes implementados (todos commitados e em produção)
+
+| Fix | Commit | Descrição |
+|-----|--------|-----------|
+| D-URGENTE-1 SL fill correto | `7ebc3b8` | exit_price = sl (não tick). Slippage artificial 10-13% PnL por SL eliminado |
+| D-HIGH-1 CVD floor cascade | `d256018` | cascade não bypassa CVD < -10%. ENJ loser (cvd=-0.56%) seria bloqueado |
+| D-MEDIUM-2 CVD saturado | `d256018` | cvd_change_pct ≥ 950 → gate cvd_data_saturated. TIA/RIF-type bloqueados |
+| D-HIGH-2 Throttle 4h pós-SL | `d2eac09` | SL hit → extend_cooldown 4h. ESPORTS não voltaria 108min depois |
+| E3-gate-final oi_accel cascade | `4129488` | oi_accel bypassed por cascade no gate final. ORCA/XPL-type desbloqueados |
+| cvd_streak no ghost dict | `4129488` | Campo adicionado para auditoria Brain |
+
+### Decisões permanentes registradas
+- **Large caps com cascade=True → final_gate_fail CORRETO**: EXP gate protege SS de BTC/ETH/SUI/XRP. Liq de $14-168k absorvida sem movement. Design, não bug.
+- **cvd_streak não bypassa por cascade**: streak=0 + cascade = spike isolado de CVD, não momentum sustentado. Gate correto.
+- **cvd_negative_quarantine**: gate Sprint 3 renomeado. is_high_quality=True quando cascade=True → bypassa completamente. Brain monitora distribuição.
+- **ema4h=-2 aguarda**: 4 trades WR=0% insuficiente. Monitorar 15+ trades antes de gate/penalidade.
+
+### Hard Reset Paper executado
+Estado limpo após todos os fixes. Coleta nova a partir de agora com DNA correto.
+Arquivos deletados: risk_state.json · paper_opportunities.json · throttle_state.json
+metric_state.json preservado (klines quentes).
+
+### Critérios de reversão ativos
+- D-HIGH-1: winner bloqueado por cvd_negative_cascade_entry → revisar threshold -10%
+- E3-gate-final: WR < 40% em 10+ trades via bypass → reverter
+- D-HIGH-2: símbolo relevante preso indevidamente no throttle 4h → revisar
 
 ---
 

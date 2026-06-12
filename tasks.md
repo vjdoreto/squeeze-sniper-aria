@@ -1,9 +1,33 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.6_
+_Atualizado: 12/06/2026 · v3.7_
+
+---
+
+## [ ] Forge — Fechar sessão Brain (12/06 — 3ª sessão)
+    Commitar e push nos dois repos:
+    - brain/BRAIN_CONTEXT.md (v2.3 — E3-gate-final + cvd_streak logging + Hard Reset + decisões permanentes)
+    - tasks.md (este item)
+    - context.md (atualizar com sprint da sessão 3ª: 8 fixes, reset paper, coleta limpa)
+    Mensagem sugerida: "docs(context): sprint 12/06 — análise profunda + 8 fixes + hard reset paper (v2.3)"
+
+---
+
+## ✅ Forge — Sprint 12/06 · E3-gate-final + cvd_streak ghost · DONE
+    fix(signal): oi_accel bypass cascade no gate final · signal_engine.py:966 · 4129488
+    feat(ghost): cvd_streak adicionado ao ghost signal dict · signal_engine.py · 4129488
+    Push origin ✅ · aria ✅
 
 ---
 
 ## ✅ Forge — Sprint 12/06 · 4 fixes (análise profunda Brain) · DONE
+
+    D-URGENTE-1: fix(paper) SL fill no sl_price target · paper_tracker.py · 7ebc3b8
+    D-HIGH-1 + D-MEDIUM-2: fix(signal) CVD floor cascade -10% + saturado >=950 · signal_engine.py · d256018
+    D-HIGH-2: fix(throttle) cooldown 4h após stop_loss hit · risk_manager.py + main.py · d2eac09
+    Push origin ✅ · aria ✅
+
+## ✅ Forge — Fechar sessão Brain (12/06 — 2ª sessão) + documentação · DONE
+    brain/BRAIN_CONTEXT.md v2.2 — 4 fixes documentados + cvd_negative_quarantine explicado + large caps = correto por design
 
     D-URGENTE-1: fix(paper) SL fill no sl_price target · paper_tracker.py · 7ebc3b8
     D-HIGH-1 + D-MEDIUM-2: fix(signal) CVD floor cascade -10% + saturado >=950 · signal_engine.py · d256018
