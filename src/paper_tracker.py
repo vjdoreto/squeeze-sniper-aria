@@ -1208,6 +1208,7 @@ class PaperTradeTracker:
                         exit_reason = "trailing_stop"
                 else:
                     exit_reason = "stop_loss"
+                    exit_price = sl  # D-URGENTE-1: fill simulado no preço do SL target, não no tick (Brain/Forge 12/06/2026)
             elif exit_reason is None and price >= tp:
                 exit_reason = "take_profit"
             elif exit_reason is None and (
