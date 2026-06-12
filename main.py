@@ -1306,7 +1306,7 @@ async def heartbeat(engine: DataEngine, signals: SqueezeIgnition, state: BotStat
         
         # SPRINT 12.1: Visibilidade de Sinais Bloqueados
         ref_stats = signals.get_refusal_stats()
-        top_r = " | ".join([f"{k}:{v}" for k, v in ref_stats["top_motivos"].items()])
+        top_r = " | ".join([f"{k.strip()}:{v}" for k, v in ref_stats["top_motivos"].items()])
 
         logger.info(
             "💓 ativo | preço %s/%s | OI %s | trends %s | Ctrl+C para parar",
