@@ -1632,6 +1632,60 @@ BANANAS31 (+17%, melhor winner da amostra) estava bloqueado com RSI=48. A zona d
 - `logo.png` path corrigido em `src/web_dashboard.py:2826` → `assets/logo.png`
 - `docs/HOUSEKEEPING.md` criado — regras de higiene permanentes do projeto
 
+---
+
+## 🔧 Sprint Forge — 13/06/2026 · Análise Profunda Brain + D-01/D-02/D-03 (v4.29)
+
+### Análise profunda Brain — 25 trades pós-reset (13/06/2026)
+
+WR 28% · PF 1.00 · PnL +$0.02 · 25 trades. Sistema empatado — edge real existe (trailing_stop WR 88%) mas 52% dos trades (13/25) são squeeze_failed com WR 0% e PnL -$16.90. Sem os squeeze_failed: WR 58%, PnL +$16.92.
+
+**Padrões nos 13 squeeze_failed:**
+- 10/13 com liq_cascade=True — cascade não garantia qualidade
+- 3/13 com ema4h ≤ -2 (STRKUSDT, XRPUSDT, ADAUSDT) — macro bearish passando
+- 3/13 com cvd_streak < 5 (STRKUSDT=3, TAOUSDT=3, OPGUSDT=4) — streak reduzido pelo cascade bypassando proteção
+
+**ema4h como preditor principal confirmado:**
+
+| ema4h | n | WR | PnL |
+|-------|---|----|-----|
+| -2 | 5 | 0% | -$3.68 |
+| 0 | 9 | 22% | -$9.13 |
+| 2 | 3 | 33% | +$0.82 |
+| **4** | **7** | **57%** | **+$18.36** |
+| 6 | 1 | 0% | -$6.35 |
+
+ema4h=4 é o único estado com alpha consistente. ema4h=0 representa 36% dos trades e -$9 de prejuízo.
+
+### Fixes implementados (todos autorizados por Doreto 13/06)
+
+| Fix | Commit | Arquivo:Linha | Descrição |
+|-----|--------|---------------|-----------|
+| **D-03** | `750ce03` | `paper_tracker.py:1253` | Slippage duplo no stop_loss removido — exit agora em sl_target exato |
+| **D-02** | `7aa4227` | `signal_engine.py:894` | cascade não reduz cvd_streak: final_cvd_streak=streak_min mesmo com liq_cascade=True |
+| **D-01** | `7aa4227` | `signal_engine.py:878` | cascade não relaxa EXP quando ema4h ≤ -2 — relax_factor=1.0 em macro bearish |
+| blacklist zerada | `dbfa0b6` | `preferences.json` | ESPORTSUSDT/OPGUSDT/TRUMPUSDT/XRPUSDT removidos — gates dinâmicos cobrem |
+
+**Root causes confirmadas pelo Forge (R-01):**
+- D-03: D-URGENTE-1 (12/06) setava exit_price=sl mas _close_trade aplicava slippage 0.1% em cima → fill 0.1% abaixo do target. ESPORTS: sl_target=0.21156465, exit=0.21135308 (diff exato 0.1%)
+- D-02: cascade bypassava streak_min 4→3 via `max(1, streak_min-1)` — paradoxo de design (cascade deveria exigir mais, não menos)
+- D-01: cascade aplicava relax_factor=0.6 uniformemente → final_min_exp=0.015 (vs 0.025 normal). XRP/ADA com exp>0.015 e ema4h=-2 passavam o gate final
+
+**Critérios de reversão:**
+- D-02: winner legítimo com cascade=True e streak=3 bloqueado → reverter `final_cvd_streak` para cascade
+- D-01: altcoin com ema4h=-2 + cascade com WR>50% em 5+ trades → revisar threshold -2
+
+### Itens registrados para acompanhamento Brain
+
+- **D-04** (tasks.md): ema4h=0 WR=22% em 9 trades, -$9.13 — aguarda 50 trades para gate ou penalidade
+- **D-05** (tasks.md): RIFUSDT 284 bloqueios lsr_trend_not_negative — cross com preço do período → alimenta Path B
+
+### Estado pós-restart (13/06 · pós-fixes)
+
+Bot reiniciado com D-01/D-02/D-03 ativos. Aguardando logs pós-warmup 300s para validação.
+
+*Versão: 4.29 · Última atualização: 13/06/2026*
+
 ### Blacklist zerada
 
 `preferences.json → blacklist: []`
