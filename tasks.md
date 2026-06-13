@@ -1,5 +1,55 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.8_
+_Atualizado: 12/06/2026 · v3.9_
+
+---
+
+## 🔒 DECISÃO — DNA Freeze formal (autorizado Doreto · 12/06/2026)
+
+**Regra ativa a partir de agora:** nenhum gate novo, nenhuma mutação de parâmetro em `preferences.json` ou `signal_engine.py` até **50 trades fechados** com o DNA de 12/06.
+
+**Exceções permitidas (sem nova autorização):**
+- Reversões já documentadas nos critérios de cada fix (D-HIGH-1, E3-gate-final, Fix A, E3 min_score, D-HIGH-2)
+- B-49 Opção A (já autorizada abaixo) — não é gate novo, é janela de silêncio ampliada
+- F-19 (já autorizado abaixo) — não é gate, é persistência de estado
+
+**O que conta como "50 trades":** trades fechados em `paper_closed.jsonl` com entry.timestamp posterior ao Hard Reset de 12/06 (~20:25 BRT).
+
+**Brain monitora.** Forge não implementa nada fora desta lista até Brain liberar.
+
+---
+
+## ✅ Forge — B-49 Opção A · ampliar silence_window 21:05 → 21:30 BRT · `signal_engine.py:314` · `(hash)`
+
+**Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha, escopo único).**
+
+**Evidência (Brain · B-49):** `reset_daily_history()` às 21:00 BRT zera ring buffer de 527 símbolos. Slopes (`exp:5m`, `oi_trend:5m`, `lsr_trend:5m`, `cvd_change_pct:5m`) levam ~30 min para reconstruir. Gate atual cobre apenas 20:50–21:05 BRT — janela descoberta de 25 min. Horário crítico: 00:00 UTC = funding rate da Binance (ciclo 8h), maior pressão de fechamento de shorts do dia.
+
+**Diff exato (Variante R-07):**
+```python
+# signal_engine.py — gate silence_window_2100
+# Localizar a condição que define o fim da janela de silêncio (atualmente 21:05 BRT)
+# ANTES: hora == 21 and minuto <= 5   (ou equivalente no código)
+# DEPOIS: hora == 21 and minuto <= 30
+```
+> Forge localiza a linha exata e aplica. A lógica pode estar como string "21:05" ou como comparação de minutos — verificar antes de editar.
+
+**Critério de validação:** `silence_window_2100` aparece em `signal_refusals.jsonl` até 21:30 BRT na próxima virada.
+
+**Nota:** Opção B (usar `price_at_reset` como baseline) permanece no backlog B-49 para implementação futura com evidência de 3 casos.
+
+---
+
+## ✅ Forge — F-19 · `_post_trade_pending` reconstruction no boot · `paper_tracker.py:279` · `e451f19` (Brain) → revisado Forge
+
+**Autorizado por Doreto em 12/06/2026.**
+
+**Problema confirmado (Forge · R-01):** `_post_trade_pending` é 100% in-memory — não é persistido em disco. Ao reiniciar, todos os trades aguardando snapshots de 4h/12h/24h são perdidos silenciosamente. Post-Trade Impact (alpha decay) está sistematicamente incompleto — impacta diretamente a capacidade de validar T-01, T-02 e T-06.
+
+**Solução (Forge):** reconstruir `_post_trade_pending` no boot dentro de `_load_disk_state()` — iterar trades em `paper_closed.jsonl` com `post_trade.snapshots` incompletos (faltando `4h`/`12h`/`24h`) e `exit.time` nas últimas 24h. Reinsere na fila de monitoramento. Sem nova infraestrutura, sem mudança de schema.
+
+**Escopo:** ~20–30 linhas em `paper_tracker.py`. Requer soft restart para entrar em efeito.
+
+**Impacto:** alpha decay completo disponível para auditoria Brain + ARIA. T-01/T-02/T-06 deixam de ser cegas para comportamento pós-saída.
 
 ---
 
