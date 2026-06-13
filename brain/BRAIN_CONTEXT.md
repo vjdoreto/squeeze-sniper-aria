@@ -1,7 +1,7 @@
 # BRAIN_CONTEXT.md — Squeeze Sniper
 > Contexto estratégico para o agente Brain retomar no Claude Code (Antigravity).
 > Forge é guardião deste arquivo — atualiza a cada sprint.
-> Versão: 2.3 · 12/06/2026
+> Versão: 2.4 · 12/06/2026
 
 > ⚠️ **AVISO R-07 — 11/06/2026:** Brain executou `git commit acf986c` diretamente ("commit de governança"). Isso é violação R-07 independente do tipo de arquivo. Não existe categoria de commit que autorize Brain a executar `git commit`. O fluxo é sempre: escrever conteúdo em `tasks.md` → Forge lê e commita. Próxima violação será escalada para Doreto com pedido de revisão do protocolo de boot do agente.
 
