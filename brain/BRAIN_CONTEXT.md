@@ -160,4 +160,25 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 | **E1/E2 gaps nos ghosts — HISTÓRICOS, não gap atual** | 37 casos E1 e 10 casos E2 com cascade=True em ghost_signals eram de 22:58 (11/06) e 00:44 (12/06) — anteriores ao restart que carregou o fix. Zero ocorrências pós-restart. ghost_signals.jsonl acumula desde o boot anterior — sempre verificar timestamps antes de diagnosticar gap. | 12/06 |
 | **BTC/ETH/DOGE final_gate_fail com cascade — CORRETO** | Large caps bloqueados por exp baixo no gate final. SUI $14.4k liq e XRP $168k liq tiveram zero movimento (post4h: -2.1% e -1.8%). SS não opera em large caps — EXP gate é proteção estrutural permanente. Decisão: não bypassar exp para cascade. | 12/06 |
 
-*BRAIN_CONTEXT.md v2.3 · Forge é guardião · 12/06/2026 — Sessão 3ª: E3-gate-final + cvd_streak logging + Hard Reset Paper. 8 fixes totais hoje. Coleta limpa iniciada.*
+---
+
+## 8. DNA Freeze — Ativo desde 12/06/2026
+
+**Regra:** nenhum gate novo, nenhuma mutação de parâmetro até 50 trades fechados com o DNA de 12/06.
+
+**Baseline do freeze:** Hard Reset Paper ~20:25 BRT · 12/06/2026. Contar trades em `paper_closed.jsonl` com entry.timestamp posterior a esse horário.
+
+**Exceções já executadas (não reabrir):**
+- B-49 Opção A: silence_window 21:05 → 21:30 BRT · `signal_engine.py:314` · `d594966`
+- F-19: `_post_trade_pending` reconstruction — já estava implementado (`e451f19`), soft restart ativou. Log esperado: "F-19: X trade(s) reinseridos" no próximo boot com trades recentes.
+
+**O que Brain monitora até 50 trades:**
+- WR geral — baseline esperado > 50%
+- Fix A: WR trades com `oi_accel` entre -0.05 e 0.0 — reversão se WR < 45% em 20+
+- B-34 bypass: WR trades com `lsr_bypass_active=True` — reversão se WR < 50% em 20+
+- D-HIGH-1: nenhum winner legítimo bloqueado por `cvd_negative_cascade_entry`
+- Alpha decay 4h/12h/24h completo aparecendo em `paper_closed.jsonl` pós-F-19
+
+**Fix B (F-18 bypass cascade para ema4h=-4):** aguarda WR de 20+ trades com Fix A ativo. Brain decide após análise.
+
+*BRAIN_CONTEXT.md v2.4 · Forge é guardião · 12/06/2026 — Sessão 5ª: DNA Freeze autorizado · B-49 Opção A + F-19 concluídos · backlog atualizado (B-22 fechado, B-33 expandido, B-57 novo) · coleta limpa ativa.*

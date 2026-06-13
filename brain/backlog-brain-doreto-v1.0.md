@@ -418,20 +418,9 @@ Com 42+ trades acumulados o padrão se confirmou consistentemente: winners médi
 **Não implementar gate adicional de CVD bruto** — volume_quality já captura este comportamento.
 
 ### B-22 — Volume de signal_refusals possivelmente inflado
-**Status:** Hipótese observacional · aguarda análise com dados  
-**Origem:** Observação do Doreto · 04/06/2026
+**Status:** ✅ FECHADO — comportamento esperado confirmado pelo Forge · 12/06/2026
 
-Em menos de 30 minutos após restart limpo o contador de refusals já ultrapassou 3.000. Doreto observa que sessões de 4-8h não parecem ter volume muito maior — sensação de que o número cresce rápido no início e desacelera depois, ou que está sendo inflado.
-
-**Duas hipóteses:**
-
-Hipótese A — volume real: o Sniper varre 200+ símbolos em ciclos contínuos de segundos. 10-20 refusals por ciclo × ciclos por minuto = milhares por hora. Comportamento correto.
-
-Hipótese B — inflação por múltiplos gates: `_maybe_log_refusal()` pode estar sendo chamado para cada gate que falha individualmente em vez de só o primeiro. Um símbolo que falha em 5 gates grava 5 refusals em vez de 1 — inflando o contador sem representar 5 oportunidades perdidas distintas.
-
-**Como confirmar:** analisar distribuição de refusals por símbolo por minuto com `reason_code` correto. Se mesmo símbolo aparece 50x no mesmo minuto com reason_codes diferentes — é inflação. Se distribuído entre símbolos — é volume real.
-
-**Próximo passo:** Brain analisa `signal_refusals.jsonl` após 30min de coleta para confirmar.
+**Resposta Forge:** 1 refusal por símbolo por ciclo de avaliação (primeiro gate que falha retorna). Não há inflação por múltiplos gates. Volume alto é real — scanner roda em ~527 símbolos a cada ciclo. Pico inicial é warmup (warmup_metrics_none, rsi_1h_warmup dominam os primeiros minutos). Nada a investigar.
 
 ### B-23 — ghost_signals.jsonl — log persistente de sinais bloqueados no último gate
 **Status:** Backlog · aguarda volume para justificar implementação  
@@ -669,8 +658,25 @@ Campos e gates novos que precisam ser verificados no `live_tracker.py` antes do 
 
 ---
 
+**PARIDADE 12/06/2026 — 10 fixes a verificar em `live_tracker.py` antes do Live**
+
+> Fixes implementados em `paper_tracker.py` / `signal_engine.py` em 12/06. Todos precisam de auditoria de paridade com `live_tracker.py`.
+
+- [ ] **D3 — gate `liq_required_no_cascade`** · `signal_engine.py:688` · `6d9554d` — gate em signal_engine, deve ser compartilhado; verificar se live_tracker herda corretamente
+- [ ] **D4 — bônus `ema_trend_1h` removido** · `market_view.py:102` · `6d9554d` — `calculate_fit_score()` é compartilhado; confirmar que live usa mesmo market_view
+- [ ] **D6 — gate `overextension_double`** · `signal_engine.py:699` · `6d9554d` — idem D3
+- [ ] **D7 — gate `lsr_multiframe_divergence`** · `signal_engine.py:707` · `6d9554d` — idem D3
+- [ ] **E1 — bypass `oi_trend_too_weak` para cascade** · `signal_engine.py:787` · `aa5d2ee` — idem D3
+- [ ] **E2 — bypass `lsr_trend_not_negative` para cascade** · `signal_engine.py:797` · `aa5d2ee` — idem D3
+- [ ] **E3-gate-final — bypass `oi_accel` cascade no gate final** · `signal_engine.py:966` · `4129488` — idem D3
+- [ ] **D-URGENTE-1 — SL fill no sl_price target** · `paper_tracker.py` · `7ebc3b8` — ⚠️ CRÍTICO: lógica de saída em `live_tracker.py` pode ter bug idêntico; Forge audita antes do Live
+- [ ] **D-HIGH-1 — gate `cvd_negative_cascade_entry`** · `signal_engine.py` · `d256018` — gate compartilhado; verificar
+- [ ] **D-HIGH-2 — throttle 4h após stop_loss hit** · `risk_manager.py` + `main.py` · `d2eac09` — `risk_manager.py` é compartilhado; verificar se `extend_cooldown()` é chamado no Live também
+
+---
+
 _Este checklist é alimentado a cada sprint. Nenhum item pode ser pulado._  
-_Última atualização: 06/06/2026 · Sprint 3 EA_
+_Última atualização: 12/06/2026 · 10 fixes de 12/06 adicionados (Brain · deliberação Brain × Forge)_
 
 ---
 
@@ -1123,4 +1129,16 @@ Com esse combo: 60% taxa de move ≥+5% nas 2h seguintes (n=14, 1 dia — confir
 
 ---
 
-_Versão 3.9 · 12/06/2026 — B-51 a B-56 adicionados (Brain · sessão análise estrutural + proposta Path B Forge × Doreto)_
+### B-57 — Limite de 200 streams WebSocket Binance (risco pré-B-55)
+**Status:** Risco de infraestrutura · investigar antes de B-55 virar task  
+**Origem:** Forge · deliberação Brain × Forge · 12/06/2026
+
+A Binance limita 200 streams por conexão WebSocket. O SS hoje tem +527 símbolos com chunking de conexões — mas nunca foi auditado formalmente se todos os símbolos estão cobertos uniformemente.
+
+**Risco específico:** quando B-55 (ring buffers sub-minuto) for implementado, cada símbolo vai precisar de stream AggTrade em janelas de 10/20/30s. Isso pode dobrar o consumo de streams e quebrar o chunking atual silenciosamente.
+
+**Próximo passo:** antes de B-55 virar task, Forge audita `data_engine.py` — contar streams ativos por conexão, confirmar cobertura dos 527 símbolos, e estimar impacto de B-55 no consumo total. Brain registra como pré-requisito de B-55.
+
+---
+
+_Versão 4.0 · 12/06/2026 — B-22 fechado · B-33 expandido com 10 fixes de 12/06 · B-57 adicionado · DNA Freeze autorizado · B-49 Opção A + F-19 em tasks.md (Brain · deliberação Brain × Forge × Doreto)_

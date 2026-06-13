@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.26 · 12/06/2026
+- Versão atual: v4.28 · 12/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -449,6 +449,39 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 - Nenhum trade com loss > 8%
 
 **Próximo passo imediato:** coletar 20+ trades com regime atual (mae_guard, sizing $20, liq_cascade $500) → trazer logs ao Brain para análise → se padrões confirmados → Sprint 2.
+
+---
+
+## 🔧 Sprint 12/06/2026 — 5ª Sessão Forge: DNA Freeze + Backlogs + B-49 + F-19 (v4.28)
+
+### Sessão Brain × Forge × Doreto — deliberação de backlogs + fechamento
+
+**Análise cruzada dos backlogs (Forge × Brain × ARIA):**
+- Forge entregou análise independente dos backlogs Brain (v3.9) e ARIA (v1.1)
+- Brain validou 9 de 10 pontos, nuançou 2 (B-49 Opção B estrutural, B-51 não fundir com Path B ainda)
+- Resultado: B-22 fechado, B-33 expandido com 10 fixes de paridade live, B-57 novo (risco 200 streams)
+
+**DNA Freeze formalizado (autorizado Doreto · 12/06/2026):**
+- Zero gates novos, zero mutações de parâmetro até 50 trades fechados com DNA de 12/06
+- Baseline: Hard Reset Paper ~20:25 BRT · 12/06/2026
+- Exceções já executadas: B-49 Opção A + F-19
+
+**B-49 Opção A — `d594966`:**
+- `silence_window_2100` ampliada: 21:05 → 21:30 BRT (`signal_engine.py:314`)
+- Motivação: slopes levam ~30min para reconstruir pós-reset + janela de funding rate (00:00 UTC)
+- Validar na próxima virada: refusals `silence_window_2100` até 21:30 BRT
+
+**F-19 revisado e confirmado:**
+- `_rebuild_post_trade_pending()` em `paper_tracker.py:279` já implementado desde `e451f19`
+- Soft restart ativou — log "F-19: X trade(s) reinseridos" esperado no próximo boot com trades recentes
+- Desbloqueia alpha decay 4h/12h/24h completo para análise T-01/T-02/T-06
+
+**Estado do bot pós-restart (22:05 BRT):**
+- Uptime 427s · warmup concluído · score máximo 76 (threshold 78 — 2pts abaixo)
+- Pipeline F-12 funcional: TRUMPUSDT $23k, VELVETUSDT $5.6k já aparecem nos refusals
+- 32 trades acumulados pós-Hard Reset — coleta em andamento para meta de 50
+
+**Próxima sessão (pendente):** devolutivas ARIA — análise dos itens A-NEW-1/A-NEW-2/A-NEW-3 do backlog ARIA
 
 ---
 
