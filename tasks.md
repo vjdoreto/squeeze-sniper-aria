@@ -1,25 +1,18 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.7_
+_Atualizado: 12/06/2026 · v3.8_
 
 ---
 
-## [ ] Forge — Fechar sessão ARIA (12/06)
-    Commitar e push nos dois repos:
-    - aria/backlog-aria-doreto-v1.0.md (v1.1 — A-06/A-07/A-08/A-09 adicionados: estudos preparatórios Path B)
-    - aria/scripts/analyze_path_b.py (script E-01/E-04 gerado na sessão)
-    - tasks.md (este item)
-    Mensagem sugerida: "docs(aria): backlog v1.1 — Path B estudos A-06 a A-09 + script analyze_path_b.py"
+## ✅ Forge — Fechar sessão ARIA (12/06) · DONE
+    a3dde1c: aria/backlog-aria-doreto-v1.0.md + aria/scripts/analyze_path_b.py + tasks.md
+    Push origin ✅ · aria ✅
 
 ---
 
-## [ ] Forge — Fechar sessão Brain + ARIA (12/06 — 4ª sessão)
-    Commitar e push nos dois repos:
-    - brain/backlog-brain-doreto-v1.0.md (v3.9 — B-51 a B-56 adicionados: RIFUSDT-type, Path B completo, coleta forçada, score discriminação, ring buffers, dois paths DNA)
-    - brain/BRAIN_CONTEXT.md (v2.3 — sem alteração nesta sessão)
-    - aria/backlog-aria-doreto-v1.0.md (v1.1 — A-06/A-07/A-08/A-09 adicionados: estudos preparatórios Path B)
-    - aria/scripts/analyze_path_b.py (script E-01/E-04 gerado na sessão ARIA)
-    - tasks.md (este item)
-    Mensagem sugerida: "docs(backlog): sprint 12/06 4ª sessão — Path B Momentum Rider + B-51/56 Brain + A-06/09 ARIA"
+## ✅ Forge — Fechar sessão Brain + ARIA (12/06 — 4ª sessão) · DONE
+    a3dde1c: backlogs B-51/56 + A-06/09 + analyze_path_b.py + tasks.md
+    0ca8512: context.md v4.26 + aria/ARIA_CONTEXT.md v1.11
+    Push origin ✅ · aria ✅
 
 ---
 

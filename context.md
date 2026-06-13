@@ -476,6 +476,36 @@ Sessão sem código. Foco em análise estratégica e planejamento.
 
 ---
 
+## 🔧 Sprint 12/06/2026 — Sessão Forge (v4.27)
+
+### Análise de boot pós-Hard Reset (20:25–21:00 BRT)
+
+Bot reiniciado com os 8 fixes do dia ativos. Warmup concluído às 20:30:33. Análise dos logs e ghost signals revelou:
+
+- **Pipeline F-12 funcional** desde o segundo 9 do boot (DIAG F-12 #1: TRUMPUSDT $107)
+- **RIFUSDT score=100 bloqueado por `lsr_trend_not_negative`** (lsr=-0.051 > -0.3) — near-miss estrutural registrado como evidência para Path B
+- **ATUSDT score=76 com liq=$14k** — 2 pts abaixo do threshold 78; oi_trend negativo derrubando o score
+- **score_below_threshold domina 76% dos refusals** — mercado em regime misto/bearish na janela analisada
+- Nenhum bug de DNA identificado — silêncio é mercado, não falha de sistema
+
+### Sessão estratégica — Path B Momentum Rider formalizado
+
+Discussão Forge × Doreto resultou em proposta formal de segunda estratégia embarcada no SS:
+
+**Path B — Momentum Rider:** detecta início de movimento direcional (não evento de cascade). Horizonte 5–30min, leverage 3–5x, trailing largo, saída por reversão de tendência. Universo ~50-80 símbolos com tendência limpa (mapeado pela ARIA: E-04).
+
+**Pré-requisito inegociável:** Path A (cascade) validado com 50+ trades e KPIs GO/LIVE atingidos antes de qualquer desenvolvimento de Path B.
+
+**Estudos em andamento:**
+- E-01 (ARIA): edge validado com 14 observações — 60% com 4 critérios (lsr_trend:1h ≤ 0 como discriminador central)
+- E-04 (ARIA): 28 símbolos mapeados com tendência sustentada limpa
+- B-51 a B-56 (Brain backlog): definição formal, case model, checklist pré-requisitos
+- A-06 a A-09 (ARIA backlog): continuidade dos estudos para múltiplos regimes
+
+**Commits desta sessão:** `a3dde1c` (backlogs + script) · `0ca8512` (context v4.26 + ARIA_CONTEXT v1.11)
+
+---
+
 ## 🔧 Sprint 12/06/2026 — Análise Profunda + 8 Fixes (v4.25)
 
 ### Origem
