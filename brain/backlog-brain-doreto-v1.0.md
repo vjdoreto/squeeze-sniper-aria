@@ -945,3 +945,182 @@ VELVET com exp:5m=0 enquanto subia +95% — estava no universo dos 288 mas sem k
 **Validar na próxima sessão:** log de boot `Bootstrap klines: top50=50 + volume_recente=X → Y únicos` — confirma expansão. Ativos que "acordam" no dia devem ter exp:5m populado desde o início.
 
 ---
+
+### B-51 — RIFUSDT-type: lsr_trend flat com CVD explosivo + FR negativo bloqueado
+**Status:** Evidência inicial · backlog · 12/06/2026
+**Origem:** Brain · análise ghost signals sessão 12/06
+
+4 ghost signals consecutivos RIFUSDT: score=100, CVD=61.3%, trades=182–194, FR=-0.000496 (shorts pagando), ema_trend=6/máx, ema_trend_4h=2 — bloqueados por `lsr_trend_not_negative` com lsr_trend=-0.051 (threshold exige ≤ -0.3).
+
+**A questão:** lsr_trend=-0.051 é ruído (gate correto) ou acumulação legítima onde shorts não estão fugindo mas também não estão chegando? Com FR negativo, shorts estão pagando para manter — esse é sinal de curto-circuito iminente sem necessariamente ter LSR despencando ainda.
+
+**Por que não virou task agora:** n=4 casos, 1 símbolo, zero trades com esse perfil para saber se o movimento aconteceu. R-02 exige n≥10.
+
+**Critério para virar task:** identificar 10+ ocorrências de lsr_trend entre -0.05 e -0.3 com CVD>30% + FR negativo nos ghost signals. ARIA verifica se esses ativos subiram após o bloqueio. Se WR hipotético >60% → propor ajuste de threshold com evidência.
+
+**Próximo passo:** quando ARIA analisar o próximo lote de ghost_signals.jsonl, filtrar esse perfil e reportar ao Brain.
+
+---
+
+### B-52 — Dois paths de DNA: squeeze clássico vs demand breakout
+**Status:** Questão estratégica aberta · 12/06/2026
+**Origem:** Brain · análise estrutural do DNA atual
+
+O DNA atual tenta servir dois padrões físicos distintos com bypasses paralelos:
+
+**Squeeze clássico:** LSR despencando agressivamente (≤ -0.3), liq_cascade=True, OI subindo — colapso institucional de longs alavancados. Gates projetados para isso.
+
+**Demand breakout (B-34-type):** CVD explodindo, FR negativo/neutro, LSR flat ou mildamente negativo (-0.05 a -0.3) — entrada de capital comprador progressiva que força fechamento de shorts gradualmente. Não tem a violência do cascade mas tem direção confirmada.
+
+**O problema de ter os dois no mesmo DNA:** cada bypass adicionado para o demand breakout (B-34, lsr_bypass) cria superfície de falso positivo para o squeeze clássico e vice-versa. As regras de evidência se confundem.
+
+**Questão para Doreto:** o SS foi projetado como sniper de cascade. Demand breakout é um padrão diferente com horizonte diferente (minutos vs segundos). Queremos realmente os dois? Ou especializamos o SS clássico e criamos um path B separado só quando o clássico estiver validado com 50+ trades?
+
+**Pré-requisito para decidir:** 50+ trades limpos com DNA atual. Com a amostra, Brain separa trades por perfil de entrada e vê qual path tem melhor WR.
+
+---
+
+### B-53 — Fase de coleta forçada: DNA freeze por 2–3 dias
+**Status:** Proposta estratégica · 12/06/2026
+**Origem:** Brain · observação sobre ritmo de sprints vs validação
+
+**O problema identificado:** cada sprint adiciona gates. Mais gates = menos trades. Menos trades = validação mais lenta. Após o Hard Reset de 12/06, estamos com zero trades e DNA completamente novo. Existe risco real de calibrar para sempre sem confirmar se o core thesis funciona.
+
+**Proposta:** depois que o DNA estiver estável por 1–2 sessões sem bugs novos visíveis, declarar formalmente um "DNA freeze" — nenhum gate novo, nenhuma mutação de parâmetro, por 2–3 dias de coleta. Objetivo único: chegar a 50 trades com o mesmo DNA para responder a pergunta fundamental.
+
+**O que fazer durante o freeze:** Brain analisa logs, ARIA analisa eAssets, registra tudo no backlog. Zero implementação. Forge disponível para bugs críticos (D-URGENTE) mas não para calibrações.
+
+**Critério de término:** 50 trades fechados com WR e PF calculáveis — daí Brain/Doreto decide: go/no-go live, ou nova rodada de calibrações com evidência real.
+
+**Quando ativar:** Doreto decide. Brain recomenda após 2 sessões limpas consecutivas sem SL catastrófico.
+
+---
+
+### B-54 — O Squeezometer discrimina? Questão estrutural sem resposta
+**Status:** Questão estratégica aberta · 12/06/2026
+**Origem:** Brain · análise histórica + padrão observado
+
+Identificado em 03/06: diferença de 0.7pts entre winners (96.4) e losers (95.7). Score 100 com MFE=0 documentado múltiplas vezes. Adicionamos gates que bloqueiam losers óbvios, mas o Squeezometer em si — o número que aparece na tela — ainda não prediz qualidade de entrada.
+
+**A questão real:** os gates que adicionamos são a inteligência do sistema, ou o score deveria fazer isso? Existe uma versão do Squeezometer onde score 85 entra e score 78 não entra de forma confiável? Ou o threshold é só um filtro de sanidade e a discriminação real vem dos gates individuais?
+
+**Por que importa:** se o score não discrimina, continuar calibrando o threshold (78, 80, 85, 90) é perda de tempo — o que importa são os gates. Se discrimina mas está mal calibrado, os pesos dos componentes precisam de revisão com dados reais.
+
+**Como responder:** após 50+ trades limpos, Brain roda análise discriminante: score médio winners vs losers, dispersão por componente (qual componente do score mais diferencia?). Se diferença < 3pts → score é ornamental, gates são a inteligência real. Se diferença > 5pts → score tem valor preditivo, vale calibrar pesos.
+
+**Próximo passo:** aguarda B-53 (coleta forçada de 50 trades).
+
+---
+
+### B-55 — Ring buffers sub-minuto: prioridade real antes do Live
+**Status:** Backlog estratégico · reafirmado 12/06/2026
+**Origem:** Brain · análise do gap de timing do SS
+
+O horizonte real de uma squeeze de liquidação em altcoin é 60–180 segundos. O SS entra com decisão em dados de 5m. Até o sinal disparar, parte do movimento já aconteceu — daí os squeeze_failed com MFE=0 em ativos que depois subiram.
+
+O app eAssets já opera em segundos. O SS opera em minutos. Esse gap é onde o edge vai embora.
+
+**O que é:** ring buffers de 10s/20s/30s alimentados pelo AggTrade WebSocket já existente. Campos novos: `price_change:30s`, `cvd_delta:10s`, `trades_rate:20s`. Se nenhum confirmar momentum atual no momento do sinal → não entra, independente do score.
+
+**Por que é mais importante do que parece:** não é um gate a mais — é a diferença entre entrar no setup e entrar no início do movimento. Atualmente o SS entra no setup. Com sub-minuto, entra quando o movimento começou de fato.
+
+**Pré-requisito:** 50+ trades para confirmar que o padrão de "entrou no setup mas o squeeze veio depois" é recorrente (não só os casos documentados de ZAMA/JTO/VIC em 03/06).
+
+**Próximo passo:** pós B-53 (coleta forçada). Brain analisa squeeze_failed com Post-Trade Impact positivo e quantifica o gap de timing. Se padrão recorrente → vira task prioritária pré-Live.
+
+---
+
+---
+
+### B-56 — Path B: Momentum Rider (proposta Forge × Doreto · 12/06/2026)
+**Status:** Backlog de estudo · zero código até Path A validado (50+ trades, KPIs GO/LIVE)
+**Origem:** Sessão Forge × Doreto · 12/06/2026
+**Supersede:** B-52 (absorvido aqui com expansão)
+
+#### O que é
+
+Path A (SS atual) é sniper de evento pontual — detecta cascade, extrai momentum de 90–300s. Path B é diferente na física: detecta início de movimento direcional antes de ele ser óbvio — acumulação terminando, força relativa aparecendo. Entra cedo, deixa o trade respirar, extrai a perna completa.
+
+São complementares. Path A opera em segundos, Path B em minutos. Não concorrem — coexistem.
+
+#### Evidência que sugere edge (caso RIFUSDT · 12/06)
+
+Score=100, CVD=61.3%, RSI:1h=82.5, EMA=6/máx, EMA:4h=+2, FR=-0.000496 (shorts pagando), lsr_trend=-0.051. Path A rejeitou por lsr_trend > -0.3. O threshold foi calibrado para shorts capitulando em massa — confirmação tardia. lsr_trend=-0.051 com esse DNA pode ser exatamente o onset de Path B: shorts começando a sentir pressão, não capitulando ainda.
+
+#### Diferenças fundamentais Path A vs Path B
+
+| Dimensão | Path A — Cascade | Path B — Momentum |
+|----------|-----------------|-------------------|
+| Gatilho | liq_cascade + CVD spike | ema alinhado + range_level + exp_btc crescendo |
+| Hold time | 90–300s | 5–30 min |
+| Stop loss | 2.5% | 3–5% |
+| Leverage | 10x | 3–5x |
+| Trailing | 75% callback rápido | largo, segue tendência |
+| Exit lógica | squeeze_failed + tempo | reversão de tendência |
+| Dados chave | liq_short_1m, liq_cascade | ema multi-TF, range_level:1h, exp_btc:1h |
+
+O trailing atual mata Path B — callback de 75% em 90s fecha antes da segunda perna existir.
+
+#### Estudos necessários antes de qualquer código
+
+**E-01 → ARIA** (pode começar nos snapshots históricos já disponíveis):
+Para cada ativo nos snapshots eAssets com ema_trend_4h ≥ +4 + range_level:1h ≥ 3 + exp_btc:1h > 10 — qual foi o movimento nas 2h seguintes? Se <40% geraram move de 5%+ → sem edge, proposta descartada.
+
+**E-02 → Brain** (aguarda B-53 — coleta forçada):
+Definir o "onset detector" com base nos dados reais. Candidatos: (a) primeiro candle 5m fechando com CVD acelerando 2 ciclos consecutivos; (b) exp_btc:1m cruzando zero com exp_btc:1h já positivo; (c) range_level:5m subindo de 0 para ≥2 com ema_trend_4h≥+4. Qual tem base nos dados? Brain define, Doreto aprova.
+
+**E-03 → Brain** (aguarda coleta de 50+ trades limpos):
+Nos trades fechados: qual percentual teve MFE > 8% e saiu com <3%? Isso quantifica o custo do trailing agressivo atual e fundamenta a necessidade de trailing diferente no Path B.
+
+**E-04 → ARIA** (pode começar nos snapshots históricos):
+Mapear quais símbolos têm padrão de tendência limpa (move 10%+ sustentado por 15min+) vs reversão imediata. Define o universo candidato Path B — estimativa Forge: 50–80 símbolos, não 527.
+
+**E-05 → Brain + Forge** (futuro — após evidência dos estudos acima):
+Implementar Path B como modo observacional puro. Zero entradas reais. Logar sinais que teriam entrado e o que teria acontecido. Coletar 2–3 semanas em paralelo com Path A rodando.
+
+#### O que Path B NÃO é
+
+- Não é gate a mais no Path A — são pipelines separados, capital separado
+- Não é swing trading de dias — continua intraday Futures, horizonte de minutos
+- Não é prioridade agora — Path A precisa de validação primeiro
+- Não substitui o cascade — coexistem
+
+#### Definição formal do Path B (aprovada Brain · 12/06/2026)
+
+Após E-01 ARIA, os 4 critérios de entrada confirmados:
+```
+ema_trend:4h ≥ +4
+range_level:1h ≥ 3
+exp_btc:1h > 10
+lsr_trend:1h ≤ 0   ← discriminador central (adicionado pós E-01)
+```
+Com esse combo: 60% taxa de move ≥+5% nas 2h seguintes (n=14, 1 dia — confirmar em mais dados).
+
+**EPICUSDT-type (LSR positivo, subiu mesmo assim):** é demand breakout (B-34-type), não Path B. Não incluir — diluiria o critério lsr:1h ≤ 0 que é o discriminador central.
+
+**FR como sinal de qualidade adicional (hipótese — n=2 ainda):** FR > +0.001 + lsr:1h ≤ 0 → move esperado maior (ESPORTSUSDT +12.7% e +58.5%). FR neutro + lsr:1h ≤ 0 → move menor mas edge presente. Formalizar em dois tiers após 20+ observações.
+
+**Universo candidato E-04 (ARIA · 12/06):** ~40 símbolos.
+- Tier 1 (acumulação sustentada máxima, 4/4 snaps): MANTAUSDT, BROCCOLIF3BUSDT, ASRUSDT, SOONUSDT
+- Tier 2 (tendência pura): PARTIUSDT, USUSDT, STGUSDT, VELVETUSDT, AIOUSDT, BEATUSDT, BRUSDT, BANKUSDT, CRVUSDT, ARCUSDT + outros
+- Tier 3 (3/4 snaps): AIOTUSDT, OPENUSDT, ESPORTSUSDT, EPICUSDT, FHEUSDT, ZEREBROUSDT
+- EXCLUÍDOS: SPACEUSDT (slippage A-05), BTCDOMUSDT (rever)
+- Zona cinza (monitorar): GWEIUSDT, CCUSDT, BIOUSDT
+
+**Case model confirmado:** ESPORTSUSDT — +12.7% (S2→S3) e +58.5% (S3→S4) com lsr_trend:1h negativo e FR extremo. Mesmo ativo que foi -43% no Path A (cascade). Confirma que são físicas distintas — o que mata no Path A funciona no Path B.
+
+**Pendência E-01:** N=14, 1 dia, 1 regime. ARIA precisa de snapshots de 3-5 dias com regimes distintos (BTC lateral, BTC subindo, fim de semana) antes do estudo ser robusto o suficiente para formalizar onset detector.
+
+#### Checklist de pré-requisitos (Brain monitora)
+
+- [ ] Path A: 50+ trades com DNA atual
+- [ ] Path A: WR ≥ 55%, PF ≥ 1.3
+- [x] E-01 ARIA: validação inicial concluída (60% com 4 critérios · N=14 · ampliar para 3-5 dias)
+- [ ] E-01 ARIA: confirmação em múltiplos regimes (3-5 dias de snapshots)
+- [ ] E-02 Brain: onset detector aprovado por Doreto (aguarda E-01 completo)
+- [x] E-04 ARIA: universo ~40 símbolos mapeado (Tier 1-3 + zona cinza)
+- [ ] Autorização Doreto para iniciar E-05 (fase ghost)
+
+---
+
+_Versão 3.9 · 12/06/2026 — B-51 a B-56 adicionados (Brain · sessão análise estrutural + proposta Path B Forge × Doreto)_

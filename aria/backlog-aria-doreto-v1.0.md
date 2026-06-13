@@ -194,5 +194,94 @@ Os dois snapshots disponíveis são de horários diferentes do dia (23:12 e 06:1
 
 ---
 
+## PATH B — MOMENTUM RIDER (estudos preparatórios · Brain · 12/06/2026)
+
+> Estes itens são observacionais puros. Nenhum gera demanda ao Forge. ARIA coleta e reporta ao Brain quando os critérios de acionamento forem atingidos.
+
+### A-06 — Continuação E-01: ampliar para múltiplos regimes
+**Status:** Ativo — coleta contínua
+**Origem:** Estudo E-01 · 12/06/2026 · N=14 insuficiente (1 dia, 1 regime)
+**Critério de acionamento:** 20-30 observações com regimes distintos (BTC lateral, BTC subindo, fim de semana)
+
+Estado atual: N=14 observações, todos de 11/06/2026, regime BTC bearish melhorando intraday. Padrões encontrados são encorajadores mas insuficientes para Brain formalizar o onset detector (E-02).
+
+Protocolo de coleta:
+- Tirar snapshots 2× por dia por 3-5 dias
+- Priorizar dias com regime distinto do 11/06: BTC lateral, BTC subindo forte, fim de semana
+- Para cada snapshot novo, aplicar os 4 critérios Path B (ema4h>=+4, range1h>=3, exp1h>10, lsr1h<=0) e registrar price_move no snapshot seguinte (>=2h depois)
+
+Quando atingir 20+ observações: ARIA reporta ao Brain com distribuição atualizada de move >=+5%. Se taxa mantiver >=40% → Brain define E-02 (onset detector). Se cair abaixo → Brain reavalia os critérios.
+
+Script de análise: `aria/scripts/analyze_path_b.py` já existe — basta rodar com novos snapshots.
+
+---
+
+### A-07 — FR como tier do Path B: monitorar e acumular
+**Status:** Ativo — acumulação de evidência
+**Origem:** Estudo E-01 · 12/06/2026 · N=2 (ESPORTSUSDT) insuficiente
+**Critério de acionamento:** 20+ observações com `funding_rate` registrado no momento do snapshot
+
+Hipótese a validar:
+- FR > +0.001 + lsr_trend:1h <= 0 = move esperado 10%+ nas 4-8h seguintes (Tier A)
+- FR neutro (-0.001 a +0.001) + lsr_trend:1h <= 0 = move 5-8% (Tier B)
+
+Base atual: ESPORTSUSDT × 2 (FR=+0.44% e +0.52%, moves de +12.7% e +58.5%). N muito baixo para separar tiers.
+
+Protocolo: a cada novo snapshot que tenha candidatos Path B confirmados (4 critérios), registrar o FR no momento e o move posterior. Acumular em tabela no próximo relatório ARIA ao Brain.
+
+Quando atingir 20+ observações: ARIA segmenta por faixa de FR, calcula MFE médio e WR por tier, reporta ao Brain para formalizar ou descartar os dois tiers. Se confirmado, Brain decide: gate separado no score Path B ou peso no sizing.
+
+---
+
+### A-08 — EPICUSDT-type: demanda vs resistência de shorts (LSR positivo ambíguo)
+**Status:** Ativo — monitoramento
+**Origem:** Exceção E-01 · 12/06/2026 · EPICUSDT +21% com lsr_trend:1h=+28.7
+**Critério de acionamento:** 10+ casos de LSR positivo que sobem vs 10+ casos que ficam flat
+
+Questão central: quando lsr_trend:1h positivo significa "longs entrando com força" (demand breakout — território B-34) vs "shorts resistindo e aguentando" (sinal negativo para Path B)?
+
+Observação inicial:
+- EPICUSDT (S3→S4): lsr1h=+28.7, move=+21.2% — longs dominando com força, movimento real
+- STARUSDT (S2→S3): lsr1h=+15.8, move=−8.0% — shorts resistindo, movimento falso
+- BROCCOLIF3BUSDT (S2→S3): lsr1h=+40.3, move=−0.2% — shorts muito positivos, flat
+- IOUSDT (S3→S4): lsr1h=+74.3, move=−3.4% — shorts dominantes, loser
+
+Padrão preliminar: LSR positivo extremo (>+30) sem OI crescendo = shorts resistindo = excluir. LSR positivo moderado (+15 a +30) com OI crescendo = pode ser demand = observar. N ainda insuficiente para regra.
+
+Protocolo: nos próximos snapshots, para ativos com ema4h>=+4 + lsr1h>0, registrar: lsr1h, oi_trend:1h, move posterior. Quando tiver 10+ de cada classe, ARIA propõe discriminador ao Brain.
+
+---
+
+### A-09 — Manutenção do universo Path B (E-04)
+**Status:** Ativo — manutenção contínua
+**Origem:** Estudo E-04 · 12/06/2026
+**Critério de atualização:** a cada sessão ARIA com novos snapshots
+
+Universo atual mapeado em 11/06/2026 (base de referência):
+
+**Tier 1 — Acumulação máxima sustentada (4/4 snaps, range_level:1h alto):**
+MANTAUSDT, BROCCOLIF3BUSDT, ASRUSDT, SOONUSDT
+
+**Tier 2 — Tendência pura sustentada (4/4 snaps, sem range alto):**
+PARTIUSDT, USUSDT, STGUSDT, VELVETUSDT, AIOUSDT, BEATUSDT, BRUSDT, BANKUSDT, CRVUSDT, ARCUSDT, HMSTRUSDT, FOLKSUSDT, BTCDOMUSDT*
+
+*BTCDOMUSDT: rever se faz sentido no Path B — não é altcoin
+
+**Tier 3 — Candidatos fortes mas menos consistentes (3/4 snaps):**
+AIOTUSDT (range 4/4), OPENUSDT (range 4/4), ZEREBROUSDT (range 3/4), ESPORTSUSDT (case model — +58% e +12%), EPICUSDT (exceção LSR — ver A-08), FHEUSDT, POWERUSDT, MORPHOUSDT, BASUSDT
+
+**Zona Cinza — Monitorar, sem posição ainda:**
+GWEIUSDT (range 4/4 mas LSR sistematicamente positivo — flat/loser em E-01), CCUSDT (range 4/4, só 2/4 snaps), BIOUSDT, MAGMAUSDT, JCTUSDT, RUNEUSDT, outros
+
+**Excluídos:**
+- SPACEUSDT — slippage extremo documentado (A-05 do backlog). Excluir independente da performance.
+
+Protocolo de atualização:
+- Símbolo que aparecer em Tier 1/2/3 por 3+ sessões consecutivas entra na lista permanente
+- Símbolo que deixar de aparecer com ema4h>=+4 por 2+ sessões consecutivas desce de tier ou sai
+- ARIA reporta ao Brain se houver mudança de >5 símbolos na composição do Tier 1/2
+
+---
+
 _Revisão periódica: sempre que ARIA e Doreto se reunirem._
-_Versão atual: 1.0 · 11/06/2026_
+_Versão atual: 1.1 · 12/06/2026_
