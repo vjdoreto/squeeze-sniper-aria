@@ -85,6 +85,192 @@ def _http_rate_limit(key: str, *, limit: int, window_seconds: float) -> None:
                 if not _HTTP_RATE_STATE[k]:
                     del _HTTP_RATE_STATE[k]
 
+_MOBILE_HTML = """<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+  <title>SS Monitor</title>
+  <style>
+    :root {
+      --bg: #080b0f; --card: #0f1520; --border: rgba(255,255,255,0.08);
+      --green: #2ecc71; --red: #e74c3c; --yellow: #f0a500; --blue: #3498db;
+      --text: #e8eaf0; --muted: #8892a4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; font-size: 14px; padding: 12px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .title { font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; color: var(--green); font-family: monospace; }
+    .conn { font-size: 0.72rem; color: var(--muted); }
+    .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; background: var(--red); }
+    .dot.ok { background: var(--green); }
+    .readonly-badge { background: rgba(240,165,0,0.12); color: var(--yellow); border: 0.5px solid rgba(240,165,0,0.4); font-size: 0.65rem; font-family: monospace; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+    .card { background: var(--card); border: 0.5px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; }
+    .card-title { font-size: 0.68rem; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 10px; font-family: monospace; }
+    .kpi-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .kpi { flex: 1; min-width: 80px; background: rgba(255,255,255,0.03); border-radius: 8px; padding: 10px; }
+    .kpi-label { font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; font-family: monospace; }
+    .kpi-value { font-size: 1.1rem; font-weight: 700; font-family: monospace; }
+    .pos { background: rgba(255,255,255,0.025); border-radius: 8px; padding: 10px 12px; margin-bottom: 6px; }
+    .pos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .pos-sym { font-weight: 700; font-family: monospace; font-size: 0.9rem; }
+    .pos-pnl { font-family: monospace; font-weight: 700; font-size: 0.9rem; }
+    .pos-meta { font-size: 0.68rem; color: var(--muted); font-family: monospace; }
+    .squeeze-bar { height: 8px; border-radius: 4px; background: rgba(255,255,255,0.06); margin-top: 8px; overflow: hidden; }
+    .squeeze-fill { height: 100%; border-radius: 4px; transition: width 0.5s, background 0.5s; }
+    .squeeze-val { font-size: 1.6rem; font-weight: 700; font-family: monospace; margin-bottom: 4px; }
+    .squeeze-label { font-size: 0.72rem; color: var(--muted); }
+    .cand-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+    .cand-row:last-child { border-bottom: none; }
+    .cand-sym { font-family: monospace; font-weight: 700; font-size: 0.85rem; }
+    .cand-score { font-family: monospace; font-size: 0.85rem; color: var(--green); }
+    .cand-meta { font-size: 0.65rem; color: var(--muted); font-family: monospace; }
+    .green { color: var(--green); } .red { color: var(--red); } .yellow { color: var(--yellow); }
+    .warmup-overlay { text-align: center; padding: 20px; color: var(--yellow); font-family: monospace; font-size: 0.85rem; }
+    .mode-badge { font-size: 0.7rem; font-family: monospace; padding: 2px 8px; border-radius: 4px; font-weight: 700; }
+    .mode-paper { background: rgba(46,204,113,0.1); color: var(--green); border: 0.5px solid rgba(46,204,113,0.4); }
+    .mode-live  { background: rgba(231,76,60,0.1);  color: var(--red);   border: 0.5px solid rgba(231,76,60,0.4); }
+    #lastUpdate { font-size: 0.65rem; color: var(--muted); text-align: center; margin-top: 8px; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="title">⚡ SQUEEZE SNIPER</div>
+      <span id="modeBadge" class="mode-badge mode-paper">PAPER</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+      <span class="readonly-badge">READ-ONLY</span>
+      <span class="conn"><span class="dot" id="dot"></span><span id="connTxt">conectando…</span></span>
+    </div>
+  </div>
+
+  <!-- Capital -->
+  <div class="card">
+    <div class="card-title">Capital & P&L</div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-label">Capital</div><div class="kpi-value" id="capital">—</div></div>
+      <div class="kpi"><div class="kpi-label">P&L Sessão</div><div class="kpi-value" id="pnl">—</div></div>
+      <div class="kpi"><div class="kpi-label">Trades</div><div class="kpi-value" id="trades">—</div></div>
+      <div class="kpi"><div class="kpi-label">Win Rate</div><div class="kpi-value" id="wr">—</div></div>
+    </div>
+  </div>
+
+  <!-- Squeezometer -->
+  <div class="card">
+    <div class="card-title">Squeezometer</div>
+    <div class="squeeze-val" id="sqVal">0</div>
+    <div class="squeeze-label" id="sqLabel">INATIVO</div>
+    <div class="squeeze-bar"><div class="squeeze-fill" id="sqFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- Posições abertas -->
+  <div class="card">
+    <div class="card-title">Posições Abertas (<span id="posCount">0</span>)</div>
+    <div id="positionsContainer"><div style="color:var(--muted);font-size:0.8rem;font-family:monospace;">Sem posições abertas</div></div>
+  </div>
+
+  <!-- Top candidatos -->
+  <div class="card">
+    <div class="card-title">Top Candidatos</div>
+    <div id="candidatesContainer"><div style="color:var(--muted);font-size:0.8rem;font-family:monospace;">Aguardando dados…</div></div>
+  </div>
+
+  <div id="lastUpdate">—</div>
+
+  <script>
+    const fmt2 = v => v == null ? '—' : v.toFixed(2);
+    const fmtPct = v => v == null ? '—' : (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    const fmtUsd = v => v == null ? '—' : '$' + v.toFixed(2);
+
+    function renderPositions(positions) {
+      const c = document.getElementById('positionsContainer');
+      const open = positions.filter(p => p.status === 'open');
+      document.getElementById('posCount').textContent = open.length;
+      if (!open.length) { c.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;font-family:monospace;">Sem posições abertas</div>'; return; }
+      c.innerHTML = open.map(p => {
+        const pnlPct = p.pnl_pct ?? 0;
+        const cls = pnlPct >= 0 ? 'green' : 'red';
+        const dur = p.duration_s ? Math.round(p.duration_s) + 's' : '—';
+        return `<div class="pos">
+          <div class="pos-header">
+            <span class="pos-sym">${p.symbol}</span>
+            <span class="pos-pnl ${cls}">${fmtPct(pnlPct)} (${fmtUsd(p.pnl_usd ?? null)})</span>
+          </div>
+          <div class="pos-meta">MFE ${fmtPct(p.mfe_pct ?? null)} · MAE ${fmtPct(p.mae_pct ?? null)} · ${dur} · Score ${p.score ?? '—'}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderCandidates(candidates) {
+      const c = document.getElementById('candidatesContainer');
+      if (!candidates || !candidates.length) { c.innerHTML = '<div style="color:var(--muted);font-size:0.8rem;font-family:monospace;">Aguardando dados…</div>'; return; }
+      c.innerHTML = candidates.slice(0, 8).map(cd => {
+        const sq = cd.status === 'squeeze' ? '🔥' : cd.status === 'potential' ? '🚀' : '—';
+        return `<div class="cand-row">
+          <div><div class="cand-sym">${sq} ${cd.symbol}</div><div class="cand-meta">EXP ${fmt2(cd.exp)} · OI ${fmt2(cd.oi_trend)} · LSR ${fmt2(cd.lsr_trend)}</div></div>
+          <div class="cand-score">${cd.score ?? '—'}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function updateSqueezometer(level) {
+      const val = Math.round(level ?? 0);
+      document.getElementById('sqVal').textContent = val;
+      const fill = document.getElementById('sqFill');
+      fill.style.width = val + '%';
+      const label = document.getElementById('sqLabel');
+      if (val >= 85) { fill.style.background = '#e74c3c'; label.textContent = '🚨 CRÍTICO'; label.className = 'squeeze-label red'; }
+      else if (val >= 70) { fill.style.background = '#f0a500'; label.textContent = '🟡 AQUECENDO'; label.className = 'squeeze-label yellow'; }
+      else { fill.style.background = '#2ecc71'; label.textContent = 'MONITORANDO'; label.className = 'squeeze-label'; }
+    }
+
+    function applySnapshot(d) {
+      const paper = d.paper ?? {};
+      const stats = paper.stats ?? {};
+      const capital = paper.capital ?? d.live?.capital ?? null;
+      const pnl = stats.total_pnl ?? null;
+      const totalTrades = (stats.wins ?? 0) + (stats.losses ?? 0);
+      const wr = totalTrades > 0 ? ((stats.wins ?? 0) / totalTrades * 100) : null;
+
+      document.getElementById('capital').textContent = capital != null ? '$' + capital.toFixed(2) : '—';
+      const pnlEl = document.getElementById('pnl');
+      pnlEl.textContent = fmtPct(pnl);
+      pnlEl.className = 'kpi-value ' + (pnl == null ? '' : pnl >= 0 ? 'green' : 'red');
+      document.getElementById('trades').textContent = totalTrades || '—';
+      document.getElementById('wr').textContent = wr != null ? wr.toFixed(0) + '%' : '—';
+
+      const mode = d.mode ?? 'paper';
+      const mb = document.getElementById('modeBadge');
+      mb.textContent = mode.toUpperCase();
+      mb.className = 'mode-badge ' + (mode === 'live' ? 'mode-live' : 'mode-paper');
+
+      updateSqueezometer(d.market_squeeze_level);
+      renderPositions(d.positions ?? []);
+      renderCandidates(d.candidates ?? []);
+
+      const now = new Date();
+      document.getElementById('lastUpdate').textContent = 'Atualizado ' + now.toLocaleTimeString('pt-BR');
+    }
+
+    function connect() {
+      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+      const ws = new WebSocket(proto + '://' + location.host + '/ws');
+      const dot = document.getElementById('dot');
+      const connTxt = document.getElementById('connTxt');
+
+      ws.onopen = () => { dot.className = 'dot ok'; connTxt.textContent = 'conectado'; };
+      ws.onclose = () => { dot.className = 'dot'; connTxt.textContent = 'reconectando…'; setTimeout(connect, 3000); };
+      ws.onerror = () => { dot.className = 'dot'; };
+      ws.onmessage = e => {
+        try { applySnapshot(JSON.parse(e.data)); } catch {}
+      };
+    }
+    connect();
+  </script>
+</body>
+</html>"""
+
 _DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -2902,6 +3088,10 @@ def create_app(
     @app.get("/", response_class=HTMLResponse)
     async def index():
         return HTMLResponse(_DASHBOARD_HTML)
+
+    @app.get("/mobile", response_class=HTMLResponse)
+    async def mobile():
+        return HTMLResponse(_MOBILE_HTML)
 
     @app.get("/favicon.ico", include_in_schema=False)
     async def favicon():

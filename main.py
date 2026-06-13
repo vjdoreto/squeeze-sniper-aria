@@ -427,13 +427,13 @@ async def trading_loop(
                 sq = state.market_squeeze_level
                 if sq >= 85:
                     last_panic = _safe_float(getattr(state, "_last_panic_ts", 0.0), 0.0)
-                    if now - last_panic > 300:  # cooldown 5min — crítico
+                    if now - last_panic > 900:  # cooldown 15min — crítico
                         asyncio.create_task(telegram.panic_warning(sq))
                         setattr(state, "_last_panic_ts", now)
                         setattr(state, "_last_warming_ts", now)  # reset warming ao enviar crítico
                 else:
                     last_warming = _safe_float(getattr(state, "_last_warming_ts", 0.0), 0.0)
-                    if now - last_warming > 300:  # cooldown 5min — aquecendo
+                    if now - last_warming > 1800:  # cooldown 30min — aquecendo
                         asyncio.create_task(telegram.market_warming(sq))
                         setattr(state, "_last_warming_ts", now)
             if state.market_paused:
