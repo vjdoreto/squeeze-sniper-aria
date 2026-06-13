@@ -712,6 +712,19 @@ class SqueezeIgnition:
             )
             return None
 
+        # D-E2 — cascade fantasma: aceleração (1.8×) com liq absoluta irrelevante (Brain/Forge 13/06/2026)
+        # MEUSDT $471, COAIUSDT $468, LABUSDT $41, TAOUSDT $320 → 4 squeeze_failed, -$13.65
+        # cascade=True com $41 é micro-aceleração, não colapso institucional.
+        # Critério de reversão: winner com cascade e liq<$1000 em 2+ sessões → revisar threshold.
+        _liq_cascade_abs = d.get("liq_short_1m_stable") or 0.0
+        if liq_cascade and _liq_cascade_abs < 1000:
+            self._maybe_log_refusal(
+                symbol,
+                "cascade_micro_liq",
+                {"liq_short_1m": _liq_cascade_abs, "threshold": 1000},
+            )
+            return None
+
         # D6 — overextension dupla (Brain/ARIA · 11/06/2026)
         # ema4h=+6 AND ema1h=+6 → WR=0% n=3, todos squeeze_failed. Ativo overextended nos 2 TFs.
         _ema_4h_oe = d.get("ema_trend:4h") or 0
@@ -835,8 +848,11 @@ class SqueezeIgnition:
         # Evidência: WAXPUSDT EMA:4h=-6, norm_1h=+1.378 → entrou → -16.93%.
         # Todos os grandes losers por max_hold/trailing em queda tinham EMA:4h=-6
         # com norm_1h positivo. O AND tornava o gate ineficaz.
+        # D-E1 (Brain/Forge 13/06/2026): ema4h≤-2 bloqueante — estende F-18 de -4 para -2.
+        # n=5 WR=0% em 2 sessões sem exceção. Large caps com macro bearish absorvem liq sem mover.
+        # Critério de reversão: winner legítimo com ema4h=-2 em 2+ sessões → revisar para -3.
         _ema_4h = d.get("ema_trend:4h")  # None = klines 4h ainda não carregadas (< 50 candles)
-        if _ema_4h is not None and _ema_4h <= -4:
+        if _ema_4h is not None and _ema_4h <= -2:
             self._maybe_log_refusal(
                 symbol,
                 "ema_4h_bearish",
