@@ -452,6 +452,40 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 
 ---
 
+## 🔧 Sprint 13/06/2026 — Sessão Forge: Boot validation + firewall mobile + análise D-E1/D-E2 (v4.31)
+
+### Sessão Forge × Doreto — 13/06/2026 noite
+
+**Sem código novo — sessão de validação operacional.**
+
+**Boot validado (16:19:42):**
+- Cache quente 665s ✅ · F-12 ativo segundo 14 (RIFUSDT $182) ✅
+- Warmup 300s concluído às 16:24:43 ✅
+- Liquidações reais captadas: ESPORTSUSDT $13.6k · RIFUSDT $10.2k · BEATUSDT $7k · MEGAUSDT $5.2k · VELVETUSDT $4.5k
+
+**D-E1 (ema_4h_bearish ≤ -2): 22 bloqueios confirmados ✅**
+Fora do top-5 porque score_below_threshold (99.7k) engole a maioria antes. Apenas ativos com score alto + ema4h≤-2 chegam ao gate.
+
+**D-E2 (cascade_micro_liq): 5 bloqueios confirmados ✅**
+Funcionando. Caso SYNUSDT (liq=303, cascade=True, squeeze_failed) investigado — D-E2 operou corretamente; 303 no signal dict vem do campo raw após reset de minuto, não do stable que D-E2 lê.
+
+**Primeiros 5 trades da coleta limpa:**
+| Símbolo | Exit | PnL% | ema4h | cascade |
+|---------|------|------|-------|---------|
+| VELVETUSDT | trailing_stop | +21.9% | 0 | True |
+| RIFUSDT | trailing_stop | +29.6% | 4 | True |
+| SYNUSDT | squeeze_failed | -19.6% | 2 | True |
+| BTWUSDT | trailing_stop | +3.8% | 0 | True |
+| RIFUSDT | max_hold | -24.0% | 4 | True |
+
+WR 3/5 = 60% · todos com cascade=True · todos com ema4h ≥ 0 (D-E1 correto)
+
+**Fix operacional:** regra de firewall Windows criada para porta 8765 — /mobile via Tailscale operacional.
+
+**Meta ativa:** 50 trades limpos pós-restart 13/06 → Brain libera DNA Freeze.
+
+---
+
 ## 🔧 Sprint 13/06/2026 — Sessão Tarde: 5 fixes + mobile + PaperAnalyzer fix (v4.30)
 
 ### Sessão Forge × Brain × Doreto — 13/06/2026 tarde

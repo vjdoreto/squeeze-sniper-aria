@@ -1,9 +1,9 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 13/06/2026 · v4.2_
+_Atualizado: 13/06/2026 · v4.3_
 
 ---
 
-## [ ] Forge — Fechar sessão Brain (13/06 — 7ª sessão)
+## ✅ Forge — Fechar sessão Brain (13/06 — 7ª sessão)
     Commitar e push nos dois repos:
     - brain/BRAIN_CONTEXT.md (v2.5 — D-E1/D-E2 documentados · PaperAnalyzer protocolo · D-E3 monitoramento)
     - brain/backlog-brain-doreto-v1.0.md (v4.1 — B-58 D-E3 monitoramento · B-59 squeeze_failed estrutural)
@@ -34,7 +34,7 @@ _Atualizado: 13/06/2026 · v4.2_
 
 ---
 
-## [ ] Forge — Boot checklist próxima sessão (13/06 — restart pendente)
+## ✅ Forge — Boot checklist próxima sessão (13/06 — restart pendente)
 
     1. Hard Reset Paper:
        - Deletar: logs\risk_state.json · logs\paper_opportunities.json · logs\throttle_state.json
