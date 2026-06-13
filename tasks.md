@@ -3,6 +3,19 @@ _Atualizado: 13/06/2026 · v4.1_
 
 ---
 
+## ✅ Forge — Validação pós-warmup 13/06 · logs analisados
+
+    Warmup 300s concluído às 10:53:14 — gatilho liberado.
+    Boot quente confirmado (cache 33s). F-12 ativo desde segundo 6.
+    D-01/D-02/D-03: sem erros de runtime.
+    final_gate_fail ausente do top-5 (era recorrente antes) — D-01 operando.
+    D3 liq_required_no_cascade: 60 bloqueios — funcionando.
+    Regime de mercado: lsr_trend_positive=251, score_below_threshold=1773 — LSR não caindo, mercado neutro/bearish.
+    Liquidações relevantes: TAOUSDT $9.4k, GWEIUSDT $1.6k, COAIUSDT $2.1k, RIFUSDT $1k.
+    Próximos trades validarão D-01/D-02 em condições reais.
+
+---
+
 ## [ ] Forge — Próxima sessão · Boot checklist 13/06
 
     1. Soft restart (Ctrl+C → python main.py)
