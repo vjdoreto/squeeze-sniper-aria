@@ -1169,4 +1169,21 @@ Evidência inicial: n=3 trades com ema1h=6 AND ema4h≤2, WR=0%, -$6.01. Forge r
 
 ---
 
-_Versão 4.1 · 13/06/2026 — B-58 adicionado (D-E3 monitoramento) · B-59 adicionado (squeeze_failed estrutural) · D-E1/D-E2 implementados (1e715e5) · PaperAnalyzer auto-apply desabilitado · baseline limpo estabelecido (Brain · sessão 7ª)_
+### B-60 — ema1h=6 dreno estrutural do sistema
+**Status:** Monitoramento ativo · análise após DNA Freeze (30 trades) · 13/06/2026
+**Origem:** Forge · análise profunda histórica · 8ª sessão
+
+**Evidência:** n=36 trades com ema1h=6, WR=33%, PnL=-159% acumulado. O overextension_double (D6) só cobre ema4h=6 AND ema1h=6. O perfil ema4h≤4 + ema1h=6 passa livre e é responsável pela maioria dos losers.
+
+Dentro do ema1h=6: squeeze_failed responde por 12/36 trades com WR=0% e PnL=-95%. O ativo está overextended em 1h = sem espaço para mover no horizonte do trade (90-180s).
+
+**O que Brain vai verificar após 30 trades limpos:**
+- ema1h=6 + ema4h≤4 continua com WR < 35%?
+- Se sim → propor penalidade no score (-5pts quando ema1h=6) ou gate bloqueante condicional
+- Comparar com D-E3 (ema1h≥4 + ema4h≤2) — pode ser absorvido ou refinado
+
+**Nota D-E4:** Brain propôs gate ema1h==0 bloqueante. Forge derrubou com evidência: 4 winners históricos com ema1h=0 (ESPORTSUSDT +96%, ENJUSDT +31%, ICXUSDT +3.4%, AIOTUSDT +8.8%). D-E4 cancelado permanentemente. Discriminador real em ema1h=0 é a liq — D-E2 já cobre o subgrupo perigoso.
+
+---
+
+_Versão 4.2 · 13/06/2026 — B-60 adicionado (ema1h=6 dreno estrutural · n=36 WR=33%) · D-E4 cancelado com nota permanente · DNA Freeze v2 ativo (30 trades) · 8ª sessão_

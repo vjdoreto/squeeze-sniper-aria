@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.30 · 13/06/2026
+- Versão atual: v4.33 · 13/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -573,6 +573,30 @@ PaperAnalyzer rodava a cada hora e mutava `preferences.json` silenciosamente (bl
 - Próximo stop_loss: confirmar exit_price = sl_target exato (D-03 ativo)
 
 **Push origin ✅ · Push aria ✅ · Requer soft restart**
+
+---
+
+## 🔧 Sprint 13/06/2026 — Sessão Forge: Análise WR 16% + throttle fix + DNA Freeze + restart limpo (v4.33)
+
+### Origem
+Brain realizou análise profunda do WR 16% (6 trades pós-restart D-E1/D-E2 em 13/06 noite). Forge cruzou dados independentemente. Consenso Brain × Forge × Doreto.
+
+### Achados
+- **Throttle gap (D-HIGH-2)**: `main.py:442` cobria só `stop_loss`, não `max_hold`. RIFUSDT entrou 2x no mesmo dia (-44% combinado). Fix: `last_exit_reason in ("stop_loss", "max_hold")`. Commit `95c1cfa`.
+- **B-60 descoberto**: ema1h=6 é o maior dreno — n=36, WR=33%, PnL=-159%. Post-freeze.
+- **D-E4 cancelado**: Brain propôs ema1h=0 como gate, Forge verificou 4 winners com ema1h=0 (incluindo ESPORTSUSDT +96%). Evidência insuficiente — discriminador é liq, não ema1h. D-E2 já cobre parte.
+- **Hard Reset Paper**: risk_state.json + paper_opportunities.json + throttle_state.json deletados. metric_state.json preservado.
+
+### DNA Freeze confirmado (Doreto + Brain + Forge · 13/06/2026 noite)
+Zero implementações até 30 trades limpos pós-restart (~20:25 BRT 13/06).
+Brain monitora: squeeze_failed >25% → B-55 sprint; <15% → avaliar go/no-go live.
+
+### Commits
+- `95c1cfa` — throttle fix (D-HIGH-2 cobre max_hold)
+- `b690735` — tasks.md v4.32 + context.md v4.32
+
+### Bot
+Reiniciado ~20:25:33 BRT. Warmup 300s concluído. Gatilho liberado. Cache quente 48s. DNA BLOCKER: score_below_threshold dominante.
 
 ---
 

@@ -189,4 +189,26 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 **Dados confiáveis para análise:** apenas trades coletados após restart dos commits `bc4093f` + `7121fe4` + `1e715e5` (13/06/2026). Trades anteriores foram coletados com PaperAnalyzer potencialmente corrompendo o DNA — são suspeitos para teses que dependem de DNA específico.
 
-*BRAIN_CONTEXT.md v2.5 · Forge é guardião · 13/06/2026 — Sessão 7ª: D-E1 + D-E2 implementados (1e715e5) · PaperAnalyzer auto-apply desabilitado (7121fe4) · protocolo preferences.suggested.json estabelecido · D-E3 em monitoramento · baseline limpo a partir de agora.*
+| **Throttle max_hold (8ª sessão)** | RIFUSDT -24% max_hold → voltou 1.5h depois → -20.79% stop_loss = -44% mesmo símbolo. Bug: `extend_cooldown()` só disparava em stop_loss. Fix: `main.py:442` → `in ("stop_loss", "max_hold")`. `95c1cfa` | 13/06 |
+| **D-E4 cancelado (8ª sessão)** | Brain propôs gate ema1h==0 bloqueante. Forge derrubou: ema1h=0 tem 4 winners históricos incluindo ESPORTSUSDT +96%. Discriminador real é liq, não ema1h. D-E2 já cobre o subgrupo perigoso (cascade + liq<$1k). | 13/06 |
+| **B-60 — ema1h=6 dreno estrutural** | n=36 trades, WR=33%, PnL=-159% acumulado. overextension_double (D6) só cobre ema4h=6 AND ema1h=6. ema4h≤4 + ema1h=6 passa livre. Análise após 30 trades do Freeze. | 13/06 |
+| **LSR paradoxo confirmado** | Losers têm LSR trend médio -0.213 vs winners -0.024. cascade + LSR muito negativo + liq baixa = absorção institucional, não squeeze. Sinal de armadilha, não força. Monitorar com mais dados. | 13/06 |
+| **DNA Freeze v2 — 30 trades** | Baseline: restart pós-commit `95c1cfa` · 13/06 noite. Monitorar: squeeze_failed % (> 25% → B-55), ema1h=6 WR, throttle confirmação. | 13/06 |
+
+---
+
+## 8. DNA Freeze v2 — Ativo desde 13/06/2026 · 8ª sessão
+
+**Regra:** nenhum gate novo, nenhuma mutação de parâmetro até **30 trades fechados** pós-restart `95c1cfa`.
+
+**Baseline:** restart após commit `95c1cfa` · 13/06/2026 noite.
+
+**O que Brain monitora:**
+- **squeeze_failed %** — se > 25% → problema é timing → B-55 (ring buffers sub-minuto) é próxima sprint
+- **ema1h=6 WR** — n=36 histórico, WR=33%, -159% PnL. Padrão persiste?
+- **throttle max_hold** — confirmar log de ativação
+- **ema1h=0** — D-E4 cancelado. Mas monitorar: se ema1h=0 + cascade=False persistir com WR=0% em 10+ trades → revisar com nova evidência
+
+**Diagnóstico do círculo (confirmado 8ª sessão):** adicionamos gates de seleção para um problema de timing. squeeze_failed com MFE=0 = bot entrou no setup certo mas o squeeze não confirmou em 90s. Nenhum gate de entrada resolve isso. B-55 (ring buffers 10s/20s/30s confirmando que o preço JÁ está subindo antes de entrar) é o ponto de saída do círculo.
+
+*BRAIN_CONTEXT.md v2.6 · Forge é guardião · 13/06/2026 — Sessão 8ª: throttle max_hold fix (95c1cfa) · D-E4 cancelado (Forge derrubou com evidência) · B-60 ema1h=6 no backlog · DNA Freeze v2 (30 trades) · diagnóstico do círculo confirmado.*

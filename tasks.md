@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 13/06/2026 · v4.32_
+_Atualizado: 13/06/2026 · v4.33_
 
 ---
 
