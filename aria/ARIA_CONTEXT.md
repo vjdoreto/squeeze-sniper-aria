@@ -102,7 +102,8 @@ Todos os trades coletados **antes do restart pós-`fde21af`** têm CVD e klines 
 **Hipótese:** FR > +0.001 em ativo com `ema_trend:4h ≥ 0` + OI crescendo = curto-circuito de short squeeze iminente (shorts pagando para manter posição → pressão crescente para fechar).
 **Status:** 🟢 DESBLOQUEADA COMPLETA — `funding_rate` agora presente nos **ghost signals** também (T-09 · `4ffd73f` · 11/06/2026). `ema_trend_1h` também exportado nos ghost signals (B-score-ema1h · `90d3e3b` · 11/06/2026). Near-miss table no dashboard mostra ambos os campos em tempo real.
 **Evidência eAssets 10/06:** BEATUSDT FR=+0.0029, STGUSDT FR=-0.001, AIOUSDT FR=+0.0547 (extremo — subiu +29%).
-**Próximo passo:** nos primeiros 30+ trades/ghost, cruzar `funding_rate` × `MFE` × `exit_reason`. Regra empírica: FR > +0.0015 + EMA:4h=+6 + OI crescendo → MFE médio mais alto.
+**Evidência E-01 12/06:** ESPORTSUSDT FR=+0.44/+0.52% → moves de +12.7% e +58.5% nas 4-8h seguintes. Candidatos com FR neutro tiveram moves mais modestos (+5-7%) ou flat. Dois tiers sendo investigados em A-07 do backlog.
+**Próximo passo:** TA-01 permanece agendada para 30+ trades com `funding_rate` presente. A-07 do backlog acumula observações Path B para formalizar tiers de FR.
 
 ---
 
@@ -166,4 +167,33 @@ Aguarda validação estatística dos 50+ trades do SS antes de implementar.
 
 **Watchlist próxima sessão:** PARTIUSDT, MANTAUSDT (range_level:1h=5, estrutura mais limpa para SS).
 
-*ARIA_CONTEXT.md v1.10 · Forge é guardião · 11/06/2026 — Sprint Telegram: paper_reset + hard_reset + mode_change alerts adicionados (`665244c`, `dfe080d`). Squeezometer warming cooldown 900s→300s (5min). Bot rodando com D3/D4/D6/D7 ativos — ARIA aguarda 20+ trades limpos para TA-01 (FR×MFE) e validação de T-01/T-02.*
+---
+
+## 8. Estudos Preparatórios Path B — Momentum Rider (12/06/2026)
+
+Sessão Brain × ARIA × Doreto resultou em proposta formal do Path B (Momentum Rider) — complementar ao Path A (SS clássico). Path B entra em desenvolvimento apenas após Path A atingir 50+ trades com WR ≥ 55% e PF ≥ 1.3.
+
+### Critérios candidatos Path B (em validação)
+- `ema_trend:4h ≥ +4`
+- `range_level:1h ≥ 3`
+- `exp_btc:1h > 10`
+- `lsr_trend:1h ≤ 0` ← **discriminador crítico descoberto em E-01**
+
+### Achados E-01 (N=14, 11/06/2026, regime BTC bearish melhorando intraday)
+- Critérios brutos (3 condições): 28% de moves ≥+5% — abaixo do threshold de go/no-go (40%)
+- Com 4º critério (lsr_trend:1h ≤ 0): 60% de moves ≥+5% — acima do threshold
+- **Discriminador principal:** lsr_trend:1h médio = −10.3 nos winners vs +33.4 nos losers
+- Case model: ESPORTSUSDT (3/4 snaps sustentado, FR=+0.44%, lsr1h negativo) → +12.7% e +58.5%
+
+### Achados E-04 (universo candidato, 11/06/2026)
+- 28 símbolos com tendência sustentada (3-4/4 snaps, 0 reversões)
+- 0 símbolos instáveis — regime do dia era direcional, não spike-e-reverte
+- Tier 1 (range alto sustentado): MANTAUSDT, BROCCOLIF3BUSDT, ASRUSDT, SOONUSDT
+- Excluídos: SPACEUSDT (slippage extremo A-05), BTCDOMUSDT (rever pertinência)
+
+### Estudos ativos no backlog ARIA (A-06 a A-09)
+Ver `aria/backlog-aria-doreto-v1.0.md` v1.1 para protocolo completo de cada item.
+
+Script de análise disponível: `aria/scripts/analyze_path_b.py`
+
+*ARIA_CONTEXT.md v1.11 · Forge é guardião · 12/06/2026 — Estudos E-01/E-04 Path B concluídos. A-06/A-07/A-08/A-09 no backlog. ARIA aguarda novos snapshots para ampliar N do E-01.*

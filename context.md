@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.25 · 12/06/2026
+- Versão atual: v4.26 · 12/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -449,6 +449,30 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 - Nenhum trade com loss > 8%
 
 **Próximo passo imediato:** coletar 20+ trades com regime atual (mae_guard, sizing $20, liq_cascade $500) → trazer logs ao Brain para análise → se padrões confirmados → Sprint 2.
+
+---
+
+## 🔧 Sprint 12/06/2026 — 4ª Sessão: Estratégia Path B + Backlogs (v4.26)
+
+### Sessão Brain × ARIA × Doreto — estratégia e backlogs
+
+Sessão sem código. Foco em análise estratégica e planejamento.
+
+**Brain — B-51 a B-56 adicionados ao backlog:**
+- B-51: RIFUSDT-type (lsr_trend flat com CVD explosivo) — evidência inicial
+- B-52: absorvido por B-56
+- B-53: proposta de DNA freeze (coleta forçada 50 trades)
+- B-54: questão estrutural — o Squeezometer discrimina?
+- B-55: ring buffers sub-minuto reafirmados como prioridade pré-Live
+- B-56: Path B Momentum Rider — proposta formal Forge × Doreto, definição de 4 critérios, checklist de pré-requisitos, E-01/E-04 absorvidos
+
+**ARIA — E-01 e E-04 concluídos:**
+- E-01 (validação edge Path B): 28% bruto → 60% com 4º critério (lsr_trend:1h ≤ 0). N=14, 1 dia. Case model: ESPORTSUSDT +12.7%/+58.5%.
+- E-04 (universo candidato): ~40 símbolos mapeados em Tier 1-3. Zero instáveis.
+- A-06/A-07/A-08/A-09 adicionados ao backlog ARIA para continuidade.
+- Script `aria/scripts/analyze_path_b.py` disponível para novos snapshots.
+
+**Decisão estratégica registrada:** Path B entra em desenvolvimento apenas após Path A atingir 50+ trades com WR ≥ 55% e PF ≥ 1.3. Estudos ARIA continuam em paralelo.
 
 ---
 
