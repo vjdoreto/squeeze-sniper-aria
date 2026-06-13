@@ -1,5 +1,5 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 13/06/2026 · v4.1_
+_Atualizado: 13/06/2026 · v4.2_
 
 ---
 
@@ -25,16 +25,27 @@ _Atualizado: 13/06/2026 · v4.1_
 
 ---
 
-## [ ] Forge — Próxima sessão · Boot checklist 13/06
+## ✅ Forge — Sessão tarde 13/06 · 5 fixes + mobile + PaperAnalyzer · DONE
+    bc4093f: squeezometer cooldowns + /mobile read-only
+    7121fe4: PaperAnalyzer auto-apply desabilitado (R-02)
+    1e715e5: D-E1 (ema4h≤-2 bloqueante) + D-E2 (cascade_micro_liq<$1000)
+    97edf01: Brain CONTEXT v2.5 + backlog v4.1 + tasks.md
+    Push origin ✅ · aria ✅
 
-    1. Soft restart (Ctrl+C → python main.py)
-    2. Hard Reset Paper: deletar risk_state.json · paper_opportunities.json · throttle_state.json
-       NÃO deletar: metric_state.json · paper_closed.jsonl · signals.jsonl
-    3. Monitorar pós-warmup:
-       - D-01: final_gate_fail em ativos com ema4h≤-2 + cascade (gate ativo?)
-       - D-02: streak<4 com cascade bloqueado (final_cvd_streak=4 funcionando?)
-       - D-03: próximo stop_loss hit — exit_price = sl_target exato (sem 0.1% abaixo)
-    4. Meta: 50 trades pós-reset → Brain libera DNA Freeze → avaliar Fix B (F-18 cascade bypass)
+---
+
+## [ ] Forge — Boot checklist próxima sessão (13/06 — restart pendente)
+
+    1. Hard Reset Paper:
+       - Deletar: logs\risk_state.json · logs\paper_opportunities.json · logs\throttle_state.json
+       - NÃO deletar: logs\metric_state.json · logs\paper_closed.jsonl · logs\signals.jsonl
+    2. python main.py
+    3. Confirmar pós-warmup (300s):
+       - ema_4h_bearish em signal_refusals.jsonl (D-E1 ativo)
+       - cascade_micro_liq em signal_refusals.jsonl (D-E2 ativo)
+       - PaperAnalyzer: log mostra "sugestões disponíveis" SEM "salvas" (auto-apply off)
+       - /mobile acessível em http://localhost:<porta>/mobile
+    4. Meta: 50 trades limpos pós-restart → Brain libera DNA Freeze
 
 ---
 

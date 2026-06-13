@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.29 · 13/06/2026
+- Versão atual: v4.30 · 13/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -449,6 +449,32 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 - Nenhum trade com loss > 8%
 
 **Próximo passo imediato:** coletar 20+ trades com regime atual (mae_guard, sizing $20, liq_cascade $500) → trazer logs ao Brain para análise → se padrões confirmados → Sprint 2.
+
+---
+
+## 🔧 Sprint 13/06/2026 — Sessão Tarde: 5 fixes + mobile + PaperAnalyzer fix (v4.30)
+
+### Sessão Forge × Brain × Doreto — 13/06/2026 tarde
+
+**5 commits implementados:**
+
+| Commit | Descrição |
+|--------|-----------|
+| `bc4093f` | Squeezometer cooldowns: crítico 5min→15min, aquecendo 5min→30min · `main.py:430/436` |
+| `bc4093f` | `/mobile` read-only via Tailscale — página leve sem controles · `web_dashboard.py` |
+| `7121fe4` | PaperAnalyzer auto-apply desabilitado (R-02) — DNA não é mais mutado silenciosamente · `main.py:263` |
+| `1e715e5` | D-E1: gate ema4h≤-2 bloqueante (estende F-18 de -4 para -2) · `signal_engine.py:839` |
+| `1e715e5` | D-E2: gate cascade_micro_liq (<$1000) — cascade fantasma bloqueado · `signal_engine.py:715` |
+| `97edf01` | Brain CONTEXT v2.5 + backlog v4.1 (B-58/B-59) + tasks.md |
+
+**Descoberta crítica desta sessão:**
+PaperAnalyzer rodava a cada hora e mutava `preferences.json` silenciosamente (blacklist + min_rsi_5m). Causa dos dados contaminados das sessões anteriores. Desabilitado em `7121fe4`. Trades confiáveis para meta de 50 contam apenas a partir do restart pós-commits desta sessão.
+
+**D-E3 (ema1h=6+ema4h≤2) em monitoramento** — adiar 20 trades. Brain formaliza se WR<35% persistir.
+
+**Decisões estratégicas fechadas:** margem cruzada (não aplicável) · leverage (revisar pós-50 trades com WR≥55%).
+
+**Estado operacional:** requer Hard Reset Paper + soft restart para ativar todos os commits.
 
 ---
 
