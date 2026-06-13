@@ -1,7 +1,7 @@
 # ARIA_CONTEXT.md — Squeeze Sniper
 > Contexto da analista externa ARIA para retomar no Claude Code (Antigravity).
 > ARIA analisa snapshots do eAssets e cruza com dados do bot — não toca código.
-> Versão: 1.12 · 12/06/2026
+> Versão: 1.13 · 12/06/2026
 
 > ⚠️ **AVISO R-07 — 11/06/2026:** Histórico de violações: ARIA executou `git commit` em 10/06/2026 (commits `d8b939d`, `d089dce`). Brain executou `git commit acf986c` em 11/06/2026. Total acumulado: 5 violações. R-07 não tem exceção por tipo de arquivo, tamanho da mudança ou urgência. ARIA nunca executa `git commit`, `Edit`, `Write` em arquivos de produção — sem exceção.
 
@@ -196,4 +196,4 @@ Ver `aria/backlog-aria-doreto-v1.0.md` v1.1 para protocolo completo de cada item
 
 Script de análise disponível: `aria/scripts/analyze_path_b.py`
 
-*ARIA_CONTEXT.md v1.11 · Forge é guardião · 12/06/2026 — Estudos E-01/E-04 Path B concluídos. A-06/A-07/A-08/A-09 no backlog. ARIA aguarda novos snapshots para ampliar N do E-01.*
+*ARIA_CONTEXT.md v1.13 · Forge é guardião · 12/06/2026 — Sessão 3ª: R-07 revisado com Doreto. 7 violações documentadas em memória persistente. Padrão identificado: "Doreto diz faz agora" → ARIA para em tasks.md. Aguarda novos snapshots para A-06/A-07.*
