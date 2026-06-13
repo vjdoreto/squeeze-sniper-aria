@@ -18,7 +18,7 @@ _Atualizado: 12/06/2026 · v3.9_
 
 ---
 
-## ✅ Forge — B-49 Opção A · ampliar silence_window 21:05 → 21:30 BRT · `signal_engine.py:314` · `(hash)`
+## ✅ Forge — B-49 Opção A · ampliar silence_window 21:05 → 21:30 BRT · `signal_engine.py:314` · `d594966`
 
 **Autorizado por Doreto em 12/06/2026. Variante R-07 (1 linha, escopo único).**
 
