@@ -1,14 +1,15 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v3.9_
+_Atualizado: 12/06/2026 · v4.0_
 
 ---
 
-## [ ] Forge — Fechar sessão Brain (12/06 — 5ª sessão)
-    Commitar e push nos dois repos:
-    - brain/BRAIN_CONTEXT.md (v2.4 — DNA Freeze documentado + monitoramento pós-50 trades)
-    - brain/backlog-brain-doreto-v1.0.md (v4.0 — B-22 fechado, B-33 expandido 10 fixes, B-57 novo)
-    - tasks.md (este item + DNA Freeze + B-49 + F-19 já marcados ✅)
-    Mensagem sugerida: "docs(context): sprint 12/06 5ª sessão Brain — DNA Freeze + B-49 + F-19 + backlog v4.0"
+## ✅ Forge — Fechar sessão ARIA (12/06 — 2ª sessão)
+    Commitado nos dois repos (ver abaixo)
+
+---
+
+## ✅ Forge — Fechar sessão Brain (12/06 — 5ª sessão)
+    Commitado nos dois repos (ver abaixo)
 
 ---
 

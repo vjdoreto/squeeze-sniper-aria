@@ -35,20 +35,20 @@ ESPORTSUSDT apresentou simultaneamente:
 ---
 
 ### A-02 — BRUSDT: padrão LSR colapso multi-TF — setup SS mais clássico
-**Status:** Observação documentada · 11/06/2026
+**Status:** Observação documentada · 11/06/2026 · ⚠️ Flag metodológica adicionada · 12/06/2026
 **Snapshot:** eassets-panel-20260611-061006.json
 
 BRUSDT mostrou o setup mais limpo do universo neste snapshot:
 - **LSR:1h=-21.41, LSR:5m=-39.39** — colapso de shorts em TODOS os timeframes simultâneos
-- **OI:1h=+63.86, OI:5m=+47.80** — acumulação acelerando (OI:5m > OI:1h = nova aceleração)
+- **OI:1h=+63.86, OI:5m=+47.80** — acumulação acelerando
 - **EMA:4h=+4 / 1h=+6 / 15m=+6 / 5m=+6** — alinhamento
 - **RSI:1h=72.3 / RSI:5m=73.6** — momentum quente sem euforia
 
-O padrão "OI:5m crescendo mais rápido que OI:1h" merece atenção — pode indicar aceleração de entrada institucional nas últimas velas vs acumulação mais lenta. Quando OI curto prazo > OI médio prazo = demand ramp em formação.
+> ⚠️ **Flag metodológica (Forge · 12/06/2026):** `oi_change_pct:5m` e `oi_trend:1h` no SS não são comparáveis diretamente — um é percentual de crescimento em 5 minutos, o outro é ângulo normalizado de tendência em 1h. A comparação numérica "OI:5m > OI:1h = aceleração" pode ser espúria. Quando formalizar para o Brain, normalizar para a mesma escala ou usar valores absolutos de OI. Pedir ao Forge quais campos do MetricStore estão disponíveis para esse cálculo.
 
-**Hipótese para futura tese:** OI:5m > OI:1h (aceleração) + LSR colapsando em todos TFs = sinal de entrada institucional mais urgente que OI crescendo apenas no 1h.
+**Hipótese (a formalizar com escala correta):** aceleração de OI em curto prazo vs médio prazo + LSR colapsando em todos TFs = sinal de entrada institucional mais urgente. A hipótese tem valor — a métrica precisa de ajuste.
 
-**Próximos passos:** monitorar nos próximos snapshots se BRUSDT entra em log SS e com qual MFE. Se sim, validar se o padrão OI:5m > OI:1h precede squeezes mais fortes.
+**Próximos passos:** monitorar se BRUSDT entra em log SS. Quando formalizar A-02, solicitar ao Forge o campo correto de OI comparável entre TFs.
 
 ---
 
@@ -183,14 +183,14 @@ Se ARIA cruzar ghost_signals.jsonl com os candidatos Tier 1/2 dos snapshots e o 
 
 ---
 
-### AP-04 — Snapshot diário: horário ótimo de coleta
-**Status:** Observação · baixa prioridade
+### AP-04 — Protocolo de coleta: dois snapshots diários em horário fixo
+**Status:** Proposta formalizada (Forge · 12/06/2026) · aguarda confirmação de Doreto
 
-Os dois snapshots disponíveis são de horários diferentes do dia (23:12 e 06:10 UTC). Para análise comparativa consistente, snapshots no mesmo horário são mais úteis.
+Forge propõe formalizar protocolo: tirar snapshot sempre próximo de **06:00 UTC** (abertura europeia) e **00:00 UTC** (virada diária). Com dois snapshots diários consistentes, ARIA pode medir evolução intraday e comparações entre dias ficam válidas.
 
-**Hipótese:** 06:00–08:00 UTC pode ser uma janela de maior desacoplamento de altcoins vs BTC (Europa acordando, Ásia ainda ativa). A comparação dos dois snapshots disponíveis sugere que o movimento mais expressivo das ilhas aconteceu nesse período.
+**ARIA aceita a proposta.** Condicional à disponibilidade de Doreto — se não for viável, análise qualitativa continua funcionando com snapshots irregulares.
 
-**Sugestão para Doreto:** quando possível, tirar snapshot sempre perto do mesmo horário para facilitar comparações ARIA. Sem urgência — análise qualitativa continua funcionando com snapshots irregulares.
+**Pendente:** Doreto confirmar se consegue manter essa rotina. Se sim, ARIA documenta como protocolo permanente.
 
 ---
 
@@ -283,5 +283,56 @@ Protocolo de atualização:
 
 ---
 
+---
+
+## ITENS ADICIONADOS — Deliberação Forge × ARIA (12/06/2026)
+
+### A-NEW-1 — Custo de oportunidade: candidatos ARIA fora do universo prioritário SS
+**Status:** Novo · aguarda `analyze_eassets.py` funcional e ~3 snapshots
+**Origem:** Forge sugeriu gap de cobertura ARIA × SS · ARIA reformulou · 12/06/2026
+
+Forge propôs cruzar candidatos ARIA com lista prioritária SS. ARIA reformulou a pergunta para ter valor novo (o diagnóstico estrutural já está documentado em tasks.md — paradoxo do bootstrap top 50).
+
+**Pergunta real:** dos candidatos ARIA Tier 1/2 que **não estão** na lista prioritária do SS, quantos tiveram moves ≥+5% nas 4-8h seguintes? Isso quantifica o custo de oportunidade do paradoxo estrutural em USD perdido — dado que o Brain ainda não tem.
+
+**Como fazer:** cruzar candidatos identificados nos snapshots com `signal_refusals.jsonl` do período correspondente. Se ativo não aparece nem nos refusals → estava fora do radar do SS completamente. Registrar move posterior via snapshot seguinte.
+
+**Critério de acionamento:** 3+ snapshots com candidatos mapeados + `analyze_eassets.py` rodando. ARIA entrega ao Brain com tabela: símbolo | tier ARIA | apareceu no SS? | move posterior.
+
+---
+
+### A-NEW-2 — QC dos snapshots: auditoria de cobertura de campos
+**Status:** Novo · **alta prioridade** — executar antes de qualquer nova correlação quantitativa
+**Origem:** Forge · 12/06/2026
+
+Campos como `funding_rate` e `lsr:1h` podem aparecer como 0 por ausência de dado, não por valor real. Se 30% dos símbolos têm FR=0 por dado ausente, análises de T-06 e A-07 estão contaminadas.
+
+**Formato de entrega:** a cada snapshot analisado, ARIA reporta ao início da análise:
+- "X% dos símbolos têm `funding_rate` válido (≠ 0 ou com valor real registrado)"
+- "Y% têm `lsr:1h` válido"
+- "Z% têm `range_level:1h` válido"
+
+**Regra:** campos com cobertura < 60% no snapshot não entram em correlação quantitativa daquela sessão — só observação qualitativa.
+
+---
+
+### A-NEW-3 — Post-mortem de misses: reason_code por miss documentado
+**Status:** Novo · item colaborativo ARIA → Forge
+**Origem:** Forge · 12/06/2026
+
+Protocolo para responder: "por qual gate exato o SS bloqueou esse candidato no horário do snapshot?"
+
+**Fluxo:** ARIA identifica o miss (ativo em Tier 1/2 no snapshot + SS não entrou) → ARIA passa ao Forge: símbolo + janela de timestamp → Forge extrai `reason_code` exato do `signal_refusals.jsonl` → ARIA incorpora na análise.
+
+**Valor:** calibração de gates vira analítica em vez de empírica. Brain tem evidência direta de qual gate está custando mais oportunidade.
+
+**Como acionar:** ARIA inclui lista de misses ao final de cada análise de snapshot no formato:
+```
+MISSES PARA FORGE INVESTIGAR:
+- SIMBOLOUSDT · timestamp ~HH:MM UTC · motivo suspeito: [gate ARIA suspeita]
+```
+
+---
+
 _Revisão periódica: sempre que ARIA e Doreto se reunirem._
-_Versão atual: 1.1 · 12/06/2026_
+_Versão atual: 1.2 · 12/06/2026_
