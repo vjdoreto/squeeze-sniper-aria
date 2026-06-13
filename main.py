@@ -436,12 +436,12 @@ async def trading_loop(
                         risk_manager.update(tracker.current_capital, tracker.peak_capital, is_win)
                         last_processed_closed_count = current_closed
 
-                        # D-HIGH-2: Cooldown estendido de 4h após stop_loss hit (Brain/Forge 12/06/2026)
+                        # D-HIGH-2: Cooldown estendido de 4h após stop_loss ou max_hold (Brain/Forge 12/06/2026 · ext 13/06/2026)
                         last_exit_reason = (last_trade.get("exit") or {}).get("reason", "")
                         last_symbol = (last_trade.get("entry") or {}).get("symbol", "")
-                        if last_exit_reason == "stop_loss" and last_symbol and symbol_throttler:
+                        if last_exit_reason in ("stop_loss", "max_hold") and last_symbol and symbol_throttler:
                             symbol_throttler.extend_cooldown(last_symbol, total_seconds=14400)
-                            logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após stop_loss hit", last_symbol)
+                            logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após %s", last_symbol, last_exit_reason)
 
                         # Circuit breaker: notifica se acabou de pausar
                         if was_trading and not risk_manager.can_trade() and telegram:
