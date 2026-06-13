@@ -452,6 +452,37 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 
 ---
 
+## 🔧 Sprint 13/06/2026 — Análise profunda WR 16% + throttle fix + DNA Freeze (v4.32)
+
+### Sessão Brain × Forge × Doreto — 13/06/2026 noite
+
+**Contexto:** WR 16.7% nos 6 trades com DNA limpo pós-restart (19:30 UTC). Brain e Forge fizeram análise cruzada independente antes de convergir.
+
+**Corte correto dos trades válidos:** pós-19:30 UTC (restart com D-E1/D-E2 ativos). 6 trades: BTWUSDT ✅ · RIFUSDT ❌ · RIFUSDT ❌ · SSVUSDT ❌ · TRADOORUSDT ❌ · MEGAUSDT ❌.
+
+**Bug confirmado e corrigido — D-HIGH-2 ext (`95c1cfa`):**
+RIFUSDT saiu por max_hold -24% às 19:42 e voltou às 21:13 → stop_loss -20.79% = -44% num símbolo.
+D-HIGH-2 original só cobria `stop_loss`. Fix: `main.py:442` — condição extendida para `("stop_loss", "max_hold")`. Push origin ✅
+
+**D-E4 cancelado por Forge — com evidência:**
+Brain propôs gate `ema1h==0 bloqueante`. Forge puxou histórico completo (67 trades) e encontrou 4 winners com ema1h=0 — incluindo ESPORTSUSDT +96%. Gate mataria o maior trade do projeto. Brain aceitou sem resistência. D-E4 cancelado.
+
+**Achado Forge B-60 — ema1h=6 é o maior dreno:**
+| ema1h | n | WR | PnL acumulado |
+|-------|---|----|--------------|
+| -2 | 4 | 75% | +55% |
+| 0 | 16 | 25% | +18% |
+| 6 | 36 | 33% | **-159%** |
+
+ema1h=6 com squeeze_failed: n=12, WR=0%, PnL=-95%. B-60 registrado no backlog — analisa pós-Freeze.
+
+**DNA Freeze confirmado por Doreto + Brain + Forge:**
+Zero implementações por 30 trades limpos. Métricas de saída: squeeze_failed > 25% → B-55 (ring buffers). squeeze_failed < 15% → avaliar go/no-go live.
+
+**Versão:** v4.32 · 13/06/2026
+
+---
+
 ## 🔧 Sprint 13/06/2026 — Sessão Forge: Boot validation + firewall mobile + análise D-E1/D-E2 (v4.31)
 
 ### Sessão Forge × Doreto — 13/06/2026 noite

@@ -1,5 +1,79 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 13/06/2026 · v4.3_
+_Atualizado: 13/06/2026 · v4.32_
+
+---
+
+## ✅ Forge — D-HIGH-2 ext: throttle cobre max_hold · `main.py:442` · `95c1cfa`
+
+**Autorizado por Doreto 13/06/2026 · Brain + Forge consenso · análise profunda noite**
+
+RIFUSDT saiu por max_hold -24% (19:42) e voltou 1.5h depois por stop_loss -20.79% = -44% no mesmo símbolo.
+D-HIGH-2 original só cobria stop_loss. Fix: `last_exit_reason in ("stop_loss", "max_hold")`.
+Push origin ✅
+
+**Critério de validação:** log `[THROTTLE-SL] <symbol> cooldown estendido para 4h após max_hold` aparece no próximo max_hold hit.
+
+---
+
+## 🔬 B-60 — ema1h=6 é o maior dreno do sistema (backlog pós-Freeze)
+
+**Origem:** achado Forge × Brain · análise 13/06/2026 noite · n=36, WR=33%, PnL=-159%
+
+ema1h=6 gera 36 trades com PnL acumulado -159%. squeeze_failed com ema1h=6: n=12, WR=0%, PnL=-95%.
+Por comparação: ema1h=-2 tem WR=75% e +55% PnL.
+
+**D-E4 (ema1h=0 bloqueante) CANCELADO** — Forge encontrou 4 winners com ema1h=0 incluindo ESPORTSUSDT +96%.
+O discriminador real é liq, não ema1h. D-E2 já cobre parte do overlap.
+
+**Status:** BLOQUEADO por DNA Freeze. Brain analisa após 30 trades limpos.
+
+---
+
+## 🔒 DNA FREEZE — confirmado Doreto + Brain + Forge · 13/06/2026 noite
+
+**Após throttle fix (95c1cfa): ZERO implementações por 30 trades limpos.**
+
+Brain e ARIA apenas observam e registram no backlog. Forge apenas monitora.
+
+**Métricas de decisão (Brain monitora):**
+- squeeze_failed > 25% → B-55 (ring buffers) é a próxima sprint
+- squeeze_failed < 15% → gates funcionaram, avaliar go/no-go live
+- ema1h=6 WR continua < 35% → B-60 vira proposta formal pós-Freeze
+
+---
+
+## 🔒 DNA FREEZE — ativo desde 13/06/2026 · 8ª sessão
+
+**Regra:** nenhum gate novo, nenhuma mutação de parâmetro até **30 trades fechados** pós-restart 13/06 noite (commit `95c1cfa`).
+
+**O que Brain monitora até 30 trades:**
+- squeeze_failed %: se > 25% → confirma problema de timing → B-55 (ring buffers sub-minuto) é a próxima sprint
+- ema1h=6 WR: n=36 histórico com WR=33%, -159% PnL — monitorar se padrão persiste
+- ema1h=0 WR: D-E4 **cancelado** (Forge derrubou — ema1h=0 tem 4 winners históricos incluindo ESPORTSUSDT +96%)
+- throttle max_hold: confirmar log `[THROTTLE-SL] cooldown estendido para 4h após max_hold`
+
+**Exceções já executadas (não reabrir):**
+- `95c1cfa` — throttle max_hold fix (1 linha, `main.py:442`)
+
+---
+
+## ✅ Forge — Throttle max_hold fix · `main.py:442` · `95c1cfa`
+
+**Autorizado por Doreto em 13/06/2026 · Análise profunda Brain × Forge · 8ª sessão**
+
+Bug: `extend_cooldown()` só disparava em `stop_loss`. RIFUSDT saiu por `max_hold` às 19:42 (-24%) e voltou às 21:13 (-20.79%) = -44% num símbolo em 1 sessão.
+Fix: condição expandida para `exit_reason in ("stop_loss", "max_hold")`.
+Critério de validação: log `[THROTTLE-SL] cooldown estendido para 4h após max_hold` no próximo max_hold hit.
+
+---
+
+## 🔬 Brain — B-60 · ema1h=6 WR=33%, n=36, -159% PnL acumulado (13/06/2026)
+
+**Origem:** análise profunda Forge · 8ª sessão · dados históricos completos
+**Sem implementação agora — DNA Freeze. Analisar após 30 trades.**
+
+ema1h=6 é o maior dreno do sistema por volume de trades. overextension_double (D6) só cobre ema4h=6 AND ema1h=6 — ema4h≤4 com ema1h=6 passa livre e é o perfil dominante dos losers.
+Após o Freeze: Brain propõe gate ou penalidade com diff exato para Forge.
 
 ---
 
