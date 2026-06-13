@@ -1250,7 +1250,11 @@ class PaperTradeTracker:
         # SPRINT 12.220: Slippage Realista na Saída (Pilar 4)
         # Simula fill parcial e spread: o preço de venda é ligeiramente pior que o trigger.
         tick_size = trade["entry"]["metrics"].get("tick_size", "0.00000001")
-        slipped_exit_price = exit_price * (1 - self.config.slippage_pct / 100.0)
+        # D-03 (Brain/Forge 13/06/2026): stop_loss fill já está em sl_target via D-URGENTE-1 — slippage adicional é dupla contagem.
+        if reason == "stop_loss":
+            slipped_exit_price = exit_price
+        else:
+            slipped_exit_price = exit_price * (1 - self.config.slippage_pct / 100.0)
         slipped_exit_price = self._round_price(slipped_exit_price, tick_size, up=False)
 
         symbol = trade["symbol"]
