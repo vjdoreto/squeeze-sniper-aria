@@ -1141,4 +1141,32 @@ A Binance limita 200 streams por conexão WebSocket. O SS hoje tem +527 símbolo
 
 ---
 
-_Versão 4.0 · 12/06/2026 — B-22 fechado · B-33 expandido com 10 fixes de 12/06 · B-57 adicionado · DNA Freeze autorizado · B-49 Opção A + F-19 em tasks.md (Brain · deliberação Brain × Forge × Doreto)_
+### B-58 — D-E3 em monitoramento: gate ema1h≥4 + ema4h≤2
+**Status:** Monitoramento ativo · 13/06/2026
+**Origem:** Análise profunda Brain 13/06 — sessão 7ª
+
+Evidência inicial: n=3 trades com ema1h=6 AND ema4h≤2, WR=0%, -$6.01. Forge recomendou adiar (n=3 pequeno, D-E1+D-E2 cobrem parte). Brain concordou.
+
+**Critério para virar task:** após 20+ trades limpos pós-restart 13/06, Brain verifica se o padrão persiste. Se ema1h≥4 + ema4h≤2 continuar com WR < 35% → propor gate com diff exato para Forge. Se D-E1/D-E2 eliminarem a maioria dos casos → encerrar observação.
+
+**Nota:** ema4h=2 não é pego por D-E1 (threshold ≤ -2). D-E3 cubriria o gap ema4h=0 e ema4h=2 quando overextended no 1h.
+
+---
+
+### B-59 — squeeze_failed: problema central não resolvido
+**Status:** Investigação pendente · 13/06/2026
+**Origem:** Análise profunda Brain 13/06 — sessão 7ª
+
+48.5% dos trades pós-reset são squeeze_failed (n=16), WR=0%, -$19.06. D-E1 e D-E2 removem alguns casos da amostra (5+4=9 trades) mas o squeeze_failed em si permanece o maior dreno do sistema.
+
+**Perfil dos squeeze_failed remanescentes (sem os capturados por D-E1/D-E2):**
+- Cascade=True com liq>$1000 e ema4h≥-1 — squeeze não confirmado em 90s
+- MFE=0 imediato na maioria — entrada prematura, não setup errado
+
+**Hipótese Brain:** o timing de entrada é o problema estrutural, não os gates de seleção. Ring buffers sub-minuto (B-55) são a resposta correta — confirmar que o squeeze JÁ começou antes de entrar.
+
+**Próximo passo:** com 20+ trades limpos, Brain separa squeeze_failed por perfil (liq, cascade, ema4h) e quantifica o gap de timing usando Post-Trade Impact 5min/15min. Se padrão confirmar → B-55 sobe de prioridade no roadmap pré-Live.
+
+---
+
+_Versão 4.1 · 13/06/2026 — B-58 adicionado (D-E3 monitoramento) · B-59 adicionado (squeeze_failed estrutural) · D-E1/D-E2 implementados (1e715e5) · PaperAnalyzer auto-apply desabilitado · baseline limpo estabelecido (Brain · sessão 7ª)_

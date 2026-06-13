@@ -3,6 +3,15 @@ _Atualizado: 13/06/2026 · v4.1_
 
 ---
 
+## [ ] Forge — Fechar sessão Brain (13/06 — 7ª sessão)
+    Commitar e push nos dois repos:
+    - brain/BRAIN_CONTEXT.md (v2.5 — D-E1/D-E2 documentados · PaperAnalyzer protocolo · D-E3 monitoramento)
+    - brain/backlog-brain-doreto-v1.0.md (v4.1 — B-58 D-E3 monitoramento · B-59 squeeze_failed estrutural)
+    - tasks.md (este item)
+    Mensagem sugerida: "docs(context): sprint 13/06 — D-E1/D-E2 implementados + análise profunda Brain (v2.5)"
+
+---
+
 ## ✅ Forge — Validação pós-warmup 13/06 · logs analisados
 
     Warmup 300s concluído às 10:53:14 — gatilho liberado.

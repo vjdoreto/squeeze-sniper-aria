@@ -1,7 +1,7 @@
 # BRAIN_CONTEXT.md — Squeeze Sniper
 > Contexto estratégico para o agente Brain retomar no Claude Code (Antigravity).
 > Forge é guardião deste arquivo — atualiza a cada sprint.
-> Versão: 2.4 · 12/06/2026
+> Versão: 2.5 · 13/06/2026
 
 > ⚠️ **AVISO R-07 — 11/06/2026:** Brain executou `git commit acf986c` diretamente ("commit de governança"). Isso é violação R-07 independente do tipo de arquivo. Não existe categoria de commit que autorize Brain a executar `git commit`. O fluxo é sempre: escrever conteúdo em `tasks.md` → Forge lê e commita. Próxima violação será escalada para Doreto com pedido de revisão do protocolo de boot do agente.
 
@@ -91,7 +91,7 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 - **F-13** `rsi_1h_warmup`: bloqueia entrada se rsi:1h = 50.0 artificial (uptime < 600s)
 - **F-14** `mae_guard_late`: sai se duration ≥ 240s E pnl < -3% E mfe < 3%
 - **F-15** `volume_quality_spike`: bloqueia se cvd_change_pct/(trades_1m+1) ≥ 2.0
-- **F-18** `ema_4h_bearish`: bloqueia se ema_trend:4h ≤ -4 (sozinho — AND removido)
+- **F-18 + D-E1** `ema_4h_bearish`: bloqueia se ema_trend:4h ≤ **-2** (estendido de -4 em 13/06 · commit `1e715e5`)
 
 **Sequência de saída:** squeeze_failed(90s) → squeeze_aborted(120s) → mae_guard(120s) → mae_guard_late(240s) → trailing(180s+) → max_hold(480s)
 
@@ -159,6 +159,10 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 | **Hard Reset Paper executado** | Estado operacional zerado (risk_state, paper_opportunities, throttle_state deletados). Logs históricos preservados (paper_closed, metric_state, signals, ghosts). Soft restart aplicado. Coleta limpa iniciada com DNA novo (7 fixes ativos). | 12/06 |
 | **E1/E2 gaps nos ghosts — HISTÓRICOS, não gap atual** | 37 casos E1 e 10 casos E2 com cascade=True em ghost_signals eram de 22:58 (11/06) e 00:44 (12/06) — anteriores ao restart que carregou o fix. Zero ocorrências pós-restart. ghost_signals.jsonl acumula desde o boot anterior — sempre verificar timestamps antes de diagnosticar gap. | 12/06 |
 | **BTC/ETH/DOGE final_gate_fail com cascade — CORRETO** | Large caps bloqueados por exp baixo no gate final. SUI $14.4k liq e XRP $168k liq tiveram zero movimento (post4h: -2.1% e -1.8%). SS não opera em large caps — EXP gate é proteção estrutural permanente. Decisão: não bypassar exp para cascade. | 12/06 |
+| **D-E1 — gate ema_4h_bearish estendido ≤ -4 → ≤ -2** | n=5 trades com ema4h=-2, WR=0%, sem exceção em 2 sessões. F-18 dificulta mas não bloqueava ema4h=-2. Uma linha: threshold -4 → -2. reason_code ema_4h_bearish existente. Critério reversão: winner com ema4h=-2 em 5+ trades. `signal_engine.py:839` · `1e715e5` | 13/06 |
+| **D-E2 — gate cascade_micro_liq** | cascade=True com liq_short_1m_stable < $1000 = micro-aceleração, não colapso institucional. n=4 losers (MEUSDT $471, COAIUSDT $468, LABUSDT $41, TAOUSDT $320) -$13.65. Gate recusa antes do bloco relax_factor — limpo, sem reatribuição de variável. `signal_engine.py:715` · `1e715e5` | 13/06 |
+| **PaperAnalyzer auto-apply DESABILITADO** | PA rodava a cada hora e sobrescrevia preferences.json: reinserindo blacklist (OPGUSDT/TAOUSDT/XRPUSDT) e revertendo min_rsi_5m 45→60 silenciosamente. Commit `7121fe4`. preferences.suggested.json continua sendo escrito — Brain pode ler como sinal, nunca auto-aplicar. Trades confiáveis são APENAS os pós-restart 13/06. | 13/06 |
+| **preferences.suggested.json — protocolo Brain** | Brain lê no boot de cada sessão como dado adicional. Se símbolo aparecer com WR<30% em 2+ trades → Brain cruza com logs antes de propor qualquer gate. Nunca auto-aplicar. | 13/06 |
 
 ---
 
@@ -179,6 +183,10 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 - D-HIGH-1: nenhum winner legítimo bloqueado por `cvd_negative_cascade_entry`
 - Alpha decay 4h/12h/24h completo aparecendo em `paper_closed.jsonl` pós-F-19
 
-**Fix B (F-18 bypass cascade para ema4h=-4):** aguarda WR de 20+ trades com Fix A ativo. Brain decide após análise.
+**Fix B (F-18 bypass cascade para ema4h=-4):** aguarda WR de 20+ trades com Fix A ativo. Brain decide após análise. Nota: D-E1 estendeu o bloqueio para ema4h≤-2 — Fix B (bypass cascade) seria somente em ema4h=-4 que agora não é mais alcançável sem revisão do critério.
 
-*BRAIN_CONTEXT.md v2.4 · Forge é guardião · 12/06/2026 — Sessão 5ª: DNA Freeze autorizado · B-49 Opção A + F-19 concluídos · backlog atualizado (B-22 fechado, B-33 expandido, B-57 novo) · coleta limpa ativa.*
+**D-E3 (ema1h=6 + ema4h≤2 bloqueante):** monitoramento ativo. Após 20+ trades limpos pós-restart 13/06, Brain verifica se ema1h≥4+ema4h≤2 persiste com WR<35%. Se sim → formaliza com evidência para Forge.
+
+**Dados confiáveis para análise:** apenas trades coletados após restart dos commits `bc4093f` + `7121fe4` + `1e715e5` (13/06/2026). Trades anteriores foram coletados com PaperAnalyzer potencialmente corrompendo o DNA — são suspeitos para teses que dependem de DNA específico.
+
+*BRAIN_CONTEXT.md v2.5 · Forge é guardião · 13/06/2026 — Sessão 7ª: D-E1 + D-E2 implementados (1e715e5) · PaperAnalyzer auto-apply desabilitado (7121fe4) · protocolo preferences.suggested.json estabelecido · D-E3 em monitoramento · baseline limpo a partir de agora.*
