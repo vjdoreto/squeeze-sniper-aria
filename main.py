@@ -262,49 +262,13 @@ async def paper_analysis_loop(
         try:
             result = analyzer.run_analysis()
             if result:
-                # SPRINT 6.2 / Melhoria 8: Persistência das mudanças em preferences_local.json
-                prefs_path = resolve_preferences_path()
-                current_prefs = load_preferences(prefs_path)
-
-                changed = False
-
-                # 1. Aplica Blacklist
-                if result.parameter_changes.get("blacklist"):
-                    new_entries = result.parameter_changes["blacklist"]
-                    signals.blacklist.update(new_entries)
-                    
-                    existing_bl = set(current_prefs.get("blacklist", []))
-                    existing_bl.update(new_entries)
-                    current_prefs["blacklist"] = sorted(list(existing_bl))
-                    changed = True
-                    logger.info("🛡️ Blacklist atualizada e persistida: %s", current_prefs["blacklist"])
-                
-                # 2. Aplica parâmetros de sinal — escreve em <mode>.signal (nunca na raiz)
-                _mode = current_prefs.get("trading_mode", "paper")
-                if "signal" in result.parameter_changes:
-                    sig_changes = result.parameter_changes["signal"]
-                    sig_node = current_prefs.setdefault(_mode, {}).setdefault("signal", {})
-                    for attr, val in sig_changes.items():
-                        if hasattr(signals, attr):
-                            setattr(signals, attr, val)
-                            sig_node[attr] = val
-                            changed = True
-                            logger.info("⚙️ Parâmetro %s otimizado para %s via Auto-Calibração", attr, val)
-
-                # 3. Aplica parâmetros de execução — escreve em <mode>.execution (nunca na raiz)
-                if "execution" in result.parameter_changes:
-                    exec_changes = result.parameter_changes["execution"]
-                    exec_node = current_prefs.setdefault(_mode, {}).setdefault("execution", {})
-                    for attr, val in exec_changes.items():
-                        if hasattr(sniper, attr):
-                            setattr(sniper, attr, val)
-                            exec_node[attr] = val
-                            changed = True
-                            logger.info("⚙️ Sniper %s otimizado para %s via Auto-Calibração", attr, val)
-
-                if changed:
-                    _save_prefs(current_prefs)
-                    logger.info("💾 Preferências auto-calibradas salvas.")
+                # Auto-apply desabilitado (13/06/2026 — R-02):
+                # PaperAnalyzer gera sugestões em preferences.suggested.json para Brain revisar.
+                # Nenhuma mudança entra em preferences.json sem Brain → tasks.md → Forge.
+                if result.parameter_changes:
+                    logger.info(
+                        "📋 PaperAnalyzer: sugestões disponíveis em preferences.suggested.json — aguardam revisão Brain."
+                    )
 
         except Exception as e:
             logger.exception("Erro no analisador de paper: %s", e)
