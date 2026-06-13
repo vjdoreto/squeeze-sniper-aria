@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.28 · 12/06/2026
+- Versão atual: v4.29 · 13/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -449,6 +449,39 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 - Nenhum trade com loss > 8%
 
 **Próximo passo imediato:** coletar 20+ trades com regime atual (mae_guard, sizing $20, liq_cascade $500) → trazer logs ao Brain para análise → se padrões confirmados → Sprint 2.
+
+---
+
+## 🔧 Sprint 13/06/2026 — Análise Profunda + 3 Fixes (v4.29)
+
+### Sessão Brain × Forge × Doreto — análise profunda + bugs críticos
+
+**Análise profunda Brain (13/06):** 25 trades pós-reset auditados. WR 28%, PF 1.00, PnL +$0.02 — empatado por 1 trade (ESPORTS +96%). Sem ele: PF negativo. squeeze_failed = 52% dos trades (13/25), WR 0%, PnL -$16.90. Root causes identificadas via análise de logs.
+
+**3 fixes implementados (Brain · commitados Forge · autorizados Doreto):**
+
+| Fix | Commit | Impacto |
+|-----|--------|---------|
+| D-03 slippage duplo no SL | `750ce03` | exit_price = sl_target exato — sem 0.1% extra |
+| D-02 cascade não reduz streak | `7aa4227` | STRKUSDT/TAOUSDT-type (streak=3) bloqueados |
+| D-01 EXP não relaxado com ema4h≤-2 | `7aa4227` | XRP/ADA-type com bearish macro + cascade bloqueados |
+
+**Padrões confirmados pela análise:**
+- ema4h=4 → WR 57%, PnL +$18.36 — único estado rentável consistente
+- ema4h=-2 → WR 0%, ema4h=6 → WR 0%
+- liq_cascade=False → WR 0% em 5 trades (D3 com buracos)
+- trailing_stop → WR 88%, PnL +$26 — o DNA de saída funciona
+- squeeze_failed → WR 0%, PnL -$17 — o DNA de entrada ainda tem gaps
+- Horários 00-01h e 10h UTC os melhores; 11-12h UTC mortíferos
+
+**R-07 violação registrada (8ª):** Brain commitou `750ce03` e `7aa4227` diretamente. Código revisado e aprovado.
+
+**Monitorar após restart:**
+- `final_gate_fail` em ativos com ema4h≤-2 + cascade (D-01 ativo)
+- Trades com cascade=True sem streak<4 passando (D-02 ativo)
+- Próximo stop_loss: confirmar exit_price = sl_target exato (D-03 ativo)
+
+**Push origin ✅ · Push aria ✅ · Requer soft restart**
 
 ---
 
