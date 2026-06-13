@@ -875,9 +875,16 @@ class SqueezeIgnition:
         relax_label = "NORMAL"
 
         # Cascata de liquidação = sinal mais forte do DNA → entrada agressiva
+        ema_trend_4h = d.get("ema_trend:4h") or 0
         if liq_cascade:
-            relax_factor = 0.6  # 40% relaxação: o squeeze JÁ começou de verdade
-            relax_label = "RELAXED (CASCADE)"
+            # D-01 (Brain/Forge 13/06/2026): macro bearish (ema4h<=-2) + cascade = large cap absorvendo liq sem movimento.
+            # Só relaxa EXP quando macro é neutra/bullish (ema4h>-2) — altcoins com squeeze real.
+            if ema_trend_4h <= -2:
+                relax_factor = 1.0  # sem relaxamento: EXP mantém threshold cheio
+                relax_label = "CASCADE (BEARISH MACRO)"
+            else:
+                relax_factor = 0.6  # 40% relaxação: squeeze real em macro favorável
+                relax_label = "RELAXED (CASCADE)"
 
         # OI explodindo sem preço ainda ter subido muito = ignição precoce
         elif (oi_change_pct or 0) > 2.0 and (exp or 0) < 0.04:
@@ -891,7 +898,9 @@ class SqueezeIgnition:
 
         final_min_exp = self.min_exp * relax_factor
         final_min_oi_trend = self.min_oi_trend * relax_factor
-        final_cvd_streak = max(1, self.cvd_streak_min - 1) if relax_factor < 0.9 else self.cvd_streak_min
+        # D-02 (Brain/Forge 13/06/2026): cascade não reduz cvd_streak — paradoxo de design.
+        # cascade exige mais confiança, não menos. Manter streak_min=4 mesmo com cascade=True.
+        final_cvd_streak = self.cvd_streak_min if liq_cascade else (max(1, self.cvd_streak_min - 1) if relax_factor < 0.9 else self.cvd_streak_min)
 
         # Throttling de logs no terminal (Elite Ghost)
         if score >= 85:
