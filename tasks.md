@@ -3,6 +3,19 @@ _Atualizado: 13/06/2026 · v4.1_
 
 ---
 
+## [ ] Forge — Próxima sessão · Boot checklist 13/06
+
+    1. Soft restart (Ctrl+C → python main.py)
+    2. Hard Reset Paper: deletar risk_state.json · paper_opportunities.json · throttle_state.json
+       NÃO deletar: metric_state.json · paper_closed.jsonl · signals.jsonl
+    3. Monitorar pós-warmup:
+       - D-01: final_gate_fail em ativos com ema4h≤-2 + cascade (gate ativo?)
+       - D-02: streak<4 com cascade bloqueado (final_cvd_streak=4 funcionando?)
+       - D-03: próximo stop_loss hit — exit_price = sl_target exato (sem 0.1% abaixo)
+    4. Meta: 50 trades pós-reset → Brain libera DNA Freeze → avaliar Fix B (F-18 cascade bypass)
+
+---
+
 ## ✅ Forge — D-03 · slippage duplo no stop_loss · `paper_tracker.py:1253` · `750ce03`
 
 **Autorizado por Doreto 13/06/2026 · Análise profunda Brain 13/06**
