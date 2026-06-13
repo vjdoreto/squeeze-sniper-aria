@@ -1,5 +1,64 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 12/06/2026 · v4.0_
+_Atualizado: 13/06/2026 · v4.1_
+
+---
+
+## ✅ Forge — D-03 · slippage duplo no stop_loss · `paper_tracker.py:1253` · `750ce03`
+
+**Autorizado por Doreto 13/06/2026 · Análise profunda Brain 13/06**
+
+D-URGENTE-1 (12/06) setava exit_price=sl_target mas _close_trade ainda aplicava slippage_pct=0.1% em cima.
+Evidência: ESPORTS exit=0.21135308 vs sl_target=0.21156465 (diff exato 0.1%).
+Fix: reason==stop_loss usa exit_price direto — sem slippage adicional.
+
+---
+
+## ✅ Forge — D-02 · cascade não reduz cvd_streak · `signal_engine.py:894` · `7aa4227`
+
+**Autorizado por Doreto 13/06/2026 · Análise profunda Brain 13/06**
+
+cascade bypassava streak_min de 4→3 — paradoxo de design. cascade exige mais confiança, não menos.
+final_cvd_streak mantém streak_min=4 quando liq_cascade=True.
+Evidência: 3/13 squeeze_failed com streak=3 (STRKUSDT, TAOUSDT, OPGUSDT) que só passavam pelo benefício indevido.
+Critério de reversão: winner legítimo com cascade=True e streak=3 bloqueado → reverter para max(1, streak_min-1).
+
+---
+
+## ✅ Forge — D-01 · EXP não relaxado com cascade + ema4h<=-2 · `signal_engine.py:878` · `7aa4227`
+
+**Autorizado por Doreto 13/06/2026 · Análise profunda Brain 13/06**
+
+cascade relaxava EXP 40% (0.025→0.015) mesmo com macro bearish. Large caps com ema4h<=-2 + cascade
+= absorção de liq sem movimento. Fix: ema4h<=-2 → relax_factor=1.0 (EXP threshold cheio).
+Altcoins com ema4h>-2 mantêm o 40% de relaxamento (ESPORTS-type preservado).
+Evidência: XRPUSDT ema4h=-2, ADAUSDT ema4h=-2, STRKUSDT ema4h=-2 → squeeze_failed.
+Critério de reversão: altcoin com ema4h=-2 + cascade com WR>50% em 5+ trades → revisar threshold.
+
+---
+
+## ✅ Forge — blacklist zerada · `preferences.json` · `dbfa0b6`
+
+**Autorizado por Doreto 13/06/2026**
+
+ESPORTSUSDT, OPGUSDT, TRUMPUSDT, XRPUSDT removidos. D-01/D-02 cobrem esses perfis via gates dinâmicos.
+
+---
+
+## 🔬 Forge — D-04 · ema4h=0 WR=22% (13/06/2026)
+
+**Origem:** análise profunda Brain 13/06 · 9 trades com ema4h=0, WR 22%, PnL -$9.13
+
+Aguardando 50 trades pós-reset para evidência estatística antes de hardcodar.
+Brain monitora. Se ema4h=0 continuar com WR < 35% em 20+ trades → propor gate ema4h >= 2 ou penalidade no score.
+
+---
+
+## 🔬 Brain/ARIA — D-05 · RIFUSDT 284 bloqueios lsr_trend_not_negative (13/06/2026)
+
+**Origem:** análise profunda Brain 13/06 · lsr_trend=-0.057 vs threshold -0.3
+
+RIFUSDT candidato legítimo sistematicamente bloqueado. Cruzar preço nos períodos dos 284 ghost signals.
+Alimenta análise Path B. Brain/ARIA executam — Forge não envolvido.
 
 ---
 
