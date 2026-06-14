@@ -1,5 +1,13 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 13/06/2026 · v4.33_
+_Atualizado: 14/06/2026 · v4.34_
+
+---
+
+## ✅ Forge — Remove silence_window_2100 · `signal_engine.py` · `0fab22e`
+
+**Autorizado por Doreto 13/06/2026 noite · Sessão 9ª**
+
+Gate B-28/B-49 bloqueava 39min extras por dia (20:50–21:30 BRT). Evidência: slopes reconstroem em <6min pós-reset; `daily_reset_window` já cobre 20:55–21:05 BRT. Gate removido completamente. Push origin ✅
 
 ---
 

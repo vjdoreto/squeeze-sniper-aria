@@ -40,7 +40,7 @@ O projeto roda em **2 sessões paralelas do Claude** com objetivos complementare
 **Regra 3 — Contexto mestre versionado**
 - `context.md` precisa ter data e versão em cada atualização
 - Brain não pode passar estado desatualizado para sessões futuras
-- Versão atual: v4.33 · 13/06/2026
+- Versão atual: v4.34 · 14/06/2026
 
 **Fluxo contínuo:**
 ```
@@ -573,6 +573,26 @@ PaperAnalyzer rodava a cada hora e mutava `preferences.json` silenciosamente (bl
 - Próximo stop_loss: confirmar exit_price = sl_target exato (D-03 ativo)
 
 **Push origin ✅ · Push aria ✅ · Requer soft restart**
+
+---
+
+## 🔧 Sprint 13/06/2026 noite → 14/06 madrugada — Sessão Forge: silence_window_2100 removida + análise refusals (v4.34)
+
+### Origem
+Zero trades após restart ~20:54 BRT 13/06. Forge investigou causas.
+
+### Achados
+- **silence_window_2100 era redundante**: bloqueia 20:50–21:30 BRT (39 min extra). `daily_reset_window` já cobre 20:55–21:05 BRT. Reconstrução de slopes medida em <6min pós-reset (score max=78 no minuto 6). Gate removido completamente. Commit `0fab22e`.
+- **price_change_24h não é gate**: campo zerado no reset mas não usado em nenhum gate de entrada — apenas visual no dashboard. Não há risco de entrada ruim.
+- **Análise 3h de refusals (pós-restart)**: 12.912 refusals. score_below_threshold=8.328 (64.5%), cvd_negative_quarantine=1.109, lsr_trend_positive=959. Score max=77 vs threshold=78.
+- **Ghost signals**: TAOUSDT score=100, ema4h=4 — bloqueado só por `trades_1m_too_low` (mercado noturno baixo volume). WALUSDT score=100 bloqueado por D-E1 (ema4h=-2).
+- **Bot saudável** — zero trades é mercado noturno, não bug.
+
+### Commits
+- `0fab22e` — remove silence_window_2100 (B-28/B-49), daily_reset_window já cobre
+
+### DNA Freeze
+Continua ativo. 0 trades até encerramento desta sessão. Meta: 30 trades pós-restart `95c1cfa`.
 
 ---
 
