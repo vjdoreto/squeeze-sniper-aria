@@ -1,5 +1,78 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 14/06/2026 · v4.34_
+_Atualizado: 14/06/2026 · v4.35_
+
+---
+
+## [ ] Forge — Fechar sessão Brain (14/06 — 10ª sessão)
+    Commitar e push nos dois repos:
+    - brain/BRAIN_CONTEXT.md (v2.7 — throttle bug duplo bbad06e + squeeze_failed=44% + B-55 confirmado)
+    - tasks.md (este item)
+    Mensagem sugerida: "docs(context): sprint 14/06 — análise profunda 9 trades + throttle fix bbad06e + B-55 confirmado (v4.35)"
+
+---
+
+## ✅ Forge — Fix throttle batch + symbol field · `main.py` ~L432-444
+
+**Autorizado por Doreto 14/06/2026 · Brain análise profunda + Forge veredito · Sessão 10ª**
+
+**Dois bugs confirmados no mesmo bloco — throttle D-HIGH-2 nunca funcionou desde a implementação:**
+
+- **Bug 1 (batch):** quando `current_closed` aumenta em mais de 1 num ciclo, o código lê só `history[-1]` — trades anteriores no batch são ignorados. VELVET SL às 05:05 foi engolido pelo HUSDT trailing_stop às 05:19 no mesmo batch.
+- **Bug 2 (symbol field):** `last_symbol` lido de `(last_trade.get("entry") or {}).get("symbol", "")` — campo inexistente. O correto é `trade.get("symbol", "")` (raiz do trade). Resultado: `last_symbol` é sempre `""` → condição `and last_symbol` falha → `extend_cooldown` **nunca foi chamado em nenhuma situação desde 12/06**.
+
+**Evidência:** VELVETUSDT stop_loss -30.8% às 05:05 → re-entry às 08:01 (2h57m depois, dentro da janela 4h) → squeeze_failed -8.5%. Custo direto do bug nesta sessão: -8.5% desnecessário.
+
+**Diff exato (Variante R-07 — escopo único, ~15 linhas):**
+
+```python
+# ANTES (main.py ~L432-444)
+history = getattr(tracker, "_closed", [])
+last_trade = history[-1] if history else {}
+is_win = (last_trade.get("exit") or {}).get("pnl_pct", 0) > 0
+was_trading = risk_manager.can_trade()
+risk_manager.update(tracker.current_capital, tracker.peak_capital, is_win)
+last_processed_closed_count = current_closed
+
+# D-HIGH-2: Cooldown estendido de 4h após stop_loss ou max_hold
+last_exit_reason = (last_trade.get("exit") or {}).get("reason", "")
+last_symbol = (last_trade.get("entry") or {}).get("symbol", "")
+if last_exit_reason in ("stop_loss", "max_hold") and last_symbol and symbol_throttler:
+    symbol_throttler.extend_cooldown(last_symbol, total_seconds=14400)
+    logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após %s", last_symbol, last_exit_reason)
+
+# DEPOIS
+history = getattr(tracker, "_closed", [])
+new_trades = history[last_processed_closed_count:current_closed]
+last_trade = new_trades[-1] if new_trades else {}
+is_win = (last_trade.get("exit") or {}).get("pnl_pct", 0) > 0
+was_trading = risk_manager.can_trade()
+risk_manager.update(tracker.current_capital, tracker.peak_capital, is_win)
+last_processed_closed_count = current_closed
+
+# D-HIGH-2: Cooldown estendido — itera TODOS os trades novos (fix batch + fix symbol field)
+for trade in new_trades:
+    exit_reason = (trade.get("exit") or {}).get("reason", "")
+    sym = trade.get("symbol", "")  # symbol está na raiz do trade, não em entry
+    if exit_reason in ("stop_loss", "max_hold") and sym and symbol_throttler:
+        symbol_throttler.extend_cooldown(sym, total_seconds=14400)
+        logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após %s", sym, exit_reason)
+```
+
+**Critério de validação:** próximo stop_loss hit → log `[THROTTLE-SL]` aparece com o símbolo correto. Bug 2 pode ser confirmado com qualquer stop_loss isolado — não precisa de fechamento simultâneo.
+
+**Nota DNA Freeze:** não viola — corrige lógica declarada ativa que nunca funcionou. Nenhum gate novo, nenhum parâmetro novo.
+
+---
+
+## 🔬 B-55 — Ring buffers sub-minuto (topo do backlog pós-Freeze)
+
+**Origem:** Brain análise profunda 14/06 · squeeze_failed=44% em 9 trades limpos · confirmação do diagnóstico Sprint 8
+
+squeeze_failed com MFE=0 em 90s = preço não se moveu. CVD, liq, cascade, trades/min — tudo certo no setup, mas o squeeze ainda não começou quando o bot entra. Nenhum gate de seleção resolve timing.
+
+Ring buffers AggTrade 10s/20s/30s confirmam que o preço JÁ está subindo antes de entrar. Isso elimina a classe inteira de squeeze_failed com MFE=0.
+
+**Status:** BLOQUEADO por DNA Freeze. Primeira sprint após Freeze liberar (30 trades).
 
 ---
 

@@ -211,4 +211,7 @@ Veja `SQUEEZE_SNIPER_DNA.md` para lista completa. Destaques críticos:
 
 **Diagnóstico do círculo (confirmado 8ª sessão):** adicionamos gates de seleção para um problema de timing. squeeze_failed com MFE=0 = bot entrou no setup certo mas o squeeze não confirmou em 90s. Nenhum gate de entrada resolve isso. B-55 (ring buffers 10s/20s/30s confirmando que o preço JÁ está subindo antes de entrar) é o ponto de saída do círculo.
 
-*BRAIN_CONTEXT.md v2.6 · Forge é guardião · 13/06/2026 — Sessão 8ª: throttle max_hold fix (95c1cfa) · D-E4 cancelado (Forge derrubou com evidência) · B-60 ema1h=6 no backlog · DNA Freeze v2 (30 trades) · diagnóstico do círculo confirmado.*
+| **Throttle D-HIGH-2 inoperante desde 12/06 — fix bbad06e** | Dois bugs no mesmo bloco main.py ~L432: (1) batch — só `history[-1]` lido quando múltiplos fecham juntos; (2) symbol field — lido de `entry.symbol` (inexistente) em vez de `trade["symbol"]` (raiz) → `last_symbol=""` sempre → `extend_cooldown` nunca chamado. Evidência direta: VELVET SL 05:05 → re-entry 08:01 (-8.5% evitável). Fix: iteração de todos os trades novos + campo correto. `main.py` · `bbad06e` · 14/06 |
+| **squeeze_failed = 44% em 9 trades limpos** | Análise profunda 14/06: 4/9 squeeze_failed com MFE=0 em 90s exatos. Padrão confirma diagnóstico Sprint 8: timing problem, não seleção. Nenhum gate resolve. B-55 (ring buffers 10s/20s/30s) confirmado como próxima sprint pós-Freeze. | 14/06 |
+
+*BRAIN_CONTEXT.md v2.7 · Forge é guardião · 14/06/2026 — Sessão 10ª: análise profunda 9 trades (WR 22%) · throttle D-HIGH-2 bug duplo confirmado e corrigido (bbad06e) · squeeze_failed=44% confirma B-55 como próxima sprint · DNA Freeze v2 continua (30 trades).*
