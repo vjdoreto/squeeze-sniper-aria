@@ -452,6 +452,23 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 
 ---
 
+## 🔧 Sprint 14/06/2026 — Auditoria Live vs Paper + checklist pré-live (v4.36)
+
+### Sessão Forge × Doreto — 14/06/2026 (2ª sessão do dia)
+
+**Auditoria Live vs Paper (Doreto perguntou):**
+Gates de entrada 100% compartilhados (signal_engine.py). Saídas protetoras espelhadas: squeeze_aborted, mae_guard, mae_guard_late, trailing adaptativo. Throttle D-HIGH-2 fix `bbad06e` roda no tracker ativo — inclui Live.
+
+**Gap identificado e registrado:** `squeeze_failed` (90s exit) existe no paper_tracker mas não no live_tracker. Não é urgente — live está encolhido em paper. Registrado em tasks.md como checklist pré-live (`f2b930b`).
+
+**`preferences.suggested.json` commitado** — arquivo gerado pelo PaperAnalyzer (sugestões não auto-aplicadas). Brain lê como dado adicional no boot.
+
+**DNA Freeze:** continua ativo. Monitorando 30 trades.
+
+**Versão:** v4.36 · 14/06/2026
+
+---
+
 ## 🔧 Sprint 14/06/2026 — Throttle fix duplo + B-61 backlog + monitor de boot (v4.35)
 
 ### Sessão Brain × Forge × Doreto — 14/06/2026
