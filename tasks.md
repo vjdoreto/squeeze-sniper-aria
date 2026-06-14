@@ -1,5 +1,29 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 14/06/2026 · v4.36_
+_Atualizado: 14/06/2026 · v4.37_
+
+---
+
+## [ ] Forge — Pré-live checklist: squeeze_failed em live_tracker.py
+
+**Origem:** auditoria Forge × Doreto · 14/06/2026 · comparação paper vs live
+
+**Gap identificado:** `squeeze_failed` (exit em 90s se PnL < threshold e MFE = 0) existe no `paper_tracker.py` mas **não existe** em `live_tracker.py`. No live, trades com timing ruim ficam abertos até SL/TP server-side ou trailing — amplificando perdas nos casos squeeze_failed com MFE=0.
+
+**Gates de entrada são 100% compartilhados** (signal_engine.py) — o gap é só na saída.
+
+**Implementação estimada:** ~15 linhas em `live_tracker.update_position()`, espelhando a lógica do paper:
+```python
+# squeeze_failed: após 90s, PnL < -X% e MFE = 0 → exit antecipado
+if not trade.get("squeeze_failed_checked"):
+    if duration_sec >= 90 and pnl_pct < -threshold and current_mfe == 0:
+        trade["squeeze_failed_checked"] = True
+        early_exit_reason = "squeeze_failed"
+```
+> Forge verifica thresholds exatos no paper_tracker antes de implementar (R-01).
+
+**Quando executar:** SOMENTE após Brain liberar migração para Live. Não executar durante DNA Freeze nem antes de go/no-go live.
+
+**Prioridade:** checklist pré-live — não urgente agora.
 
 ---
 
