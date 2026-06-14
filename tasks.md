@@ -1,13 +1,12 @@
 # Tasks — Fila Brain → Forge
-_Atualizado: 14/06/2026 · v4.35_
+_Atualizado: 14/06/2026 · v4.36_
 
 ---
 
-## [ ] Forge — Fechar sessão Brain (14/06 — 10ª sessão)
-    Commitar e push nos dois repos:
-    - brain/BRAIN_CONTEXT.md (v2.7 — throttle bug duplo bbad06e + squeeze_failed=44% + B-55 confirmado)
-    - tasks.md (este item)
-    Mensagem sugerida: "docs(context): sprint 14/06 — análise profunda 9 trades + throttle fix bbad06e + B-55 confirmado (v4.35)"
+## ✅ Forge — Fechar sessão Brain (14/06 — 10ª sessão) · DONE
+    42c708b: brain/BRAIN_CONTEXT.md v2.7 + tasks.md v4.35
+    0ddd92c: B-61 backlog (score liq relativo ao OI)
+    Push origin ✅ · aria ✅
 
 ---
 

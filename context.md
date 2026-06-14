@@ -452,6 +452,30 @@ Documento autoritativo único — reconciliação Forge × Brain. Arquiva versã
 
 ---
 
+## 🔧 Sprint 14/06/2026 — Throttle fix duplo + B-61 backlog + monitor de boot (v4.35)
+
+### Sessão Brain × Forge × Doreto — 14/06/2026
+
+**Análise profunda Brain (10ª sessão):** 9 trades pós-Freeze auditados. WR 22%, squeeze_failed=44% (4/9), MFE=0 em todos os losers. Padrão de timing confirmado — bot entra no setup certo antes do squeeze começar de fato. B-55 (ring buffers sub-minuto) confirmado como próxima sprint pós-Freeze.
+
+**Bug duplo confirmado e corrigido — throttle D-HIGH-2 (`bbad06e`):**
+- Bug 1 (batch): `history[-1]` ignorava trades anteriores quando `current_closed` subia >1 num ciclo
+- Bug 2 (symbol field): `entry.symbol` não existe — campo está em `trade["symbol"]` (raiz). Throttle nunca funcionou desde 12/06.
+- Fix: itera `new_trades = history[last_processed:current]` e lê `trade.get("symbol")`.
+- Evidência do custo: VELVET stop_loss 05:05 → re-entry 08:01 → squeeze_failed -8.5% evitável.
+
+**B-61 registrado no backlog Brain (`0ddd92c`):**
+Proposta de score de liq relativo ao OI do ativo. VELVET $3k liq / $500k OI = 0.6% → deveria pontuar +15pts (hoje: 0pts). Thresholds absolutos fixos penalizam small/mid caps injustamente. Brain avalia pós-Freeze com dados dos 30 trades.
+
+**Primeiro trade pós-restart 14/06:**
+HUSDT trailing_stop +1.50% — score=97, cascade=True, liq=$82k, CVD=+366%, ema4h=2. DNA funcionando.
+
+**DNA Freeze:** continua ativo — 1/30 trades limpos pós-restart `95c1cfa`. 29 restantes.
+
+**Versão:** v4.35 · 14/06/2026
+
+---
+
 ## 🔧 Sprint 13/06/2026 — Análise profunda WR 16% + throttle fix + DNA Freeze (v4.32)
 
 ### Sessão Brain × Forge × Doreto — 13/06/2026 noite
