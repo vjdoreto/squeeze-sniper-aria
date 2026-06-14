@@ -430,18 +430,21 @@ async def trading_loop(
                     if current_closed > last_processed_closed_count:
                         # Acessa histórico de forma segura
                         history = getattr(tracker, "_closed", [])
-                        last_trade = history[-1] if history else {}
+                        new_trades = history[last_processed_closed_count:current_closed]
+                        last_trade = new_trades[-1] if new_trades else {}
                         is_win = (last_trade.get("exit") or {}).get("pnl_pct", 0) > 0
                         was_trading = risk_manager.can_trade()
                         risk_manager.update(tracker.current_capital, tracker.peak_capital, is_win)
                         last_processed_closed_count = current_closed
 
-                        # D-HIGH-2: Cooldown estendido de 4h após stop_loss ou max_hold (Brain/Forge 12/06/2026 · ext 13/06/2026)
-                        last_exit_reason = (last_trade.get("exit") or {}).get("reason", "")
-                        last_symbol = (last_trade.get("entry") or {}).get("symbol", "")
-                        if last_exit_reason in ("stop_loss", "max_hold") and last_symbol and symbol_throttler:
-                            symbol_throttler.extend_cooldown(last_symbol, total_seconds=14400)
-                            logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após %s", last_symbol, last_exit_reason)
+                        # D-HIGH-2: Cooldown 4h após stop_loss/max_hold — itera TODOS os trades novos
+                        # Fix batch (Brain 14/06) + fix symbol field (Forge 14/06): symbol está na raiz do trade, não em entry
+                        for _t in new_trades:
+                            _exit_reason = (_t.get("exit") or {}).get("reason", "")
+                            _sym = _t.get("symbol", "")
+                            if _exit_reason in ("stop_loss", "max_hold") and _sym and symbol_throttler:
+                                symbol_throttler.extend_cooldown(_sym, total_seconds=14400)
+                                logger.info("🛡️ [THROTTLE-SL] %s cooldown estendido para 4h após %s", _sym, _exit_reason)
 
                         # Circuit breaker: notifica se acabou de pausar
                         if was_trading and not risk_manager.can_trade() and telegram:
