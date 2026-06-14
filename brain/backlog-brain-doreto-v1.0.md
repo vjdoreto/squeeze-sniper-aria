@@ -8,6 +8,60 @@ _Criado: 04/06/2026 · Versão: 1.0_
 
 ## LÓGICA DO BOT / ESTRATÉGIA
 
+### B-61 — Score de liquidação relativo ao OI do ativo (Forge × Doreto · 14/06/2026)
+**Status:** Racional completo · aguarda 30 trades pós-Freeze para evidência estatística  
+**Origem:** Observação Doreto durante análise de boot · 14/06/2026
+
+**O problema:**
+O score de `liq_short_1m_stable` usa thresholds absolutos fixos (`market_view.py`):
+- > $100k → +15pts
+- > $50k  → +10pts
+- > $10k  → +5pts
+- < $10k  → **0pts**
+
+Isso ignora completamente o tamanho do ativo. Um evento de $3k de liquidação num ativo com OI de $500k representa **0.6% do OI destruído num minuto** — evento institucional significativo. O mesmo $3k num ativo com OI de $2B representa **0.00015%** — ruído absoluto.
+
+Resultado prático: VELVET, GPS, HOLO, BANANAS31 — todos small/mid caps, todos com liquidações reais — recebem **0pts de liq** no score. Ficam dependentes de outros componentes para atingir 78. O DNA do SS foi desenhado para capturar liquidações institucionais, mas o score trata $3k no VELVET igual a $3k no BTC.
+
+**O que já existe e funciona:**
+O `liq_cascade` já usa tiers proporcionais ao OI (`metric_engine.py:730`):
+- OI < $1M → threshold $500
+- OI $1M–$10M → threshold $2k
+- OI > $10M → threshold $10k
+
+Esse raciocínio já está correto para o cascade. O problema é que o **score de liq** não herdou essa lógica.
+
+**Proposta — Score relativo ao OI:**
+
+| Liq como % do OI por minuto | Pts |
+|-----------------------------|-----|
+| ≥ 0.5% do OI | +15 |
+| ≥ 0.2% do OI | +10 |
+| ≥ 0.05% do OI | +5 |
+| < 0.05% | 0 |
+
+Exemplos com esse critério:
+- VELVET: liq=$3k / OI=$500k = **0.6%** → +15pts (hoje recebe 0)
+- BTC: liq=$100k / OI=$20B = **0.0005%** → 0pts (hoje recebe +5 a +15 indevidamente)
+- HOLO: liq=$1.8k / OI=$300k = **0.6%** → +15pts (hoje recebe 0)
+
+**Impacto esperado:**
+- Small/mid caps com squeeze real pontuam liq de forma justa
+- Large caps (BTC, ETH, XRP) que absorvem liq sem movimento perdem pts de liq — alinhado com o comportamento observado (large caps = `final_gate_fail` correto por design)
+- Score máximo para VELVET-type sobe ~10-15pts → mais entradas no momento certo
+
+**Lógica de implementação (Forge avalia):**
+Em `market_view.py`, na função `calculate_fit_score()`, substituir o bloco de `liq_short_1m_stable` fixo por cálculo relativo usando `oi_usd` (já disponível via `oi_change_pct` × `oi` do MetricStore, ou calculado como `oi * price`).
+
+**Critério para virar task:**
+1. DNA Freeze encerrado (30 trades limpos) ✅ pendente
+2. Brain audita distribuição de liq_short_1m_stable nos 30 trades: quantos ficaram em 0pts por serem < $10k mas representarem > 0.2% do OI?
+3. Se ≥ 5 trades afetados → proposta formal com diff para Forge
+
+**Nota Forge:** `trading_mode=None` no heartbeat é campo apontando para `DataEngine` que não tem esse atributo. Cosmético — sem impacto. Fix trivial se quisermos limpar o log (apontar para `state.trading_mode`).
+
+---
+
 ### B-49 — Janela cega pós-reset 21h BRT (25 min descobertos)
 **Status:** Tese com evidência inicial · aguarda coleta de trades para confirmar padrão  
 **Origem:** Observação Doreto + análise Brain · 11/06/2026
